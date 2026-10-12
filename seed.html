@@ -7,6 +7,7 @@
 <title>스티커 번호 만들기 · 카페인24 크리스마스 룰렛</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700;800&display=swap">
 <link rel="stylesheet" href="css/admin.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 <header class="top"><span class="logo">CAFEIN<b>24</b></span><span class="ttl">스티커 번호 만들기 (인쇄 전 1회)</span><span class="sp"></span><span class="me" data-user></span><a class="btn-sm" href="admin.html">관리 현황 →</a><button data-logout hidden>로그아웃</button></header>
@@ -22,8 +23,8 @@
   <div class="box">
     <h2>진행 순서</h2>
     <ol class="steps">
-      <li><b>매장 목록 올리기</b> — 아래 칸에 엑셀에서 복사한 매장 표를 붙여넣고 저장 (매장코드 3자리 · 매장명 · 점주명 · 점주연락처 · 지역)</li>
-      <li><b>번호 만들기</b> — 배분표대로 60,000개 번호를 만들어 Firestore(codes)에 올립니다. 2~3분 걸려요.</li>
+      <li><b>매장 목록 올리기</b> — 매장목록 엑셀 파일을 올리고 'Firestore에 매장 저장'</li>
+      <li><b>번호 만들기</b> — 배분표대로 매장 수 × 300장 번호를 만들어 Firestore(codes)에 올립니다. 2~3분 걸려요.</li>
       <li><b>인쇄소용 CSV 내려받기</b> — 등수가 없는 QR 주소 목록. 묶음(1~5) 번호가 있어서 60장씩 포장할 수 있어요.</li>
       <li><b>내부 보관용 CSV(등수 포함)</b>는 본사 외부로 절대 내보내지 마세요.</li>
     </ol>
@@ -32,11 +33,14 @@
 
   <div class="box">
     <h2>1. 매장 목록</h2>
-    <p>탭 또는 쉼표로 구분된 표를 붙여넣어요. 첫 줄이 제목이면 자동으로 건너뜁니다. 매장코드는 001~999 세 자리.</p>
+    <p><b>매장목록 엑셀 파일을 그대로 올리면 돼요.</b> 'No'는 매장코드(3자리), '매장명·점주·전화번호·권역·분류·담당SV' 칸을 읽어요. 매장명에 '미진행'이 들어간 매장은 자동으로 빠져요.</p>
+    <div class="row"><input type="file" id="stores-file" accept=".xlsx,.xls,.csv"></div>
+    <details><summary class="note">엑셀 없이 직접 붙여넣기</summary>
     <textarea id="stores-text" placeholder="매장코드	매장명	점주명	점주연락처	지역
-017	학동점	김OO	01012345678	서울
-018	역삼점	이OO	01098765432	서울"></textarea>
-    <div class="row"><button class="btn ghost" id="btn-parse">미리보기</button><button class="btn" id="btn-save-stores" disabled>Firestore에 매장 저장</button><span class="note" id="stores-msg"></span></div>
+017	학동점	김OO	01012345678	서울"></textarea>
+    <div class="row"><button class="btn ghost sm" id="btn-parse">붙여넣은 내용 읽기</button></div>
+    </details>
+    <div class="row"><button class="btn" id="btn-save-stores" disabled>Firestore에 매장 저장</button><span class="note" id="stores-msg"></span></div>
     <div class="tscroll" id="stores-prev" hidden></div>
   </div>
 
@@ -74,7 +78,7 @@
 </main>
 
 <script type="module">
-import { db, EVENT, $, won, requireAdmin, downloadCsv, randomCode, shuffle, playUrl } from "./js/common.js";
+import { db, EVENT, $, won, esc, requireAdmin, downloadCsv, randomCode, shuffle, playUrl } from "./js/common.js";
 import { collection, doc, getDocs, getCountFromServer, writeBatch, query, limit, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 let stores = [];      // Firestore에 있는 매장 [{code,name,...}]
@@ -91,19 +95,42 @@ async function refreshStatus(){
 }
 
 // ---- 1. 매장 ----
-$('btn-parse').addEventListener('click', () => {
-  const lines = $('stores-text').value.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-  parsed = [];
-  for(const l of lines){
-    const c = l.split(/\t|,/).map(x => x.trim());
-    if(!/^\d{1,3}$/.test(c[0])) continue;              // 제목 줄 건너뜀
-    parsed.push({ code:c[0].padStart(3,'0'), name:c[1]||'', owner:c[2]||'', phone:(c[3]||'').replace(/\D/g,''), region:c[4]||'' });
-  }
+// 권역 '경기 수원시 권선구' → '경기' 처럼 시·도만
+const REGION = { '경기도':'경기','부천':'경기','서울특별시':'서울','충청북도':'충북','충청남도':'충남','전북특별자치도':'전북','세종특별자치시':'세종','진천':'충북','경상':'경상','충청':'충청','전라':'전라' };
+const regionOf = v => { const f = String(v||'').trim().split(/\s+/)[0] || ''; return REGION[f] || f; };
+function showParsed(skipped){
   const dup = parsed.map(p=>p.code).filter((v,i,a)=>a.indexOf(v)!==i);
-  $('stores-msg').textContent = parsed.length ? `${parsed.length}개 매장 인식` + (dup.length ? ` · 중복 코드 ${[...new Set(dup)].join(', ')}` : '') : '매장을 인식하지 못했어요. 첫 칸이 세 자리 숫자인지 확인해 주세요.';
+  $('stores-msg').innerHTML = parsed.length ? `<b>${parsed.length}개 매장</b> 인식` + (skipped.length ? ` · 제외 ${skipped.length}개(${skipped.join(', ')})` : '') + (dup.length ? ` · <span class="danger">중복 코드 ${[...new Set(dup)].join(', ')}</span>` : '') + ` · 스티커 ${won(parsed.length*(+$('p-per').value||300))}장 예정` : '매장을 인식하지 못했어요.';
   $('stores-prev').hidden = !parsed.length;
-  $('stores-prev').innerHTML = `<table><thead><tr><th>코드</th><th>매장명</th><th>점주</th><th>연락처</th><th>지역</th></tr></thead><tbody>${parsed.map(p=>`<tr><td>${p.code}</td><td>${p.name}</td><td>${p.owner}</td><td>${p.phone}</td><td>${p.region}</td></tr>`).join('')}</tbody></table>`;
+  $('stores-prev').innerHTML = `<table><thead><tr><th>코드</th><th>매장명</th><th>분류</th><th>점주</th><th>연락처</th><th>지역</th><th>담당SV</th></tr></thead><tbody>${parsed.map(p=>`<tr><td>${p.code}</td><td>${esc(p.name)}</td><td>${esc(p.type)}</td><td>${esc(p.owner)}</td><td>${esc(p.phone)}</td><td>${esc(p.region)}</td><td>${esc(p.sv)}</td></tr>`).join('')}</tbody></table>`;
   $('btn-save-stores').disabled = !parsed.length || dup.length > 0;
+}
+const toStore = (code, name, owner, phone, region, type, sv) => ({ code:String(code).trim().padStart(3,'0'), name:String(name||'').trim(), owner:String(owner||'').trim(), phone:String(phone||'').replace(/\D/g,''), region:regionOf(region), type:String(type||'').trim(), sv:String(sv||'').trim() });
+
+// 엑셀 파일 읽기 (머리글 이름으로 칸을 찾음)
+$('stores-file').addEventListener('change', async e => {
+  const f = e.target.files[0]; if(!f) return;
+  const wb = XLSX.read(await f.arrayBuffer());
+  const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval:'' });
+  parsed = []; const skipped = [];
+  for(const r of rows){
+    const no = String(r['No'] ?? r['NO'] ?? r['매장코드'] ?? '').trim(), name = String(r['매장명']||'').trim();
+    if(!/^\d{1,3}$/.test(no) || !name) continue;
+    if(name.includes('미진행')){ skipped.push(name); continue; }
+    parsed.push(toStore(no, name, r['점주'], r['전화번호'], r['권역'] || r['도로명주소'], r['분류'], r['담당SV'])); // 권역이 비면 주소로
+  }
+  parsed.sort((a,b)=>a.code.localeCompare(b.code));
+  showParsed(skipped);
+});
+$('btn-parse').addEventListener('click', () => {
+  parsed = []; const skipped = [];
+  for(const l of $('stores-text').value.split(/\r?\n/).map(l => l.trim()).filter(Boolean)){
+    const c = l.split(/\t/).map(x => x.trim());
+    if(!/^\d{1,3}$/.test(c[0])) continue;              // 제목 줄 건너뜀
+    if((c[1]||'').includes('미진행')){ skipped.push(c[1]); continue; }
+    parsed.push(toStore(c[0], c[1], c[2], c[3], c[4], '', ''));
+  }
+  showParsed(skipped);
 });
 $('btn-save-stores').addEventListener('click', async () => {
   const b = $('btn-save-stores'); b.disabled = true; b.textContent = '저장 중…';

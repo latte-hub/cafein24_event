@@ -17,11 +17,29 @@ service cloud.firestore {
     function prizeOf(tier) { return {'1': 50000, '2': 10000, '3': 5000, '4': 1000, '5': 0}[string(tier)]; }
     function changedOnly(keys) { return request.resource.data.diff(resource.data).affectedKeys().hasOnly(keys); }
 
-    // ---------- 매장 (200개) ----------
-    // 손님: 자기 스티커의 매장 1건만 읽기(매장명 표시용). 목록·쓰기는 관리자만.
+    // ---------- 매장 (공개용: 매장명·지역만) ----------
+    // 손님: 매장 1건 읽기(매장명 표시용). 점주 이름·연락처는 여기에 두지 않음.
     match /stores/{code} {
       allow get: if true;
       allow list, write: if isAdmin();
+    }
+    // ---------- 매장 비공개 정보 (점주명·연락처·담당SV) : 본사만 ----------
+    match /storesPrivate/{code} {
+      allow read, write: if isAdmin();
+    }
+
+    // ---------- 손님 전화번호 (문서 id = 스티커 번호) : 본사만 읽기 ----------
+    match /phones/{code} {
+      allow read, update, delete: if isAdmin();
+      // 룰렛을 돌리는 같은 순간(같은 트랜잭션)에 한 번만 만들 수 있음
+      allow create: if isAdmin() || (
+        request.resource.data.keys().hasOnly(['phone','store','createdAt'])
+        && isPhone(request.resource.data.phone)
+        && request.resource.data.store == getAfter(/databases/$(database)/documents/codes/$(code)).data.store
+        && getAfter(/databases/$(database)/documents/codes/$(code)).data.used == true
+        && existsAfter(/databases/$(database)/documents/entries/$(code))
+        && request.resource.data.createdAt == request.time
+      );
     }
 
     // ---------- 스티커 번호 (60,000개) ----------
@@ -45,11 +63,12 @@ service cloud.firestore {
       // 만들 때: 같은 트랜잭션에서 잠근 codes 문서의 등수·매장과 반드시 일치해야 함
       allow create: if isAdmin() || (
         request.resource.data.code == code
-        && request.resource.data.keys().hasOnly(['code','store','storeName','phone','tier','money','label','agreeMarketing','createdAt','surveyDone','bonusMoney'])
+        && request.resource.data.keys().hasOnly(['code','store','storeName','phoneMask','tier','money','label','agreeMarketing','createdAt','surveyDone','bonusMoney'])
         && request.resource.data.tier == getAfter(/databases/$(database)/documents/codes/$(code)).data.tier
         && request.resource.data.store == getAfter(/databases/$(database)/documents/codes/$(code)).data.store
         && getAfter(/databases/$(database)/documents/codes/$(code)).data.used == true
-        && isPhone(request.resource.data.phone)
+        && request.resource.data.phoneMask is string && request.resource.data.phoneMask.size() <= 13
+        && existsAfter(/databases/$(database)/documents/phones/$(code))
         && request.resource.data.tier in [1, 2, 3, 4, 5]
         && request.resource.data.money == prizeOf(request.resource.data.tier)
         && request.resource.data.surveyDone == false
@@ -80,7 +99,7 @@ service cloud.firestore {
         isPhone(phone)
         && request.resource.data.phone == phone
         && request.resource.data.code is string
-        && get(/databases/$(database)/documents/entries/$(request.resource.data.code)).data.phone == phone
+        && get(/databases/$(database)/documents/phones/$(request.resource.data.code)).data.phone == phone
         && request.resource.data.createdAt == request.time
       );
       allow update: if isAdmin();

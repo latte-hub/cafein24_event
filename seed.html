@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex">
 <title>스티커 번호 만들기 · 카페인24 크리스마스 룰렛</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <link rel="stylesheet" href="css/admin.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
@@ -55,7 +55,7 @@
       <label>묶음 크기 <input type="number" id="p-bundle" value="60" style="width:60px"></label>
     </div>
     <p id="p-sum" class="note"></p>
-    <div class="row"><button class="btn" id="btn-gen" disabled>번호 만들고 Firestore에 올리기</button><span class="note">매장 목록이 Firestore에 저장돼 있어야 눌러져요. 이미 번호가 있으면 추가로 올라가니 주의!</span></div>
+    <div class="row"><button class="btn" id="btn-gen" disabled>번호 만들고 Firestore에 올리기 (이어 올리기)</button><span class="note">매장 단위로 올려요. 이미 300장이 있는 매장은 건너뛰니, 중간에 멈춰도 다시 누르면 이어서 올라가요.</span></div>
     <div class="bar"><i id="gen-bar" style="width:0"></i></div>
     <div class="prog" id="gen-msg"></div>
   </div>
@@ -67,7 +67,7 @@
       <button class="btn ghost" id="btn-csv-internal" disabled>내부 보관용 CSV (등수 포함)</button>
       <button class="btn ghost" id="btn-csv-stores" disabled>매장별 요약 CSV</button>
     </div>
-    <p class="note">방금 만든 번호가 메모리에 있을 때만 내려받을 수 있어요. 나중에 다시 받으려면 admin.html의 'QR·인쇄' 탭에서 매장별로 받습니다.</p>
+    <p class="note">Firestore에 올라간 번호 전체를 읽어서 만들어요 (번호 수만큼 읽기가 발생 · 무료 요금제는 하루 5만 건까지).</p>
   </div>
 
   <div class="box">
@@ -79,11 +79,10 @@
 
 <script type="module">
 import { db, EVENT, $, won, esc, requireAdmin, downloadCsv, randomCode, shuffle, playUrl } from "./js/common.js";
-import { collection, doc, getDocs, getCountFromServer, writeBatch, query, limit, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { collection, doc, getDocs, getCountFromServer, writeBatch, query, where, limit, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 let stores = [];      // Firestore에 있는 매장 [{code,name,...}]
 let parsed = [];      // 붙여넣기 미리보기
-let made = [];        // 방금 만든 번호 [{code,store,tier,bundle,seq}]
 const TIER_MONEY = {1:50000,2:10000,3:5000,4:1000,5:0};
 
 async function refreshStatus(){
@@ -91,6 +90,7 @@ async function refreshStatus(){
   stores = s.docs.map(d => ({ code:d.id, ...d.data() })).sort((a,b) => a.code.localeCompare(b.code));
   $('st-stores').textContent = stores.length; $('st-codes').textContent = won(c.data().count);
   $('btn-gen').disabled = stores.length === 0;
+  ['btn-csv-print','btn-csv-internal','btn-csv-stores'].forEach(id => $(id).disabled = c.data().count === 0);
   calcSum();
 }
 
@@ -135,9 +135,13 @@ $('btn-parse').addEventListener('click', () => {
 $('btn-save-stores').addEventListener('click', async () => {
   const b = $('btn-save-stores'); b.disabled = true; b.textContent = '저장 중…';
   try{
-    for(let i=0;i<parsed.length;i+=400){
+    for(let i=0;i<parsed.length;i+=200){
       const batch = writeBatch(db);
-      parsed.slice(i,i+400).forEach(p => batch.set(doc(db,'stores',p.code), p, { merge:true }));
+      // 공개용(매장명·지역)과 본사 전용(점주명·연락처·담당SV)을 나눠서 저장
+      parsed.slice(i,i+200).forEach(p => {
+        batch.set(doc(db,'stores',p.code), { code:p.code, name:p.name, region:p.region, type:p.type||'' });
+        batch.set(doc(db,'storesPrivate',p.code), { owner:p.owner, phone:p.phone, sv:p.sv||'' });
+      });
       await batch.commit();
     }
     $('stores-msg').textContent = `${parsed.length}개 매장 저장 완료`;
@@ -156,53 +160,74 @@ function calcSum(){
 }
 document.querySelectorAll('#p-per,#p-t1,#p-t2,#p-t3,#p-t4,#p-bundle').forEach(i => i.addEventListener('input', calcSum));
 
+// 하루 무료 한도에 걸리면 Firebase가 오류 없이 계속 기다리므로, 오래 걸리면 안내
+const withWatch = (promise, onSlow, ms=45000) => { const t = setTimeout(onSlow, ms); return promise.finally(() => clearTimeout(t)); };
+const QUOTA_MSG = '<span class="danger">30초 넘게 응답이 없어요. Firebase 무료 요금제의 하루 쓰기 한도(2만 건)에 걸렸을 가능성이 커요.</span> Blaze 요금제로 바꾸거나 내일(오후 4~5시 이후) 이 페이지를 새로 열고 다시 누르면 남은 매장부터 이어서 올라가요.';
+
 $('btn-gen').addEventListener('click', async () => {
-  const p = P();
-  if(!confirm(`${stores.length}개 매장 × ${p.per}장 = ${won(stores.length*p.per)}개 번호를 만들어 올릴까요?\n이미 번호가 ${$('st-codes').textContent}개 있어요.`)) return;
-  const btn = $('btn-gen'); btn.disabled = true;
-  // 1등이 들어갈 매장을 무작위로 뽑기
-  const t1Stores = new Set(shuffle(stores.map(s => s.code)).slice(0, p.t1));
-  made = []; const used = new Set();
-  for(const s of stores){
-    const tiers = [];
-    if(t1Stores.has(s.code)) tiers.push(1);
-    for(let i=0;i<p.t2;i++) tiers.push(2);
-    for(let i=0;i<p.t3;i++) tiers.push(3);
-    for(let i=0;i<p.t4;i++) tiers.push(4);
-    while(tiers.length < p.per) tiers.push(5);
-    shuffle(tiers);
-    tiers.forEach((t, i) => {
-      let c; do { c = randomCode(s.code); } while(used.has(c)); used.add(c);
-      made.push({ code:c, store:s.code, storeName:s.name||'', tier:t, bundle:Math.floor(i/p.bundle)+1, seq:i+1 });
-    });
-  }
-  // Firestore에 500개씩 올리기
+  const p = P(), btn = $('btn-gen'), msg = $('gen-msg'); btn.disabled = true;
   try{
-    for(let i=0;i<made.length;i+=500){
-      const batch = writeBatch(db);
-      made.slice(i,i+500).forEach(m => batch.set(doc(db,'codes',m.code), { store:m.store, tier:m.tier, used:false, bundle:m.bundle }));
-      await batch.commit();
-      const pct = Math.min(100, Math.round(100*(i+500)/made.length));
-      $('gen-bar').style.width = pct+'%'; $('gen-msg').textContent = `${won(Math.min(i+500,made.length))} / ${won(made.length)} 올리는 중…`;
+    // 1) 매장별로 이미 올라간 번호 수 확인
+    msg.textContent = '매장별로 이미 올라간 번호를 확인하는 중…';
+    const have = {};
+    for(let i=0;i<stores.length;i+=20){
+      await Promise.all(stores.slice(i,i+20).map(async s => { have[s.code] = (await getCountFromServer(query(collection(db,'codes'), where('store','==',s.code)))).data().count; }));
+      $('gen-bar').style.width = Math.round(100*(i+20)/stores.length)+'%';
+    }
+    const partial = stores.filter(s => have[s.code] > 0 && have[s.code] < p.per);
+    if(partial.length){ msg.innerHTML = `<span class="danger">번호가 일부만 들어간 매장이 있어요: ${partial.map(s=>s.code+'('+have[s.code]+'장)').join(', ')}</span> 본사 담당자에게 알려 주세요.`; btn.disabled=false; return; }
+    const todo = stores.filter(s => !have[s.code]);
+    const doneN = stores.length - todo.length;
+    if(!todo.length){ msg.innerHTML = '<span class="ok">모든 매장의 번호가 이미 올라가 있어요.</span>'; btn.disabled=false; return; }
+    // 2) 1등: 이미 배정된 수를 빼고 남은 매장 중에서 무작위
+    const t1Have = (await getCountFromServer(query(collection(db,'codes'), where('tier','==',1)))).data().count;
+    const t1Left = Math.max(0, p.t1 - t1Have);
+    if(!confirm(`이미 끝난 매장 ${doneN}개는 건너뛰고, 남은 ${todo.length}개 매장(${won(todo.length*p.per)}장)을 올릴게요.\n1등은 이미 ${t1Have}개 → 남은 ${Math.min(t1Left,todo.length)}개를 남은 매장에 무작위로 넣어요.\n\n무료 요금제는 하루 약 2만 장까지만 올라가요.`)){ btn.disabled=false; msg.textContent=''; return; }
+    const t1Stores = new Set(shuffle(todo.map(s => s.code)).slice(0, t1Left));
+    // 3) 매장 하나씩 300장을 한 번에 저장 (매장 단위로 끊기므로 중간에 멈춰도 안전)
+    let n = 0;
+    for(const s of todo){
+      const tiers = [];
+      if(t1Stores.has(s.code)) tiers.push(1);
+      for(let i=0;i<p.t2;i++) tiers.push(2);
+      for(let i=0;i<p.t3;i++) tiers.push(3);
+      for(let i=0;i<p.t4;i++) tiers.push(4);
+      while(tiers.length < p.per) tiers.push(5);
+      shuffle(tiers);
+      const used = new Set(), batch = writeBatch(db);
+      tiers.forEach((t, i) => {
+        let c; do { c = randomCode(s.code); } while(used.has(c)); used.add(c);
+        batch.set(doc(db,'codes',c), { store:s.code, tier:t, used:false, bundle:Math.floor(i/p.bundle)+1, seq:i+1 });
+      });
+      await withWatch(batch.commit(), () => { msg.innerHTML = QUOTA_MSG; });
+      n++;
+      $('gen-bar').style.width = Math.round(100*(doneN+n)/stores.length)+'%';
+      msg.textContent = `매장 ${doneN+n} / ${stores.length} 완료 (${s.code} ${s.name||''})`;
     }
     await setDoc(doc(db,'stats','bonus'), { wins:0 }, { merge:true });
-    $('gen-msg').innerHTML = `<span class="ok">완료!</span> ${won(made.length)}개 번호를 올렸어요. 아래에서 CSV를 내려받으세요.`;
-    ['btn-csv-print','btn-csv-internal','btn-csv-stores'].forEach(id => $(id).disabled = false);
+    msg.innerHTML = `<span class="ok">완료!</span> ${stores.length}개 매장 번호가 모두 올라갔어요. 아래에서 CSV를 내려받으세요.`;
     await refreshStatus();
-  }catch(e){ console.error(e); $('gen-msg').innerHTML = `<span class="danger">올리다가 멈췄어요: ${e.message}</span> 다시 누르면 처음부터 다시 만듭니다(중복 주의).`; }
+  }catch(e){ console.error(e); msg.innerHTML = `<span class="danger">멈췄어요: ${esc(e.message)}</span> 다시 누르면 남은 매장부터 이어서 올라가요.`; }
   btn.disabled = false;
 });
 
-// ---- 3. CSV ----
-$('btn-csv-print').addEventListener('click', () => downloadCsv('cafein24_qr_print.csv',
-  ['매장코드','매장명','묶음','순번','스티커번호','QR주소'],
-  made.map(m => [m.store, m.storeName, m.bundle, m.seq, m.code, playUrl(m.code)])));
-$('btn-csv-internal').addEventListener('click', () => downloadCsv('cafein24_qr_INTERNAL_등수포함_외부반출금지.csv',
-  ['매장코드','매장명','묶음','순번','스티커번호','등수','금액','QR주소'],
-  made.map(m => [m.store, m.storeName, m.bundle, m.seq, m.code, m.tier===5?'꽝':m.tier+'등', TIER_MONEY[m.tier], playUrl(m.code)])));
-$('btn-csv-stores').addEventListener('click', () => {
-  const by = {};
-  made.forEach(m => { const o = by[m.store] ??= { name:m.storeName, n:0, t1:0,t2:0,t3:0,t4:0,t5:0, money:0 }; o.n++; o['t'+m.tier]++; o.money += TIER_MONEY[m.tier]; });
+// ---- 3. CSV (Firestore에서 읽어서 만듦) ----
+async function loadAllCodes(btn){
+  const old = btn.textContent; btn.disabled = true; btn.textContent = '읽는 중…';
+  try{
+    const snap = await getDocs(collection(db,'codes'));
+    const name = Object.fromEntries(stores.map(s => [s.code, s.name||'']));
+    return snap.docs.map(d => ({ code:d.id, ...d.data(), storeName:name[d.data().store]||'' }))
+      .sort((a,b) => a.store.localeCompare(b.store) || (a.seq||0)-(b.seq||0) || (a.bundle||0)-(b.bundle||0) || a.code.localeCompare(b.code));
+  }finally{ btn.disabled = false; btn.textContent = old; }
+}
+$('btn-csv-print').addEventListener('click', async e => { const all = await loadAllCodes(e.target); downloadCsv('cafein24_qr_print.csv',
+  ['매장코드','매장명','묶음','스티커번호','QR주소'], all.map(m => [m.store, m.storeName, m.bundle, m.code, playUrl(m.code)])); });
+$('btn-csv-internal').addEventListener('click', async e => { const all = await loadAllCodes(e.target); downloadCsv('cafein24_qr_INTERNAL_등수포함_외부반출금지.csv',
+  ['매장코드','매장명','묶음','스티커번호','등수','금액','사용','QR주소'], all.map(m => [m.store, m.storeName, m.bundle, m.code, m.tier===5?'꽝':m.tier+'등', TIER_MONEY[m.tier], m.used?'Y':'', playUrl(m.code)])); });
+$('btn-csv-stores').addEventListener('click', async e => {
+  const all = await loadAllCodes(e.target), by = {};
+  all.forEach(m => { const o = by[m.store] ??= { name:m.storeName, n:0, t1:0,t2:0,t3:0,t4:0,t5:0, money:0 }; o.n++; o['t'+m.tier]++; o.money += TIER_MONEY[m.tier]; });
   downloadCsv('cafein24_매장별_배분요약.csv', ['매장코드','매장명','스티커','1등','2등','3등','4등','꽝','액면합계'],
     Object.entries(by).sort().map(([k,o]) => [k,o.name,o.n,o.t1,o.t2,o.t3,o.t4,o.t5,o.money]));
 });
@@ -218,7 +243,7 @@ $('btn-wipe').addEventListener('click', async () => {
       const batch = writeBatch(db); snap.docs.forEach(d => batch.delete(d.ref)); await batch.commit();
       n += snap.size; msg.textContent = `${won(n)}개 삭제…`;
     }
-    msg.textContent = `${won(n)}개 삭제 완료`; made = []; await refreshStatus();
+    msg.textContent = `${won(n)}개 삭제 완료`; await refreshStatus();
   }catch(e){ console.error(e); msg.textContent = '삭제 실패: '+e.message; }
 });
 

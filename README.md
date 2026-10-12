@@ -21,15 +21,17 @@ GitHub Pages(화면) + Firebase Firestore(데이터) 구성입니다.
 2. Settings → Pages → Source: `main` / `(root)` 확인.
 3. Firebase 콘솔 → Authentication → 설정 → **승인된 도메인**에 `latte-hub.github.io` 추가 (안 하면 관리자 로그인 실패).
 4. Firebase 콘솔 → Firestore → **규칙** 탭에 `firestore.rules` 내용을 통째로 붙여넣고 게시. **테스트 모드는 11/11에 만료**되니 그 전에 꼭.
-5. `seed.html` → 로그인 → 매장 목록 붙여넣기 → 번호 만들기 → 인쇄소용 CSV를 인쇄소에 전달.
+5. `seed.html` → 로그인 → 매장목록 엑셀 올리기 → 매장 저장 → 번호 만들기(이어 올리기 가능) → 인쇄소용 CSV를 인쇄소에 전달.
 6. 테스트: 아무 QR 주소로 끝까지 한 번, 같은 주소 재접속, 설문 두 번 시도, admin 현황 확인.
-7. 테스트 기록은 이벤트 전에 지우고(admin 권한으로 콘솔에서 `entries`, `surveys`, `stats` 삭제), `stats/bonus`의 wins를 0으로.
+7. 테스트 기록은 12/9까지 admin → QR·인쇄 → **사용된 QR 전체 초기화**로 지웁니다 (참여 기록·전화번호·설문·집계가 함께 정리돼요).
 
 ## 데이터
 
-- `stores/{017}` 매장명·점주·지역
-- `codes/{017-K4P9XQ}` store, tier(1~5), used, usedAt, bundle — **등수는 여기에만**. QR 주소에는 없음
-- `entries/{스티커번호}` 룰렛 1회 기록 (휴대폰 번호 포함)
+- `stores/{017}` 매장명·지역·분류 (공개용 · 손님 화면에 매장명 표시)
+- `storesPrivate/{017}` 점주명·연락처·담당SV (본사만)
+- `codes/{017-K4P9XQ}` store, tier(1~5), used, usedAt, bundle(60장 묶음 1~5), seq — **등수는 여기에만**. QR 주소에는 없음
+- `entries/{스티커번호}` 룰렛 1회 기록 (가린 번호 010-****-5678만)
+- `phones/{스티커번호}` 손님 휴대폰 번호 원본 (본사만)
 - `surveys/{휴대폰번호}` 설문 (번호당 1회)
 - `stats/store_017` 매장별 참여·당첨 집계 (공개, 전화번호 없음)
 - `stats/bonus` 설문 보너스 당첨 수 (최대 1,200)
@@ -37,5 +39,9 @@ GitHub Pages(화면) + Firebase Firestore(데이터) 구성입니다.
 ## 지킬 것
 
 - 전화번호·등수 포함 CSV를 이 저장소(Public)에 절대 올리지 않습니다.
-- 이벤트 종료 60일 뒤 `entries`, `surveys`의 휴대폰 번호를 삭제합니다.
+- 이벤트 종료 60일 뒤 `phones`, `surveys`(휴대폰 번호)를 삭제합니다.
 - 기간·확률·한도는 `js/firebase-config.js`의 `EVENT`만 바꾸면 됩니다 (`firestore.rules`의 1200도 같이).
+- 테스트: `testUntil`(12/9)까지는 QR이 열려 있어요. 12/10~17은 잠기고 12/18에 다시 열려요. **12/9까지 admin → QR·인쇄 → '사용된 QR 전체 초기화'로 테스트 기록을 지우세요.**
+- 날짜는 한국 시간 기준이에요.
+- 본사 페이지(admin, seed, store)는 프리텐다드, 손님 페이지(index, play)는 IBM Plex Sans KR 폰트예요.
+- Firebase 무료 요금제는 하루 쓰기 2만·읽기 5만 건 한도가 있어요. 스티커 번호 생성과 이벤트 기간에는 Blaze 요금제를 권장해요.

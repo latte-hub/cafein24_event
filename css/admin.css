@@ -3,7 +3,7 @@
   --bg:#F7F5F1; --surface:#fff; --line:#E6E1D8; --ink:#1D1C1A; --ink2:#5F5A52; --muted:#8B8680;
   --accent:#F26A1B; --accent-soft:#FDE9DC; --navy:#1b2a4a; --ok:#17875C; --warn:#C8871A; --danger:#C7322B;
   --t1:#F26A1B; --t2:#2B6CB0; --t3:#17875C; --t4:#E3B32A; --t5:#8B8680;
-  --font:'IBM Plex Sans KR','Pretendard','Apple SD Gothic Neo',sans-serif;
+  --font:'Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
 }
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:14px;line-height:1.55;word-break:keep-all}

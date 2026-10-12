@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex">
 <title>관리 현황 · 카페인24 크리스마스 룰렛</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <link rel="stylesheet" href="css/admin.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
@@ -124,8 +124,9 @@ function table(el, cols, rows){
 // ---------- 현황판 ----------
 async function loadDash(){
   $('dash-time').textContent = '불러오는 중…';
-  const [ss, st, bonus] = await Promise.all([getDocs(collection(db,'stores')), getDocs(collection(db,'stats')), getDoc(doc(db,'stats','bonus'))]);
-  stores = {}; ss.docs.forEach(d => stores[d.id] = { code:d.id, ...d.data() });
+  const [ss, sp, st, bonus] = await Promise.all([getDocs(collection(db,'stores')), getDocs(collection(db,'storesPrivate')), getDocs(collection(db,'stats')), getDoc(doc(db,'stats','bonus'))]);
+  const priv = {}; sp.docs.forEach(d => priv[d.id] = d.data());
+  stores = {}; ss.docs.forEach(d => { const { phone:_p, owner:_o, ...pub } = d.data(); stores[d.id] = { code:d.id, ...pub, ...(priv[d.id]||{ owner:_o||'', phone:_p||'' }) }; });
   const stat = {}; st.docs.forEach(d => { if(d.id.startsWith('store_')) stat[d.id.slice(6)] = d.data(); });
   dashRows = Object.values(stores).sort((a,b)=>a.code.localeCompare(b.code)).map(s => { const x = stat[s.code]||{}; return { ...s, scans:x.scans||0, wins:x.wins||0, amount:x.amount||0 }; });
   const sum = k => dashRows.reduce((a,r)=>a+r[k],0);
@@ -178,12 +179,13 @@ $('q-search').addEventListener('keydown', e => { if(e.key==='Enter') $('btn-q-lo
 // ---------- QR 초기화 ----------
 const CODE_RE = /\d{3}-[A-Z0-9]{6}/;
 async function resetCode(code){
-  const cref = doc(db,'codes',code), eref = doc(db,'entries',code);
-  const [cs, es] = await Promise.all([getDoc(cref), getDoc(eref)]);
+  const cref = doc(db,'codes',code), eref = doc(db,'entries',code), pref = doc(db,'phones',code);
+  const [cs, es, ps] = await Promise.all([getDoc(cref), getDoc(eref), getDoc(pref)]);
   if(!cs.exists()) throw new Error('없는 스티커 번호예요: '+code);
   const batch = writeBatch(db);
   batch.update(cref, { used:false, usedAt:deleteField() });
-  const e = es.exists() ? es.data() : null;
+  const e = es.exists() ? { ...es.data(), phone: ps.exists() ? ps.data().phone : es.data().phone } : null;
+  if(ps.exists()) batch.delete(pref);
   if(e){
     batch.delete(eref);
     batch.set(doc(db,'stats','store_'+e.store), { scans:increment(-1), wins:increment(e.tier!==5?-1:0), amount:increment(-(e.money||0)) }, { merge:true });
@@ -228,8 +230,9 @@ $('btn-e-load').addEventListener('click', async () => {
   const s = $('e-store').value, t = $('e-tier').value;
   $('e-msg').textContent = '불러오는 중…';
   const conds = []; if(s) conds.push(where('store','==',s));
-  const snap = await getDocs(conds.length ? query(collection(db,'entries'), ...conds) : collection(db,'entries'));
-  entries = snap.docs.map(d => d.data()).filter(e => !t || (t==='win' ? e.tier!==5 : e.tier===+t))
+  const [snap, ph] = await Promise.all([getDocs(conds.length ? query(collection(db,'entries'), ...conds) : collection(db,'entries')), getDocs(conds.length ? query(collection(db,'phones'), ...conds) : collection(db,'phones'))]);
+  const phoneOf = {}; ph.docs.forEach(d => phoneOf[d.id] = d.data().phone);
+  entries = snap.docs.map(d => ({ ...d.data(), phone: phoneOf[d.id] || d.data().phone || '' })).filter(e => !t || (t==='win' ? e.tier!==5 : e.tier===+t))
     .sort((a,b) => (b.createdAt?.seconds||0) - (a.createdAt?.seconds||0));
   $('e-msg').textContent = `${won(entries.length)}건`;
   $('btn-e-csv').disabled = !entries.length;
@@ -254,9 +257,10 @@ $('btn-e-csv').addEventListener('click', () => downloadCsv(`참여자_${$('e-sto
 // ---------- 적립 목록 (번호별 합산) ----------
 $('btn-c-load').addEventListener('click', async () => {
   $('c-msg').textContent = '전체 참여 기록을 읽는 중…';
-  const snap = await getDocs(collection(db,'entries'));
+  const [snap, ph] = await Promise.all([getDocs(collection(db,'entries')), getDocs(collection(db,'phones'))]);
+  const phoneOf = {}; ph.docs.forEach(d => phoneOf[d.id] = d.data().phone);
   const by = {};
-  snap.docs.forEach(d => { const e = d.data(); const tot = (e.money||0) + (e.bonusMoney||0); if(!tot) return;
+  snap.docs.forEach(d => { const e = { ...d.data(), phone: phoneOf[d.id] || d.data().phone || '' }; const tot = (e.money||0) + (e.bonusMoney||0); if(!tot) return;
     const o = by[e.phone] ??= { phone:e.phone, roulette:0, bonus:0, count:0, best:5, stores:new Set() };
     o.roulette += e.money||0; o.bonus += e.bonusMoney||0; o.count++; o.best = Math.min(o.best, e.tier); o.stores.add(e.store); });
   credit = Object.values(by).map(o => ({ ...o, total:o.roulette+o.bonus, stores:[...o.stores].join(' ') })).sort((a,b)=>b.total-a.total);

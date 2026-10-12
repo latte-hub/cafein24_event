@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>관리 현황 · 카페인24 크리스마스 룰렛</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="css/admin.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+<header class="top"><span class="logo">CAFEIN<b>24</b></span><span class="ttl">크리스마스 룰렛 · 본사 관리</span><span class="sp"></span><span class="me" data-user></span><a class="btn-sm" href="seed.html">번호 만들기</a><button data-logout hidden>로그아웃</button></header>
+
+<section class="gate" id="gate">
+  <h1>본사 관리자 로그인</h1>
+  <p>@cafein24.co.kr 구글 계정으로만 들어올 수 있어요.</p>
+  <button class="btn" id="btn-login">구글 계정으로 로그인</button>
+  <div class="err" id="gate-msg"></div>
+</section>
+
+<main class="wrap" id="main" hidden>
+  <nav class="tabs">
+    <button class="on" data-tab="p-dash">현황판</button>
+    <button data-tab="p-entries">참여자·당첨자</button>
+    <button data-tab="p-credit">포인트 적립 목록</button>
+    <button data-tab="p-survey">설문 응답</button>
+    <button data-tab="p-qr">QR·인쇄</button>
+  </nav>
+
+  <!-- 현황판 : stats/store_* (매장 200건만 읽어서 가벼움) -->
+  <section class="panel on" id="p-dash">
+    <div class="row"><span class="note" id="dash-time"></span><span class="sp"></span><button class="btn ghost sm" id="btn-refresh">새로고침</button><button class="btn ghost sm" id="btn-dash-csv">매장별 현황 CSV</button></div>
+    <div class="cards">
+      <div class="card"><div class="k">룰렛 참여 (QR 사용)</div><div class="v" id="k-scans">-</div><div class="s" id="k-scans-s"></div></div>
+      <div class="card"><div class="k">당첨</div><div class="v" id="k-wins">-</div><div class="s" id="k-wins-s"></div></div>
+      <div class="card"><div class="k">당첨 금액 (적립 예정)</div><div class="v" id="k-amount">-</div><div class="s">예산 10,000,000원 중</div></div>
+      <div class="card"><div class="k">설문 보너스 1,000원</div><div class="v" id="k-bonus">-</div><div class="s">한도 1,200명</div></div>
+      <div class="card"><div class="k">참여 매장</div><div class="v" id="k-stores">-</div><div class="s" id="k-stores-s"></div></div>
+    </div>
+    <div class="row"><input type="text" id="dash-q" placeholder="매장명·코드 검색"><span class="sp"></span><span class="note">열 제목을 누르면 정렬 · 매장명을 누르면 점주 공유용 페이지</span></div>
+    <div class="tscroll"><table id="dash-tbl"></table></div>
+  </section>
+
+  <!-- 참여자 목록 : entries (필요할 때만 불러옴) -->
+  <section class="panel" id="p-entries">
+    <div class="row">
+      <select id="e-store"><option value="">전체 매장</option></select>
+      <select id="e-tier"><option value="">전체 결과</option><option value="win">당첨만</option><option value="1">1등</option><option value="2">2등</option><option value="3">3등</option><option value="4">4등</option><option value="5">꽝</option></select>
+      <button class="btn sm" id="btn-e-load">불러오기</button>
+      <span class="sp"></span><button class="btn ghost sm" id="btn-e-csv" disabled>엑셀(CSV) 내려받기</button>
+    </div>
+    <p class="note">전체를 불러오면 참여 수만큼 읽기가 발생해요(무료 한도 하루 5만 건). 평소엔 매장을 골라서 보세요.</p>
+    <div class="prog" id="e-msg"></div>
+    <div class="tscroll"><table id="e-tbl"></table></div>
+  </section>
+
+  <!-- 포인트 적립 -->
+  <section class="panel" id="p-credit">
+    <div class="box">
+      <h2>12월 28일(월) 포인트 일괄 적립용</h2>
+      <p>룰렛 당첨금 + 설문 보너스를 <b>휴대폰 번호별로 합산</b>한 목록이에요. 이 CSV로 럭키24포인트를 적립하고, 적립 완료 문자를 발송합니다.</p>
+      <div class="row"><button class="btn" id="btn-c-load">적립 목록 만들기</button><button class="btn ghost" id="btn-c-csv" disabled>적립용 CSV 내려받기</button><span class="note" id="c-msg"></span></div>
+    </div>
+    <div class="tscroll"><table id="c-tbl"></table></div>
+  </section>
+
+  <!-- 설문 -->
+  <section class="panel" id="p-survey">
+    <div class="row"><button class="btn sm" id="btn-s-load">설문 불러오기</button><span class="sp"></span><button class="btn ghost sm" id="btn-s-csv" disabled>설문 CSV 내려받기</button></div>
+    <div class="cards" id="s-cards"></div>
+    <div class="tscroll"><table id="s-tbl"></table></div>
+  </section>
+
+  <!-- QR -->
+  <section class="panel" id="p-qr">
+    <div class="box noprint">
+      <h2>매장별 QR</h2>
+      <p>매장을 고르면 그 매장 스티커 300장의 QR이 나와요. 인쇄소 파일 확인용·분실 재출력용입니다. (등수는 화면에 나오지 않아요)</p>
+      <div class="row"><select id="q-store"></select><button class="btn sm" id="btn-q-load">QR 보기</button><button class="btn ghost sm" id="btn-q-csv" disabled>이 매장 QR 주소 CSV</button><button class="btn ghost sm" onclick="print()">인쇄</button></div>
+      <div class="prog" id="q-msg"></div>
+    </div>
+    <div class="qr-grid" id="q-grid"></div>
+  </section>
+</main>
+
+<script type="module">
+import { db, EVENT, $, won, esc, fmtPhone, fmtTime, requireAdmin, downloadCsv, playUrl, baseUrl } from "./js/common.js";
+import { collection, getDocs, getDoc, doc, query, where, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const TL = t => t===5 ? '꽝' : t+'등';
+let stores = {}, dashRows = [], entries = [], credit = [], surveys = [], qrCodes = [];
+
+// 탭
+document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('on', x===b));
+  document.querySelectorAll('.panel').forEach(p => p.classList.toggle('on', p.id===b.dataset.tab));
+}));
+
+// 정렬 가능한 표
+function table(el, cols, rows){
+  let key = null, dir = 1;
+  const render = () => {
+    const rs = key===null ? rows : [...rows].sort((a,b) => { const x=cols[key].v(a), y=cols[key].v(b); return (x>y?1:x<y?-1:0)*dir; });
+    el.innerHTML = `<thead><tr>${cols.map((c,i)=>`<th class="${c.num?'num':''}" data-i="${i}">${c.h}${key===i?(dir>0?' ▲':' ▼'):''}</th>`).join('')}</tr></thead><tbody>${rs.map(r=>`<tr>${cols.map(c=>`<td class="${c.num?'num':''}">${c.f?c.f(r):esc(c.v(r))}</td>`).join('')}</tr>`).join('')}</tbody>`;
+    el.querySelectorAll('th').forEach(th => th.onclick = () => { const i=+th.dataset.i; dir = key===i ? -dir : (cols[i].num?-1:1); key=i; render(); });
+  };
+  render();
+}
+
+// ---------- 현황판 ----------
+async function loadDash(){
+  $('dash-time').textContent = '불러오는 중…';
+  const [ss, st, bonus] = await Promise.all([getDocs(collection(db,'stores')), getDocs(collection(db,'stats')), getDoc(doc(db,'stats','bonus'))]);
+  stores = {}; ss.docs.forEach(d => stores[d.id] = { code:d.id, ...d.data() });
+  const stat = {}; st.docs.forEach(d => { if(d.id.startsWith('store_')) stat[d.id.slice(6)] = d.data(); });
+  dashRows = Object.values(stores).sort((a,b)=>a.code.localeCompare(b.code)).map(s => { const x = stat[s.code]||{}; return { ...s, scans:x.scans||0, wins:x.wins||0, amount:x.amount||0 }; });
+  const sum = k => dashRows.reduce((a,r)=>a+r[k],0);
+  const scans = sum('scans'), wins = sum('wins'), amount = sum('amount'), active = dashRows.filter(r=>r.scans>0).length;
+  const total = dashRows.length*300 || 60000;
+  $('k-scans').textContent = won(scans); $('k-scans-s').textContent = `스티커 ${won(total)}장 중 ${(100*scans/total).toFixed(1)}%`;
+  $('k-wins').textContent = won(wins); $('k-wins-s').textContent = scans ? `당첨률 ${(100*wins/scans).toFixed(1)}%` : '';
+  $('k-amount').textContent = won(amount)+'원';
+  $('k-bonus').textContent = won(bonus.exists()?bonus.data().wins:0)+'명';
+  $('k-stores').textContent = active; $('k-stores-s').textContent = `전체 ${dashRows.length}개 매장`;
+  $('dash-time').textContent = '기준 ' + fmtTime(new Date());
+  drawDash();
+  // 매장 선택 목록
+  const opts = dashRows.map(s => `<option value="${s.code}">${s.code} ${esc(s.name)}</option>`).join('');
+  $('e-store').innerHTML = '<option value="">전체 매장</option>' + opts; $('q-store').innerHTML = opts;
+}
+function drawDash(){
+  const q = $('dash-q').value.trim();
+  const rows = q ? dashRows.filter(r => (r.code+r.name+(r.region||'')).includes(q)) : dashRows;
+  table($('dash-tbl'), [
+    { h:'코드', v:r=>r.code },
+    { h:'매장', v:r=>r.name, f:r=>`<a href="store.html?s=${r.code}" target="_blank">${esc(r.name)}</a>` },
+    { h:'지역', v:r=>r.region||'' },
+    { h:'참여', v:r=>r.scans, num:1, f:r=>won(r.scans) },
+    { h:'사용률', v:r=>r.scans/300, num:1, f:r=>`${(100*r.scans/300).toFixed(0)}%<div class="bar" style="width:70px;display:inline-block;margin-left:6px;vertical-align:middle"><i style="width:${Math.min(100,100*r.scans/300)}%"></i></div>` },
+    { h:'당첨', v:r=>r.wins, num:1, f:r=>won(r.wins) },
+    { h:'당첨금', v:r=>r.amount, num:1, f:r=>won(r.amount) },
+  ], rows);
+}
+$('dash-q').addEventListener('input', drawDash);
+$('btn-refresh').addEventListener('click', loadDash);
+$('btn-dash-csv').addEventListener('click', () => downloadCsv(`매장별현황_${fmtTime(new Date()).slice(0,10)}.csv`,
+  ['매장코드','매장명','지역','점주','룰렛참여','사용률(%)','당첨','당첨금','점주공유링크'],
+  dashRows.map(r => [r.code,r.name,r.region||'',r.owner||'',r.scans,(100*r.scans/300).toFixed(1),r.wins,r.amount, baseUrl()+'store.html?s='+r.code])));
+
+// ---------- 참여자 ----------
+$('btn-e-load').addEventListener('click', async () => {
+  const s = $('e-store').value, t = $('e-tier').value;
+  $('e-msg').textContent = '불러오는 중…';
+  const conds = []; if(s) conds.push(where('store','==',s));
+  const snap = await getDocs(conds.length ? query(collection(db,'entries'), ...conds) : collection(db,'entries'));
+  entries = snap.docs.map(d => d.data()).filter(e => !t || (t==='win' ? e.tier!==5 : e.tier===+t))
+    .sort((a,b) => (b.createdAt?.seconds||0) - (a.createdAt?.seconds||0));
+  $('e-msg').textContent = `${won(entries.length)}건`;
+  $('btn-e-csv').disabled = !entries.length;
+  table($('e-tbl'), [
+    { h:'참여 시각', v:e=>e.createdAt?.seconds||0, f:e=>fmtTime(e.createdAt) },
+    { h:'매장', v:e=>e.store, f:e=>`${e.store} ${esc(e.storeName||stores[e.store]?.name||'')}` },
+    { h:'스티커', v:e=>e.code },
+    { h:'휴대폰', v:e=>e.phone, f:e=>fmtPhone(e.phone) },
+    { h:'결과', v:e=>e.tier, f:e=>`<span class="tag t${e.tier}">${TL(e.tier)}</span>` },
+    { h:'당첨금', v:e=>e.money, num:1, f:e=>won(e.money) },
+    { h:'설문', v:e=>e.surveyDone?1:0, f:e=>e.surveyDone?'✓':'' },
+    { h:'보너스', v:e=>e.bonusMoney||0, num:1, f:e=>e.bonusMoney?won(e.bonusMoney):'' },
+    { h:'마케팅동의', v:e=>e.agreeMarketing?1:0, f:e=>e.agreeMarketing?'✓':'' },
+  ], entries.slice(0, 3000));
+  if(entries.length > 3000) $('e-msg').textContent += ' · 화면엔 최근 3,000건만 표시 (CSV는 전체)';
+});
+$('btn-e-csv').addEventListener('click', () => downloadCsv(`참여자_${$('e-store').value||'전체'}_${fmtTime(new Date()).slice(0,10)}.csv`,
+  ['참여시각','매장코드','매장명','스티커번호','휴대폰','결과','당첨금','설문','보너스','마케팅동의'],
+  entries.map(e => [fmtTime(e.createdAt), e.store, e.storeName||stores[e.store]?.name||'', e.code, fmtPhone(e.phone), TL(e.tier), e.money, e.surveyDone?'Y':'', e.bonusMoney||0, e.agreeMarketing?'Y':'N'])));
+
+// ---------- 적립 목록 (번호별 합산) ----------
+$('btn-c-load').addEventListener('click', async () => {
+  $('c-msg').textContent = '전체 참여 기록을 읽는 중…';
+  const snap = await getDocs(collection(db,'entries'));
+  const by = {};
+  snap.docs.forEach(d => { const e = d.data(); const tot = (e.money||0) + (e.bonusMoney||0); if(!tot) return;
+    const o = by[e.phone] ??= { phone:e.phone, roulette:0, bonus:0, count:0, best:5, stores:new Set() };
+    o.roulette += e.money||0; o.bonus += e.bonusMoney||0; o.count++; o.best = Math.min(o.best, e.tier); o.stores.add(e.store); });
+  credit = Object.values(by).map(o => ({ ...o, total:o.roulette+o.bonus, stores:[...o.stores].join(' ') })).sort((a,b)=>b.total-a.total);
+  const tot = credit.reduce((a,c)=>a+c.total,0);
+  $('c-msg').textContent = `${won(credit.length)}명 · 합계 ${won(tot)}원`;
+  $('btn-c-csv').disabled = !credit.length;
+  table($('c-tbl'), [
+    { h:'휴대폰', v:c=>c.phone, f:c=>fmtPhone(c.phone) },
+    { h:'적립 합계', v:c=>c.total, num:1, f:c=>'<b>'+won(c.total)+'</b>' },
+    { h:'룰렛', v:c=>c.roulette, num:1, f:c=>won(c.roulette) },
+    { h:'설문 보너스', v:c=>c.bonus, num:1, f:c=>won(c.bonus) },
+    { h:'당첨 횟수', v:c=>c.count, num:1 },
+    { h:'최고 등수', v:c=>c.best, f:c=>c.best<5?`<span class="tag t${c.best}">${c.best}등</span>`:'' },
+    { h:'매장', v:c=>c.stores },
+  ], credit);
+});
+$('btn-c-csv').addEventListener('click', () => downloadCsv(`포인트적립_${fmtTime(new Date()).slice(0,10)}.csv`,
+  ['휴대폰','적립합계','룰렛당첨금','설문보너스','당첨횟수','매장코드'],
+  credit.map(c => [fmtPhone(c.phone), c.total, c.roulette, c.bonus, c.count, c.stores])));
+
+// ---------- 설문 ----------
+$('btn-s-load').addEventListener('click', async () => {
+  const snap = await getDocs(collection(db,'surveys'));
+  surveys = snap.docs.map(d => d.data()).sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
+  $('btn-s-csv').disabled = !surveys.length;
+  const avg = surveys.length ? (surveys.reduce((a,s)=>a+(+s.q2||0),0)/surveys.length).toFixed(2) : '-';
+  const top = k => { const c = {}; surveys.forEach(s => c[s[k]] = (c[s[k]]||0)+1); const e = Object.entries(c).sort((a,b)=>b[1]-a[1])[0]; return e ? `${esc(e[0])} (${e[1]})` : '-'; };
+  $('s-cards').innerHTML = `<div class="card"><div class="k">응답 수</div><div class="v">${won(surveys.length)}</div></div><div class="card"><div class="k">평균 만족도 (5점)</div><div class="v">${avg}</div></div><div class="card"><div class="k">가장 많은 방문 빈도</div><div class="v" style="font-size:16px">${top('q1')}</div></div><div class="card"><div class="k">재방문 의향 최다</div><div class="v" style="font-size:16px">${top('q5')}</div></div>`;
+  table($('s-tbl'), [
+    { h:'시각', v:s=>s.createdAt?.seconds||0, f:s=>fmtTime(s.createdAt) },
+    { h:'매장', v:s=>s.store },
+    { h:'Q1 방문', v:s=>s.q1 }, { h:'Q2 만족', v:s=>s.q2, num:1 },
+    { h:'Q3', v:s=>(s.q3||[]).join(', ') }, { h:'Q4', v:s=>(s.q4||[]).join(', ') },
+    { h:'Q5', v:s=>s.q5 }, { h:'Q6', v:s=>s.q6 }, { h:'Q7', v:s=>s.q7 }, { h:'Q8', v:s=>s.q8 },
+  ], surveys);
+});
+$('btn-s-csv').addEventListener('click', () => downloadCsv(`설문응답_${fmtTime(new Date()).slice(0,10)}.csv`,
+  ['시각','매장코드','휴대폰','Q1','Q2','Q3','Q4','Q5','Q6','Q7','Q8'],
+  surveys.map(s => [fmtTime(s.createdAt), s.store, fmtPhone(s.phone), s.q1, s.q2, (s.q3||[]).join('/'), (s.q4||[]).join('/'), s.q5, s.q6, s.q7, s.q8])));
+
+// ---------- QR ----------
+$('btn-q-load').addEventListener('click', async () => {
+  const s = $('q-store').value; if(!s) return;
+  $('q-msg').textContent = '불러오는 중…'; $('q-grid').innerHTML = '';
+  const snap = await getDocs(query(collection(db,'codes'), where('store','==',s)));
+  qrCodes = snap.docs.map(d => ({ code:d.id, ...d.data() })).sort((a,b)=>(a.bundle||0)-(b.bundle||0)||a.code.localeCompare(b.code));
+  $('q-msg').textContent = `${s} ${stores[s]?.name||''} · ${qrCodes.length}장 · 사용 ${qrCodes.filter(c=>c.used).length}장`;
+  $('btn-q-csv').disabled = !qrCodes.length;
+  const frag = document.createDocumentFragment();
+  qrCodes.forEach(c => {
+    const box = document.createElement('div'); box.className = 'qr';
+    const q = document.createElement('div'); box.appendChild(q);
+    new QRCode(q, { text:playUrl(c.code), width:100, height:100, correctLevel:QRCode.CorrectLevel.M });
+    box.insertAdjacentHTML('beforeend', `<div>${c.code}</div><div class="note">묶음 ${c.bundle||'-'}${c.used?' · <span class="danger">사용됨</span>':''}</div>`);
+    frag.appendChild(box);
+  });
+  $('q-grid').appendChild(frag);
+});
+$('btn-q-csv').addEventListener('click', () => { const s = $('q-store').value; downloadCsv(`QR_${s}.csv`, ['매장코드','묶음','스티커번호','QR주소','사용'], qrCodes.map(c => [s, c.bundle||'', c.code, playUrl(c.code), c.used?'Y':''])); });
+
+requireAdmin(loadDash);
+</script>
+</body>
+</html>

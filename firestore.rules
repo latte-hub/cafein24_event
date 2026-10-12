@@ -1,0 +1,127 @@
+rules_version = '2';
+// 카페인24 크리스마스 룰렛 · Firestore 보안 규칙
+// Firebase 콘솔 → Firestore Database → 규칙 탭에 전체를 붙여넣고 '게시'.
+// ※ 테스트 모드는 2026-11-11에 만료되므로 그 전에 반드시 이 규칙으로 교체합니다.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------- 공통 ----------
+    // 관리자 = 구글 로그인 + 이메일이 @cafein24.co.kr
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email != null
+        && request.auth.token.email_verified == true
+        && request.auth.token.email.lower().matches('.*@cafein24[.]co[.]kr$');
+    }
+    function isPhone(p) { return p is string && p.size() == 11 && p.matches('01[0-9]{9}'); }
+    function prizeOf(tier) { return {'1': 50000, '2': 10000, '3': 5000, '4': 1000, '5': 0}[string(tier)]; }
+    function changedOnly(keys) { return request.resource.data.diff(resource.data).affectedKeys().hasOnly(keys); }
+
+    // ---------- 매장 (200개) ----------
+    // 손님: 자기 스티커의 매장 1건만 읽기(매장명 표시용). 목록·쓰기는 관리자만.
+    match /stores/{code} {
+      allow get: if true;
+      allow list, write: if isAdmin();
+    }
+
+    // ---------- 스티커 번호 (60,000개) ----------
+    // 손님: 번호 1건 읽기 + used:false → true 로 딱 한 번 잠그기만 가능. 등수(tier)는 절대 못 바꿈.
+    match /codes/{code} {
+      allow get: if true;
+      allow list, create, delete: if isAdmin();
+      allow update: if isAdmin() || (
+        resource.data.used == false
+        && request.resource.data.used == true
+        && changedOnly(['used', 'usedAt'])
+        && request.resource.data.usedAt == request.time
+      );
+    }
+
+    // ---------- 참여 기록 (룰렛 1회 = 1건, 문서 id = 스티커 번호) ----------
+    match /entries/{code} {
+      // 손님: 자기 스티커 번호로 1건만 읽기(재접속 시 '내 당첨 내역'). 전체 목록은 관리자만.
+      allow get: if true;
+      allow list, delete: if isAdmin();
+      // 만들 때: 같은 트랜잭션에서 잠근 codes 문서의 등수·매장과 반드시 일치해야 함
+      allow create: if isAdmin() || (
+        request.resource.data.code == code
+        && request.resource.data.keys().hasOnly(['code','store','storeName','phone','tier','money','label','agreeMarketing','createdAt','surveyDone','bonusMoney'])
+        && request.resource.data.tier == getAfter(/databases/$(database)/documents/codes/$(code)).data.tier
+        && request.resource.data.store == getAfter(/databases/$(database)/documents/codes/$(code)).data.store
+        && getAfter(/databases/$(database)/documents/codes/$(code)).data.used == true
+        && isPhone(request.resource.data.phone)
+        && request.resource.data.tier in [1, 2, 3, 4, 5]
+        && request.resource.data.money == prizeOf(request.resource.data.tier)
+        && request.resource.data.surveyDone == false
+        && request.resource.data.bonusMoney == 0
+        && request.resource.data.createdAt == request.time
+      );
+      // 고칠 때: 설문 완료 표시(1회) 또는 보너스 결과 기록(1회)만
+      allow update: if isAdmin() || (
+        (
+          changedOnly(['surveyDone'])
+          && resource.data.surveyDone == false
+          && request.resource.data.surveyDone == true
+        ) || (
+          changedOnly(['bonusMoney', 'bonusAt'])
+          && resource.data.surveyDone == true
+          && !('bonusAt' in resource.data)
+          && request.resource.data.bonusMoney in [0, 1000]
+          && request.resource.data.bonusAt == request.time
+        )
+      );
+    }
+
+    // ---------- 설문 (문서 id = 휴대폰 번호 → 번호당 1회) ----------
+    match /surveys/{phone} {
+      allow read, delete: if isAdmin();
+      // 이미 있으면 create가 거부되므로 자동으로 1회 제한
+      allow create: if isAdmin() || (
+        isPhone(phone)
+        && request.resource.data.phone == phone
+        && request.resource.data.code is string
+        && get(/databases/$(database)/documents/entries/$(request.resource.data.code)).data.phone == phone
+        && request.resource.data.createdAt == request.time
+      );
+      allow update: if isAdmin();
+    }
+
+    // ---------- 집계 ----------
+    match /stats/{id} {
+      allow read: if true;
+      allow delete: if isAdmin();
+    }
+    // 보너스 룰렛 당첨 한도 카운터: wins 를 1씩만 올릴 수 있고 1,200을 넘지 못함
+    match /stats/bonus {
+      allow create: if isAdmin() || (request.resource.data.keys().hasOnly(['wins']) && request.resource.data.wins == 1);
+      allow update: if isAdmin() || (
+        changedOnly(['wins'])
+        && request.resource.data.wins == resource.data.wins + 1
+        && request.resource.data.wins <= 1200
+      );
+    }
+    // 매장별 공개 집계 (점주 공유 페이지 store.html 용 · 전화번호 없음)
+    // scans +1, wins +0/1, amount +당첨금 만 허용
+    match /stats/{storeStat} {
+      allow create: if isAdmin() || (
+        storeStat.matches('store_[0-9]{3}')
+        && request.resource.data.keys().hasOnly(['scans','wins','amount'])
+        && request.resource.data.scans == 1
+        && request.resource.data.wins in [0, 1]
+        && request.resource.data.amount in [0, 1000, 5000, 10000, 50000]
+      );
+      allow update: if isAdmin() || (
+        storeStat.matches('store_[0-9]{3}')
+        && changedOnly(['scans','wins','amount'])
+        && request.resource.data.scans == resource.data.scans + 1
+        && (request.resource.data.wins - resource.data.wins) in [0, 1]
+        && (request.resource.data.amount - resource.data.amount) in [0, 1000, 5000, 10000, 50000]
+      );
+    }
+
+    // 그 밖의 모든 경로는 차단
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

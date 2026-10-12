@@ -1,372 +1,138 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>그린스 블렌드 이벤트 당첨자 조회</title>
-<link rel="preconnect" href="https://cdn.jsdelivr.net">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.css">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>카페인24 크리스마스 룰렛 · 이벤트 안내</title>
+<meta name="description" content="카페인24 200호점 달성 기념! 12월 18일부터 27일까지 컵 QR 스티커로 룰렛을 돌리고 최대 5만원 포인트를 받아가세요.">
+<meta property="og:title" content="카페인24 크리스마스 룰렛 · 10일 동안 1,000만원을 쏩니다!">
+<meta property="og:description" content="컵에 붙은 QR을 찍고 룰렛을 돌리세요. 1등 50,000원 럭키24포인트!">
+<meta property="og:image" content="img/hero.jpg">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="css/event.css">
 <style>
-  :root{
-    --ink:#12251B;
-    --herb:#1E5638;
-    --leaf:#5AA24A;
-    --leaf-soft:#E4F0DC;
-    --mist:#F1F5EC;
-    --paper:#FFFFFF;
-    --line:#D8E2D0;
-    --muted:#5D6C60;
-    --clay:#8A5A20;
-    --clay-soft:#FBF0DF;
-    --r:14px;
-    --font:"Pretendard","Pretendard Variable",-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;
-  }
-  *{box-sizing:border-box;}
-  html{-webkit-text-size-adjust:100%;}
-  body{
-    margin:0;
-    font-family:var(--font);
-    background:var(--mist);
-    color:var(--ink);
-    line-height:1.6;
-    letter-spacing:-0.01em;
-    padding-bottom:64px;
-  }
-  .wrap{max-width:880px;margin:0 auto;padding:0 20px;}
-
-  /* ── 머리말 ───────────────────────── */
-  header{
-    background:var(--herb);
-    color:#EAF3E4;
-    padding:38px 0 34px;
-  }
-  header .kicker{
-    font-size:14px;
-    color:#A9CDAE;
-    margin:0 0 10px;
-    font-weight:500;
-  }
-  header h1{
-    margin:0;
-    font-size:27px;
-    font-weight:700;
-    line-height:1.35;
-    letter-spacing:-0.03em;
-  }
-  header p{
-    margin:14px 0 0;
-    font-size:15px;
-    color:#C6DCC5;
-    max-width:44ch;
-  }
-
-  /* ── 조회 영역 ─────────────────────── */
-  .finder{
-    background:var(--paper);
-    border-radius:var(--r);
-    border:1px solid var(--line);
-    padding:24px 20px;
-    margin-top:-22px;
-    position:relative;
-    box-shadow:0 10px 30px rgba(18,37,27,.08);
-  }
-  label.q{
-    display:block;
-    font-size:16px;
-    font-weight:600;
-    margin:0 0 12px;
-  }
-  .field{display:flex;gap:8px;}
-  input[type=search]{
-    flex:1;
-    min-width:0;
-    font-family:var(--font);
-    font-size:17px;
-    padding:14px 15px;
-    border:1.5px solid var(--line);
-    border-radius:11px;
-    background:#FCFDFB;
-    color:var(--ink);
-    -webkit-appearance:none;
-    appearance:none;
-  }
-  input[type=search]::placeholder{color:#9AA89D;}
-  input[type=search]:focus{
-    outline:none;
-    border-color:var(--leaf);
-    box-shadow:0 0 0 3px rgba(90,162,74,.2);
-  }
-  button{
-    font-family:var(--font);
-    font-size:16px;
-    font-weight:600;
-    padding:14px 20px;
-    border:none;
-    border-radius:11px;
-    background:var(--herb);
-    color:#fff;
-    cursor:pointer;
-    white-space:nowrap;
-  }
-  button:hover{background:#17462D;}
-  button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid var(--leaf);outline-offset:2px;}
-  .hint{font-size:13.5px;color:var(--muted);margin:11px 0 0;}
-
-  /* ── 결과 ─────────────────────────── */
-  .result{margin-top:16px;}
-  .result:empty{display:none;}
-  .card{
-    border-radius:12px;
-    padding:20px 18px;
-    animation:rise .28s ease-out;
-  }
-  @keyframes rise{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
-  @media (prefers-reduced-motion:reduce){.card{animation:none;}}
-
-  .card.win{background:var(--leaf-soft);border:1.5px solid var(--leaf);}
-  .card.miss{background:var(--clay-soft);border:1.5px solid #E5C48C;}
-  .card h2{
-    margin:0 0 8px;
-    font-size:20px;
-    font-weight:700;
-    letter-spacing:-0.03em;
-  }
-  .card.win h2{color:var(--herb);}
-  .card.miss h2{color:var(--clay);}
-  .card p{margin:0;font-size:15px;color:#3C4B41;}
-  .card .name{
-    display:inline-block;
-    margin:12px 0 2px;
-    background:#fff;
-    border:1px solid var(--leaf);
-    border-radius:8px;
-    padding:7px 12px;
-    font-size:16px;
-    font-weight:600;
-    color:var(--herb);
-  }
-  .cta{
-    display:block;
-    text-align:center;
-    margin-top:16px;
-    background:var(--herb);
-    color:#fff;
-    text-decoration:none;
-    font-size:16.5px;
-    font-weight:600;
-    padding:15px 18px;
-    border-radius:11px;
-  }
-  .cta:hover{background:#17462D;}
-  .cta small{display:block;font-weight:400;font-size:13px;color:#B6D3B9;margin-top:3px;}
-  .near{margin-top:14px;}
-  .near p{font-size:14px;color:var(--muted);margin:0 0 8px;}
-  .near button{
-    background:#fff;
-    color:var(--herb);
-    border:1px solid var(--leaf);
-    font-size:14.5px;
-    padding:8px 12px;
-    margin:0 6px 6px 0;
-    border-radius:8px;
-  }
-  .near button:hover{background:var(--leaf-soft);}
-
-  /* ── 명단 ─────────────────────────── */
-  section.roster{margin-top:40px;}
-  .roster-head{
-    display:flex;
-    align-items:baseline;
-    justify-content:space-between;
-    gap:12px;
-    border-bottom:1.5px solid var(--line);
-    padding-bottom:10px;
-  }
-  .roster-head h2{margin:0;font-size:19px;font-weight:700;letter-spacing:-0.03em;}
-  .count{font-size:14px;color:var(--muted);}
-  ul{
-    list-style:none;
-    margin:0;
-    padding:0;
-    display:grid;
-    grid-template-columns:1fr;
-    gap:0;
-  }
-  li{
-    display:flex;
-    align-items:center;
-    gap:12px;
-    padding:12px 4px;
-    border-bottom:1px solid var(--line);
-    font-size:15.5px;
-  }
-  li .no{
-    flex:none;
-    width:34px;
-    font-size:13px;
-    color:var(--muted);
-    font-variant-numeric:tabular-nums;
-  }
-  li.hit{background:var(--leaf-soft);border-radius:8px;padding-left:10px;padding-right:10px;border-bottom-color:transparent;}
-  li mark{background:#FFE9A8;color:inherit;border-radius:3px;padding:0 1px;}
-  .empty{padding:26px 4px;color:var(--muted);font-size:15px;}
-
-  footer{
-    margin-top:44px;
-    padding-top:22px;
-    border-top:1px solid var(--line);
-    font-size:13.5px;
-    color:var(--muted);
-  }
-  footer p{margin:0 0 7px;}
-
-  /* ── 웹(넓은 화면) ─────────────────── */
-  @media (min-width:720px){
-    header{padding:56px 0 50px;}
-    header h1{font-size:36px;}
-    header p{font-size:16px;}
-    .finder{padding:30px 30px 28px;margin-top:-30px;}
-    label.q{font-size:17px;}
-    input[type=search]{font-size:18px;padding:16px 18px;}
-    button{font-size:17px;padding:16px 26px;}
-    ul{grid-template-columns:1fr 1fr;column-gap:28px;}
-  }
+  /* 안내 페이지 전용 · 긴 세로 한 장 */
+  .page{max-width:480px;margin:0 auto;background:var(--navy);min-height:100dvh;position:relative;overflow:hidden}
+  .page>section{padding:28px 22px;position:relative;z-index:1}
+  .page>section+section{border-top:1px solid rgba(255,255,255,.08)}
+  .hero-top{padding:0!important;position:relative;aspect-ratio:640/975;overflow:hidden}
+  .hero-top img{width:100%;display:block}
+  /* 이미지 아래쪽 '룰렛 돌리기' 버튼 그림은 안내 페이지에서 잘라냄 */
+  .hero-top .badge{position:absolute;left:16px;top:16px;background:var(--red);color:#fff;font-size:12px;font-weight:700;padding:6px 10px;border-radius:999px;letter-spacing:.04em;box-shadow:0 4px 10px rgba(0,0,0,.3)}
+  .period{background:var(--red);color:#fff;text-align:center;padding:18px 20px}
+  .period .d{font-size:26px;font-weight:800;letter-spacing:-.01em;line-height:1.1}
+  .period .s{font-size:13px;opacity:.9;margin-top:6px}
+  .sec-label{font-size:11.5px;font-weight:700;color:var(--gold);letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px}
+  .sec-title{font-size:22px;font-weight:700;line-height:1.25;margin:0 0 10px}
+  .sec-title em{font-style:normal;color:var(--gold)}
+  .sec-desc{font-size:14px;color:var(--muted);margin:0 0 14px}
+  .steps{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+  .steps li{display:grid;grid-template-columns:44px 1fr;gap:12px;align-items:start;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:14px}
+  .steps .n{width:44px;height:44px;border-radius:50%;background:var(--gold);color:var(--navy);display:grid;place-items:center;font-weight:800;font-size:18px}
+  .steps b{display:block;font-size:15px;margin-bottom:3px}
+  .steps span{font-size:13px;color:#dfe5f0}
+  .prizes{display:grid;gap:10px}
+  .prize{display:flex;align-items:center;gap:12px;border-radius:12px;padding:12px 14px;color:#fff;background-image:linear-gradient(135deg,rgba(255,255,255,.22),rgba(255,255,255,0) 50%,rgba(0,0,0,.1))}
+  .prize .rk{font-size:12px;font-weight:700;opacity:.9;width:36px;flex:none}
+  .prize .am{font-size:24px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.02em;flex:1}
+  .prize .am small{font-size:13px;font-weight:600;margin-left:2px}
+  .prize .ct{font-size:12px;opacity:.9;text-align:right}
+  .prize.t4{color:#2a1f0a}
+  .total{margin-top:14px;text-align:center;background:rgba(243,197,107,.12);border:1px dashed var(--gold);border-radius:12px;padding:14px}
+  .total b{display:block;font-size:28px;color:var(--gold);font-variant-numeric:tabular-nums}
+  .total span{font-size:12.5px;color:var(--muted)}
+  .cardbox{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16);border-radius:12px;padding:16px}
+  .cardbox h3{margin:0 0 6px;font-size:16px;color:var(--gold)}
+  .cardbox p{margin:0;font-size:13.5px;color:#dfe5f0}
+  .cardbox+.cardbox{margin-top:10px}
+  .notice{list-style:none;margin:0;padding:0;display:grid;gap:8px;font-size:12.5px;color:var(--muted)}
+  .notice li{padding-left:14px;position:relative}
+  .notice li::before{content:"·";position:absolute;left:2px;color:var(--gold);font-weight:800}
+  .foot{text-align:center;font-size:11.5px;color:#8e9ab3;padding:20px 20px 36px!important}
+  .sticky{position:sticky;bottom:0;z-index:5;padding:12px 20px 18px;background:linear-gradient(to top,var(--navy) 60%,transparent)}
+  .sticky .btn{margin-top:0}
+  .tagline{font-size:13px;color:var(--muted);text-align:center;margin:0 0 10px}
+  .snow{position:absolute;inset:0;z-index:0;pointer-events:none}
 </style>
 </head>
 <body>
+<div class="page">
+  <div class="snow"><i class="flake f1"></i><i class="flake f2"></i><i class="flake f3"></i><i class="flake f4"></i><i class="flake f5"></i><i class="flake f6"></i></div>
 
-<header>
-  <div class="wrap">
-    <p class="kicker">사장썸머 × 아웃슈가 구독자 선물 이벤트</p>
-    <h1>그린스 블렌드<br>당첨자 100분 명단</h1>
-    <p>닉네임을 검색하면 당첨 여부를 바로 확인하실 수 있습니다. 발표일 2026년 9월 14일.</p>
-  </div>
-</header>
-
-<main class="wrap">
-
-  <div class="finder">
-    <label class="q" for="q">유튜브 닉네임으로 확인하기</label>
-    <div class="field">
-      <input id="q" type="search" inputmode="search" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="예) 사장썸머">
-      <button id="go" type="button">확인</button>
-    </div>
-    <p class="hint">댓글에 보이는 닉네임 그대로 적어주세요. @는 있어도 없어도 괜찮습니다.</p>
-    <div class="result" id="result" role="status" aria-live="polite"></div>
-  </div>
-
-  <section class="roster">
-    <div class="roster-head">
-      <h2>전체 명단</h2>
-      <span class="count" id="count">100분</span>
-    </div>
-    <ul id="list"></ul>
-    <p class="empty" id="empty" hidden>검색한 닉네임과 일치하는 분이 명단에 없습니다.</p>
+  <!-- 1. 히어로 -->
+  <section class="hero-top">
+    <img src="img/hero.jpg" alt="카페인24 크리스마스 룰렛 · 다라미 산타와 행운을 잡아요! 10일 동안 천만원을 쏩니다!">
   </section>
 
-  <footer>
-    <p>신청 기간은 9월 21일 일요일까지입니다. 기간 내 신청이 없으면 다음 순번으로 변경될 수 있습니다.</p>
-    <p>작성해 주신 정보는 배송 목적으로만 사용하고, 발송이 끝나면 안전하게 파기합니다.</p>
-    <p>닉네임은 댓글 작성 시점 기준입니다. 이후 변경하셨다면 채널 댓글로 알려주세요.</p>
-  </footer>
+  <!-- 2. 기간 -->
+  <section class="period">
+    <div class="d">12.18(금) ~ 12.27(일)</div>
+    <div class="s">카페인24 200호점 달성 기념 · 10일 동안 · 전국 카페인24 매장 어디서나 · 스티커가 소진되면 조기 종료될 수 있어요</div>
+  </section>
 
-</main>
+  <!-- 3. 참여 방법 -->
+  <section>
+    <div class="sec-label">How to play</div>
+    <h2 class="sec-title">참여 방법은 <em>딱 3단계</em></h2>
+    <p class="sec-desc">음료를 주문하면 컵 앞면에 룰렛 스티커가 붙어 나와요. 스티커 1장 = 룰렛 1번!</p>
+    <ol class="steps">
+      <li><div class="n">1</div><div><b>컵 앞면 QR 스티커를 찍어요</b><span>카메라 앱으로 QR을 찍으면 바로 룰렛 화면이 열려요. 앱 설치나 회원가입은 없어요.</span></div></li>
+      <li><div class="n">2</div><div><b>휴대폰 번호를 입력하고 룰렛을 돌려요</b><span>포인트를 받을 번호 11자리만 적으면 끝. 두구두구… 다라미 산타가 행운을 골라요.</span></div></li>
+      <li><div class="n">3</div><div><b>당첨 포인트는 12월 28일(월)까지 일괄 적립</b><span>이벤트가 끝난 뒤 입력하신 번호의 럭키24포인트로 넣어 드리고, 적립이 끝나면 문자로 안내드려요.</span></div></li>
+    </ol>
+  </section>
 
-<script>
-const FORM_URL = "https://naver.me/FqIBcPcF";
+  <!-- 4. 경품 -->
+  <section>
+    <div class="sec-label">Prizes</div>
+    <h2 class="sec-title">룰렛 한 번에 <em>최대 50,000원</em></h2>
+    <p class="sec-desc">당첨 포인트는 전국 카페인24 매장에서 현금처럼 쓸 수 있는 럭키24포인트로 드려요.</p>
+    <div class="prizes">
+      <div class="prize t1"><span class="rk">1등</span><span class="am">50,000<small>P</small></span><span class="ct">총 48명</span></div>
+      <div class="prize t2"><span class="rk">2등</span><span class="am">10,000<small>P</small></span><span class="ct">총 200명</span></div>
+      <div class="prize t3"><span class="rk">3등</span><span class="am">5,000<small>P</small></span><span class="ct">총 400명</span></div>
+      <div class="prize t4"><span class="rk">4등</span><span class="am">1,000<small>P</small></span><span class="ct">총 3,600명</span></div>
+    </div>
+    <div class="total"><b>총 10,000,000원</b><span>10일 동안 4,248명에게 럭키24포인트를 쏩니다</span></div>
+  </section>
 
-const WINNERS = ["@LeeJeongYong","@dd_inni2873","@hwjang4421","@나철환-d1f","@라분-k6l","@김수연-p2b","@우아하게살고싶다","@단디-i3x","@호야-m9t","@misuncho944","@shallwebangjune","@조은정-g8l","@리얼백조-t6j","@주매일매일-o5b","@가은이-b8s","@투유니마미","@proud892","@blossomh7828","@rolling397","@뚜뚜라띠띠","@szsz0709","@Quizvendingmachine","@김인숙-g6l7d","@휘리릭v8","@두두도트","@hyunjeonglee6142","@두잇두잇키친","@김병희-n3l","@가을이오는소리","@한별-u4j","@문아정-f5o","@이소연-h1w","@URmyboo268","@바로3","@두율댁","@actionwillaction2757","@유현주-o4h","@핑쿠핑쿠pk","@taburin_book","@by7836","@eunbeenpark919","@daehakmom","@채지-s3e","@여우는바이올린","@구지은-y4s","@The071779","@이하나-o4q","@박효진-x3k","@장희연-q4s","@kimsh010","@soosu-k","@kkongeun9153","@bryb6759","@김은진-y7n","@Juhee-g3k","@그레이스-i3k","@라곰-f7c","@해인77","@나무막대기_나무","@hiharu2676","@달뷰민이","@김을진-k8k","@황혜영-f4p","@남혜리-u9r","@원월드-g6h","@miracle_jijibae","@mamandesunny972","@simplelee4306","@타리하찬로우","@ARA_GO","@bunnimi.2u","@happy-bakasatang","@hhhammm23","@새라리","@ZZINPANGS","@sehee_kang","@김정은-i5s5t","@MINYOUNGLEE-h7f","@happypro_lili","@SoniaKwak","@cafesandbank","@gritj1523","@내나소","@hyunahoh-l7h","@콩쓰-y7i","@림박사르","@이루다-f7f","@jiwoolee1616","@sseolzday","@hwayeonsee","@라떼-s9h","@jsgwak7384","@ejsohn76","@hyeyoungkim4585","@Moonmoon-bx6","@wonderland_hohoho","@soracido","@shimeili7191","@nayounglee9313","@wonmore7893"];
+  <!-- 5. 기회 더 받기 -->
+  <section>
+    <div class="sec-label">One more chance</div>
+    <h2 class="sec-title">룰렛 결과가 아쉬워도<br><em>기회는 두 번 더</em></h2>
+    <div class="cardbox">
+      <h3>① SNS 스토리 이벤트 · 5만원 상품권 추첨</h3>
+      <p>당첨 화면이나 매장 사진을 인스타그램 스토리에 올리고 <b>@cafein24</b>를 태그해 주세요. 친구를 태그하면(최대 5명) 당첨 확률이 올라가요. 이벤트 종료 후 추첨해서 <b>5만원 상품권</b>을 드립니다.</p>
+    </div>
+    <div class="cardbox">
+      <h3>② 설문조사하고 룰렛 한 번 더</h3>
+      <p>1분 설문(8문항)에 답하면 보너스 룰렛을 한 번 더 돌릴 수 있어요. 보너스 룰렛은 <b>1,000P</b> 또는 꽝! 휴대폰 번호당 1번만 참여할 수 있어요.</p>
+    </div>
+  </section>
 
-const norm = s => s.normalize("NFC").toLowerCase().replace(/^@/,"").replace(/[\s._-]/g,"");
-const KEYS = WINNERS.map(norm);
+  <!-- 6. 유의사항 -->
+  <section>
+    <div class="sec-label">Notice</div>
+    <h2 class="sec-title">꼭 읽어 주세요</h2>
+    <ul class="notice">
+      <li>스티커 1장으로 룰렛은 1번만 돌릴 수 있어요. 이미 사용한 QR을 다시 찍으면 '내 당첨 내역'만 보여요.</li>
+      <li>스티커는 음료 1잔당 1장, 매장별 준비 수량이 소진되면 해당 매장은 조기 종료돼요.</li>
+      <li>당첨 포인트는 룰렛을 돌릴 때 입력한 휴대폰 번호로 적립돼요. 번호를 잘못 입력하면 적립이 어려우니 꼭 확인해 주세요.</li>
+      <li>포인트는 이벤트 종료 후 12월 28일(월) 자정까지 일괄 적립되며, 적립 완료 후 문자로 안내드려요.</li>
+      <li>SNS 스토리 이벤트 당첨자는 개별 DM으로 안내드리며, 상품권 수령 시 제세공과금은 없어요.</li>
+      <li>입력하신 휴대폰 번호는 포인트 적립과 당첨 안내에만 사용하고, 이벤트 종료 60일 뒤 모두 삭제해요.</li>
+      <li>부정한 방법(QR 복제·위변조 등)으로 참여한 경우 당첨이 취소될 수 있어요.</li>
+    </ul>
+  </section>
 
-const listEl  = document.getElementById("list");
-const emptyEl = document.getElementById("empty");
-const countEl = document.getElementById("count");
-const resEl   = document.getElementById("result");
-const input   = document.getElementById("q");
+  <section class="foot">
+    CAFEIN24 · 24 HOURS TOGETHER<br>문의 : 카페인24 본사 고객센터 · 인스타그램 @cafein24
+  </section>
 
-function esc(s){ return s.replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
-
-function render(query){
-  const k = norm(query);
-  listEl.innerHTML = "";
-  let shown = 0;
-  WINNERS.forEach((name, i) => {
-    const key = KEYS[i];
-    if (k && !key.includes(k)) return;
-    shown++;
-    const li = document.createElement("li");
-    let label = esc(name);
-    if (k) {
-      const at = name.startsWith("@") ? 1 : 0;
-      const plain = name.slice(at);
-      const pos = norm(plain).indexOf(k);
-      if (pos > -1) li.className = "hit";
-      label = esc(name);
-    }
-    li.innerHTML = '<span class="no">' + (i + 1) + '</span><span>' + label + '</span>';
-    listEl.appendChild(li);
-  });
-  emptyEl.hidden = shown > 0;
-  countEl.textContent = k ? shown + "분 검색됨" : "100분";
-}
-
-function check(){
-  const raw = input.value.trim();
-  const k = norm(raw);
-  if (!k){
-    resEl.innerHTML = "";
-    render("");
-    return;
-  }
-  render(raw);
-
-  const exact = KEYS.indexOf(k);
-  if (exact > -1){
-    resEl.innerHTML =
-      '<div class="card win">' +
-        '<h2>당첨되셨습니다</h2>' +
-        '<p>명단 ' + (exact + 1) + '번으로 확인됩니다.</p>' +
-        '<span class="name">' + esc(WINNERS[exact]) + '</span>' +
-        '<a class="cta" href="' + FORM_URL + '" target="_blank" rel="noopener">배송지 입력하러 가기' +
-          '<small>닉네임, 성함, 연락처, 주소만 적으시면 됩니다</small></a>' +
-      '</div>';
-    return;
-  }
-
-  const near = [];
-  KEYS.forEach((key, i) => { if (key.includes(k) || k.includes(key)) near.push(i); });
-
-  if (near.length){
-    let html =
-      '<div class="card miss">' +
-        '<h2>비슷한 닉네임이 있습니다</h2>' +
-        '<p>아래에서 본인 닉네임을 눌러 확인해 주세요.</p>' +
-        '<div class="near">';
-    near.slice(0, 6).forEach(i => {
-      html += '<button type="button" data-pick="' + esc(WINNERS[i]) + '">' + esc(WINNERS[i]) + '</button>';
-    });
-    html += '</div></div>';
-    resEl.innerHTML = html;
-    resEl.querySelectorAll("[data-pick]").forEach(b => {
-      b.addEventListener("click", () => { input.value = b.dataset.pick; check(); });
-    });
-    return;
-  }
-
-  resEl.innerHTML =
-    '<div class="card miss">' +
-      '<h2>명단에 없습니다</h2>' +
-      '<p>이번에는 아쉽게 선정되지 못하셨습니다. 닉네임을 바꾸셨거나 띄어쓰기가 다를 수 있으니 한 번만 다시 확인해 주세요. 남겨주신 이야기는 모두 읽었습니다. 다음 기회로 또 찾아뵙겠습니다.</p>' +
-    '</div>';
-}
-
-document.getElementById("go").addEventListener("click", check);
-input.addEventListener("input", () => { if (!input.value.trim()){ resEl.innerHTML = ""; render(""); } else { render(input.value); } });
-input.addEventListener("keydown", e => { if (e.key === "Enter"){ e.preventDefault(); check(); input.blur(); } });
-
-render("");
-</script>
+  <div class="sticky">
+    <p class="tagline">컵에 붙은 QR 스티커를 찍으면 바로 시작!</p>
+    <a class="btn" href="https://www.instagram.com/cafein24" target="_blank" rel="noopener">인스타그램에서 소식 보기</a>
+  </div>
+</div>
 </body>
 </html>

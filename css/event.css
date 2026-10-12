@@ -1,0 +1,98 @@
+/* 카페인24 크리스마스 룰렛 · 손님 화면 공통 스타일 */
+:root{
+  --navy:#1b2a4a; --navy-deep:#0f1a30; --red:#d8322a; --red-dark:#b3221c; --green:#1e7a4a;
+  --gold:#f3c56b; --cream:#f6efe3; --ink:#1d1c1a; --white:#fff; --muted:#c9d2e3;
+  --orange:#F26A1B; --blue:#2B6CB0; --okgreen:#17875C; --yellow:#E3B32A; --gray:#8B8680;
+  --font:'IBM Plex Sans KR','Pretendard','Apple SD Gothic Neo',sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--navy-deep);color:var(--white);font-family:var(--font);font-size:15px;line-height:1.55;word-break:keep-all}
+.app{max-width:480px;margin:0 auto;min-height:100dvh;background:var(--navy);position:relative;overflow:hidden}
+.view{display:none;flex-direction:column;min-height:100dvh;padding:20px 20px 28px}
+.view.on{display:flex}
+.brand{font-size:11.5px;font-weight:600;letter-spacing:.08em;color:var(--gold);text-transform:uppercase}
+h1,h2{margin:0}
+.hero{font-size:28px;font-weight:700;line-height:1.2;letter-spacing:-.01em;margin:8px 0 6px}
+.hero em{font-style:normal;color:var(--gold)}
+.sub{font-size:14px;color:var(--muted);margin:0 0 12px}
+.btn{appearance:none;border:1px solid var(--red-dark);background:var(--red);color:#fff;font:inherit;font-weight:700;font-size:17px;padding:15px;border-radius:999px;width:100%;cursor:pointer;margin-top:auto;box-shadow:0 6px 0 #8f1a15;flex:none}
+.btn:active{transform:translateY(3px);box-shadow:0 3px 0 #8f1a15}
+.btn:disabled{opacity:.6;cursor:default;transform:none}
+.btn.ghost{background:transparent;color:#fff;border-color:rgba(255,255,255,.4);box-shadow:none;margin-top:10px}
+.btn.ghost:active{transform:none}
+.btn + .btn{margin-top:10px}
+.field{display:flex;flex-direction:column;gap:6px;margin:12px 0 10px}
+.field label{font-size:12.5px;font-weight:600;color:var(--muted)}
+.field input{font:inherit;font-size:20px;padding:12px 14px;border-radius:8px;border:1px solid rgba(255,255,255,.3);background:#fff;color:var(--ink);font-variant-numeric:tabular-nums;letter-spacing:.04em}
+.field input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(243,197,107,.3)}
+.err{font-size:12.5px;color:#ff9a93;min-height:18px}
+.agree{font-size:12.5px;color:var(--muted);display:flex;gap:8px;align-items:flex-start;margin-top:6px}
+.agree input{accent-color:var(--gold);margin-top:3px;flex:none;width:16px;height:16px}
+.code{font-size:12px;color:var(--navy);background:rgba(255,255,255,.9);border-radius:6px;padding:4px 9px;display:inline-block;font-variant-numeric:tabular-nums}
+.story{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);border-radius:10px;padding:14px;font-size:13px;color:#fff;margin-top:10px;text-align:left}
+.story b{color:var(--gold)}
+.note{font-size:12.5px;color:var(--muted)}
+.center{text-align:center}
+
+/* 메인 */
+.hero-view{padding:0!important}
+.hero-img{width:100%;height:auto;display:block}
+.hero-foot{padding:14px 20px 28px;display:flex;flex-direction:column;gap:10px;align-items:center}
+
+/* 룰렛 */
+.wheel-stage{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;min-height:0;padding:12px 0}
+.wheel-wrap{position:relative;width:min(320px,86vw);aspect-ratio:1;margin:0 auto}
+.wheel-wrap.small{width:min(250px,70vw)}
+.wheel-wrap::before{content:"";position:absolute;inset:-26px;border-radius:50%;background:radial-gradient(circle,rgba(243,197,107,.35) 0%,rgba(243,197,107,.08) 55%,transparent 72%);z-index:0;pointer-events:none}
+.wheel{width:100%;height:100%;position:relative;z-index:1;transition:transform 4.6s cubic-bezier(.12,.68,.08,1);transform:rotate(0deg);filter:drop-shadow(0 8px 14px rgba(0,0,0,.4))}
+.wheel .bulb{animation:twinkle 1.2s ease-in-out infinite}.wheel .bulb.odd{animation-delay:.6s}
+@keyframes twinkle{0%,100%{opacity:1}50%{opacity:.35}}
+.pin{position:absolute;left:50%;top:-6px;width:0;height:0;transform:translateX(-50%);border-left:12px solid transparent;border-right:12px solid transparent;border-top:26px solid var(--gold);z-index:3;filter:drop-shadow(0 2px 2px rgba(0,0,0,.4))}
+.pin::after{content:"";position:absolute;left:-6px;top:-30px;width:12px;height:12px;border-radius:50%;background:var(--gold)}
+.hub{position:absolute;left:50%;top:50%;width:64px;height:64px;transform:translate(-50%,-50%);border-radius:50%;background:var(--red);border:4px solid var(--gold);box-shadow:0 4px 10px rgba(0,0,0,.4);z-index:2}
+.xmas-bg{position:absolute;inset:0;z-index:0;pointer-events:none}
+.view{position:relative}.view>*{position:relative;z-index:1}.view>.xmas-bg{z-index:0}
+.gift{position:absolute;width:22px;height:22px;border-radius:4px;background:var(--red);opacity:.5;animation:drift 7s ease-in-out infinite}
+.gift::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:5px;transform:translateX(-50%);background:var(--gold)}
+.gift::after{content:"";position:absolute;top:50%;left:0;right:0;height:5px;transform:translateY(-50%);background:var(--gold)}
+.g1{left:8%;top:14%;transform:rotate(-12deg)}.g2{right:10%;top:22%;width:18px;height:18px;background:var(--green);animation-delay:1.5s}.g3{left:10%;bottom:30%;width:26px;height:26px;background:var(--green);animation-delay:3s}.g4{right:8%;bottom:24%;animation-delay:4.5s}
+.flake{position:absolute;width:6px;height:6px;border-radius:50%;background:#fff;opacity:.45;animation:drift 9s ease-in-out infinite}
+.f1{left:20%;top:8%}.f2{left:70%;top:6%;animation-delay:2s;width:4px;height:4px}.f3{left:48%;top:30%;animation-delay:4s}.f4{left:30%;bottom:26%;animation-delay:1s}.f5{left:85%;bottom:12%;animation-delay:3s}.f6{left:6%;top:48%;animation-delay:5s}
+@keyframes drift{0%,100%{translate:0 0}50%{translate:0 -10px}}
+
+/* 결과 · 카드 */
+.result{text-align:center;display:flex;flex-direction:column;flex:1}
+.result .big{font-size:32px;font-weight:700;line-height:1.15;margin:8px 0 4px}
+.result .big.win{color:var(--gold)}
+.result .amt{font-size:19px;font-weight:600;font-variant-numeric:tabular-nums}
+.result p{font-size:13.5px;color:var(--muted);margin:6px 0}
+.result .cta{font-size:14px;color:#fff;margin:12px 0 8px;font-weight:600}
+.pcard-wrap{position:relative;width:250px;height:150px;margin:14px auto 10px}
+.pcard{position:absolute;left:0;top:0;width:230px;height:134px;border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;justify-content:space-between;text-align:left;transform:rotate(-7deg);box-shadow:0 14px 28px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.35);background-image:linear-gradient(135deg,rgba(255,255,255,.28),rgba(255,255,255,0) 45%,rgba(0,0,0,.12));color:#fff}
+.pcard.back{left:26px;top:22px;transform:rotate(6deg);filter:brightness(.6);box-shadow:0 8px 18px rgba(0,0,0,.35)}
+.pcard::after{content:"";position:absolute;right:14px;top:14px;width:26px;height:26px;border-radius:50%;border:3px solid rgba(255,255,255,.55)}
+.pc-brand{font-size:11px;letter-spacing:.08em;font-weight:600;opacity:.9}.pc-brand b{font-weight:800}
+.pc-amt{font-size:40px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.02em;text-shadow:0 2px 0 rgba(0,0,0,.18)}.pc-amt small{font-size:18px;margin-left:2px}
+.pc-foot{display:flex;justify-content:space-between;font-size:11px;font-weight:600;opacity:.9}
+.t1{background-color:var(--orange)}.t2{background-color:var(--blue)}.t3{background-color:var(--okgreen)}.t4{background-color:var(--yellow);color:#2a1f0a}.t4::after{border-color:rgba(0,0,0,.35)}.t5{background-color:var(--gray)}
+.confetti{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:5}
+.confetti i{position:absolute;top:-10px;width:7px;height:12px;border-radius:2px;animation:fall 1.6s linear forwards}
+@keyframes fall{to{transform:translateY(900px) rotate(540deg);opacity:.2}}
+
+/* SNS 상세 · 설문 */
+.howto{list-style:none;margin:10px 0;padding:0;display:grid;gap:10px}
+.howto li{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:12px 14px;display:grid;gap:4px}
+.howto b{color:var(--gold);font-size:14px}.howto span{font-size:13px;color:#dfe5f0}
+.survey{display:grid;gap:12px;margin-bottom:10px}
+.survey fieldset{border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:10px 12px;margin:0;display:grid;gap:6px}
+.survey legend{font-size:13.5px;font-weight:600;color:#fff;padding:0 4px}
+.survey label{font-size:13.5px;color:#dfe5f0;display:flex;gap:8px;align-items:center}
+.survey input[type=radio],.survey input[type=checkbox]{accent-color:var(--gold);width:16px;height:16px}
+.survey input[type=text]{font:inherit;font-size:14px;padding:10px 12px;border-radius:6px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.95);color:var(--ink);width:100%}
+.survey .hint{color:#aeb8cc;font-size:12px}
+.stars{display:flex;gap:6px}
+.stars button{width:40px;height:40px;border-radius:50%;border:1px solid rgba(255,255,255,.3);background:transparent;color:#fff;font:inherit;font-weight:700;cursor:pointer}
+.stars button.on{background:var(--gold);color:var(--navy);border-color:var(--gold)}
+.spinner{width:28px;height:28px;border:3px solid rgba(255,255,255,.25);border-top-color:var(--gold);border-radius:50%;animation:spin 1s linear infinite;margin:40px auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}.wheel{transition-duration:.6s}}

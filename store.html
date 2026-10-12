@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>우리 매장 룰렛 현황 · 카페인24</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="css/admin.css">
+<style>
+  .wrap{max-width:560px}
+  .hello{font-size:22px;font-weight:700;margin:6px 0 2px}
+  .big{font-size:40px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+  .bar{height:10px;margin:8px 0 4px}
+</style>
+</head>
+<body>
+<header class="top"><span class="logo">CAFEIN<b>24</b></span><span class="ttl">크리스마스 룰렛 · 우리 매장 현황</span></header>
+<main class="wrap">
+  <p class="note" id="when"></p>
+  <div class="hello" id="name">불러오는 중…</div>
+  <p class="note">12월 18일(금) ~ 27일(일) · 매장 스티커 300장</p>
+
+  <div class="box">
+    <div class="note">룰렛에 참여한 손님</div>
+    <div class="big" id="scans">-</div>
+    <div class="bar"><i id="bar" style="width:0"></i></div>
+    <div class="note" id="left"></div>
+  </div>
+  <div class="cards">
+    <div class="card"><div class="k">우리 매장 당첨 손님</div><div class="v" id="wins">-</div></div>
+    <div class="card"><div class="k">우리 매장 손님이 받을 포인트</div><div class="v" id="amount">-</div><div class="s">본사가 전액 부담해요</div></div>
+  </div>
+  <div class="box">
+    <h2>점주님께</h2>
+    <p>손님 개인정보(휴대폰 번호)는 이 화면에 나오지 않아요. 당첨 포인트는 이벤트가 끝난 뒤 12월 28일(월)까지 본사에서 일괄 적립합니다.</p>
+    <p>스티커가 부족하면 본사 담당자에게 알려 주세요. 컵 앞면에 1잔당 1장씩 붙여 주시면 됩니다.</p>
+  </div>
+</main>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { firebaseConfig } from "./js/firebase-config.js";
+const db = getFirestore(initializeApp(firebaseConfig));
+const $ = id => document.getElementById(id), won = n => (n||0).toLocaleString('ko-KR');
+const s = (new URLSearchParams(location.search).get('s')||'').padStart(3,'0');
+if(!/^\d{3}$/.test(s)){ $('name').textContent = '매장 코드가 없는 주소예요.'; }
+else{
+  const [st, x] = await Promise.all([getDoc(doc(db,'stores',s)), getDoc(doc(db,'stats','store_'+s))]);
+  const d = x.exists() ? x.data() : {};
+  $('name').textContent = st.exists() ? `${st.data().name} 점주님, 안녕하세요` : `매장 ${s}`;
+  $('scans').textContent = won(d.scans)+'명';
+  $('bar').style.width = Math.min(100, 100*(d.scans||0)/300)+'%';
+  $('left').textContent = `스티커 300장 중 ${won(d.scans||0)}장 사용 · 남은 스티커 약 ${won(Math.max(0,300-(d.scans||0)))}장`;
+  $('wins').textContent = won(d.wins)+'명';
+  $('amount').textContent = won(d.amount)+'원';
+  const n = new Date(), p = v => String(v).padStart(2,'0');
+  $('when').textContent = `${n.getMonth()+1}월 ${n.getDate()}일 ${p(n.getHours())}:${p(n.getMinutes())} 기준 · 새로고침하면 최신으로 바뀌어요`;
+}
+</script>
+</body>
+</html>

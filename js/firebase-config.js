@@ -14,10 +14,11 @@ export const EVENT = {
   name: "카페인24 크리스마스 룰렛",
   start: "2026-12-18",          // 이벤트 시작일
   end: "2026-12-27",            // 종료일 (이 날까지 참여 가능)
+  testUntil: "2026-12-09",      // 이 날까지는 테스트로 QR 사용 가능 (스티커 발송 12/10 전). 12/10~17은 잠김
   creditDate: "12월 28일(월)",   // 포인트 일괄 적립 안내 문구
   adminDomain: "cafein24.co.kr", // 이 도메인 메일만 관리자
   bonusCap: 1200,               // 설문 보너스 1,000원 당첨 한도
   bonusRate: 0.3,               // 설문 보너스 당첨 확률
-  instagram: "https://www.instagram.com/cafein24",
+  instagram: "https://www.instagram.com/cafein24.official",
   prizes: { 1:[50000,"1등"], 2:[10000,"2등"], 3:[5000,"3등"], 4:[1000,"4등"], 5:[0,"꽝"] }
 };

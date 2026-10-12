@@ -67,7 +67,7 @@
     <p class="sub">추첨을 통해 5만원 상품권을 드려요. <span id="credit-date2"></span> 발표.</p>
     <ol class="howto">
       <li><b>1. 사진 찍기</b><span>룰렛 결과 화면이나 스티커 붙은 컵을 찍어요. 결과 화면은 캡처해도 돼요.</span></li>
-      <li><b>2. 스토리에 올리기</b><span>인스타그램 스토리에 사진을 올리고 <b>@cafein24</b>를 태그해요. 공개 계정만 확인할 수 있어요.</span></li>
+      <li><b>2. 스토리에 올리기</b><span>인스타그램 스토리에 사진을 올리고 <b>@cafein24.official</b>을 태그해요. 공개 계정만 확인할 수 있어요.</span></li>
       <li><b>3. 친구 태그하면 확률 UP</b><span>친구 1명을 태그할 때마다 응모권이 1장 늘어요. 최대 5명, 응모권 최대 6장.</span></li>
     </ol>
     <div class="story"><b>안내</b> 이 이벤트는 인스타그램과 관계없이 카페인24가 운영해요. 당첨자는 스토리에 태그된 계정으로 연락드려요.</div>
@@ -101,6 +101,7 @@
       </fieldset>
       <fieldset><legend>7. 이런 메뉴가 나왔으면 해요</legend><input type="text" name="q7" placeholder="예: 흑임자 라떼, 비건 쿠키" maxlength="60"></fieldset>
       <fieldset><legend>8. 이것만은 바뀌었으면 해요</legend><input type="text" name="q8" placeholder="예: 머신 대기 시간, 좌석, 청결" maxlength="80"></fieldset>
+      <div class="field" id="s-phone-wrap" hidden><label for="s-phone">본인 확인: 룰렛 돌릴 때 입력한 휴대폰 번호</label><input id="s-phone" type="tel" inputmode="numeric" placeholder="010-0000-0000" maxlength="13"></div>
       <div class="err" id="s-err"></div>
     </form>
     <button class="btn" id="btn-survey">제출하고 룰렛 한 번 더 돌리기</button>
@@ -141,24 +142,27 @@ document.querySelectorAll('#credit-date,#credit-date2').forEach(e => e.textConte
 $('bonus-cap').textContent = EVENT.bonusCap.toLocaleString();
 $('btn-ig').href = EVENT.instagram;
 
-function go(id){ document.querySelectorAll('.view').forEach(v => v.classList.toggle('on', v.id === id)); window.scrollTo(0,0); if(id==='v-wheel') resetWheel($('wheel'),$('btn-spin'),$('spin-msg'),'아래 버튼을 누르면 룰렛이 돌아가요.'); if(id==='v-bonus') resetWheel($('wheel2'),$('btn-spin2'),$('spin2-msg'),'1,000원 포인트가 나오면 당첨이에요. 선착순 '+EVENT.bonusCap.toLocaleString()+'명.'); }
+function go(id){ if(id==='v-survey') $('s-phone-wrap').hidden = !!phone; document.querySelectorAll('.view').forEach(v => v.classList.toggle('on', v.id === id)); window.scrollTo(0,0); if(id==='v-wheel') resetWheel($('wheel'),$('btn-spin'),$('spin-msg'),'아래 버튼을 누르면 룰렛이 돌아가요.'); if(id==='v-bonus') resetWheel($('wheel2'),$('btn-spin2'),$('spin2-msg'),'1,000원 포인트가 나오면 당첨이에요. 선착순 '+EVENT.bonusCap.toLocaleString()+'명.'); }
 function fail(msg){ $('error-msg').textContent = msg; go('v-error'); }
 document.querySelectorAll('[data-back]').forEach(b => b.addEventListener('click', () => go(lastView)));
 const fmtPhone = v => { const d = v.replace(/\D/g,'').slice(0,11); if(d.length<4) return d; if(d.length<8) return d.slice(0,3)+'-'+d.slice(3); return d.slice(0,3)+'-'+d.slice(3,7)+'-'+d.slice(7); };
 const digits = v => v.replace(/\D/g,'');
-const today = () => new Date().toISOString().slice(0,10);
+const today = () => new Date(Date.now() + 9*3600*1000).toISOString().slice(0,10); // 한국 시간 기준 날짜
 
 // ---------- 0. 스티커 번호 확인 ----------
 async function boot(){
   if(!/^\d{3}-[A-Z0-9]{6}$/.test(code)) return fail('QR 주소에 스티커 번호가 없어요. 컵에 붙은 QR을 다시 찍어 주세요.');
-  if(today() < EVENT.start) return fail('이벤트는 '+EVENT.start.replace(/-/g,'.')+'부터 시작해요. 조금만 기다려 주세요!');
+  const testing = EVENT.testUntil && today() <= EVENT.testUntil;
+  if(testing) document.body.insertAdjacentHTML('afterbegin','<div style="position:fixed;top:0;left:0;right:0;z-index:99;background:#f3c56b;color:#1b2a4a;font-size:12px;font-weight:700;text-align:center;padding:4px">테스트 기간 · 12/9까지 · 기록은 오픈 전에 초기화돼요</div>');
+  if(testing) document.body.style.paddingTop='24px';
+  if(!testing && today() < EVENT.start) return fail('이벤트는 '+EVENT.start.replace(/-/g,'.')+'부터 시작해요. 조금만 기다려 주세요!');
   if(today() > EVENT.end) return fail('이벤트가 끝났어요. 함께해 주셔서 고마워요!');
   try{
     const [cs, ss] = await Promise.all([getDoc(doc(db,'codes',code)), getDoc(doc(db,'stores',storeCode))]);
     if(!cs.exists()) return fail('등록되지 않은 스티커 번호예요. 매장에 문의해 주세요. ('+code+')');
     storeName = ss.exists() ? ss.data().name : storeCode+'점';
     $('code-land').textContent = '스티커 '+code+' · '+storeName;
-    if(cs.data().used){ const es = await getDoc(doc(db,'entries',code)); if(es.exists()){ entry = es.data(); tier = entry.tier; phone = entry.phone; return showHistory(); } return fail('이미 사용된 스티커예요.'); }
+    if(cs.data().used){ const es = await getDoc(doc(db,'entries',code)); if(es.exists()){ entry = es.data(); tier = entry.tier; phone = ''; return showHistory(); } return fail('이미 사용된 스티커예요.'); }
     tier = cs.data().tier;  // 등수는 서버(Firestore)에만 있음
     go('v-land');
   }catch(e){ console.error(e); fail('잠시 연결이 불안정해요. 잠깐 뒤에 다시 QR을 찍어 주세요.'); }
@@ -166,6 +170,7 @@ async function boot(){
 $('btn-start').addEventListener('click', () => go('v-phone'));
 
 // ---------- 2. 번호 입력 ----------
+$('s-phone').addEventListener('input', e => e.target.value = fmtPhone(e.target.value));
 const pin = $('phone'); pin.addEventListener('input', () => pin.value = fmtPhone(pin.value));
 $('f-phone').addEventListener('submit', e => e.preventDefault());
 $('btn-phone').addEventListener('click', () => {
@@ -205,12 +210,14 @@ $('btn-spin').addEventListener('click', async () => {
       const [snap, ss] = await Promise.all([tx.get(ref), tx.get(st)]); // 읽기는 모두 먼저
       if(!snap.exists() || snap.data().used) throw new Error('used');
       tx.update(ref, { used:true, usedAt:serverTimestamp() });
-      tx.set(doc(db,'entries',code), { code, store:storeCode, storeName, phone:digits(phone), tier, money, label, agreeMarketing:$('ag2').checked, createdAt:serverTimestamp(), surveyDone:false, bonusMoney:0 });
+      tx.set(doc(db,'entries',code), { code, store:storeCode, storeName, phoneMask:maskPhone(phone), tier, money, label, agreeMarketing:$('ag2').checked, createdAt:serverTimestamp(), surveyDone:false, bonusMoney:0 });
+      // 전화번호 원본은 본사만 열 수 있는 phones 에만 저장
+      tx.set(doc(db,'phones',code), { phone:digits(phone), store:storeCode, createdAt:serverTimestamp() });
       // 매장별 공개 집계(점주 공유 페이지용) · 전화번호는 넣지 않음
       if(ss.exists()) tx.update(st, { scans:increment(1), wins:increment(tier!==5?1:0), amount:increment(money) });
       else tx.set(st, { scans:1, wins:tier!==5?1:0, amount:money });
     });
-    entry = { code, tier, money, label, phone:digits(phone), surveyDone:false };
+    entry = { code, tier, money, label, phoneMask:maskPhone(phone), surveyDone:false };
     btn.textContent='두구두구…'; $('spin-msg').textContent='다라미 산타가 행운을 고르는 중…';
     const dur = spinTo($('wheel'), SEG, tier);
     setTimeout(showResult, dur);
@@ -230,7 +237,7 @@ function showResult(){
 }
 function showHistory(){
   const win=entry.tier!==5; const h=$('history');
-  h.innerHTML = `<div class="big${win?' win':''}">내 당첨 내역</div><div class="amt">${win?entry.label+' 당첨':'꽝'} · 스티커 ${code}</div>${cardHtml(entry.tier,entry.money,entry.label,'크리스마스 룰렛')}<p>이 스티커는 이미 참여한 번호예요. 룰렛은 스티커 1장에 1번만 돌릴 수 있어요.${win?'<br>포인트는 '+EVENT.creditDate+'까지 '+maskPhone(entry.phone)+' 번호로 적립돼요.':''}${entry.bonusMoney?'<br>설문 감사 포인트 1,000원도 함께 적립돼요.':''}</p>${actions(entry.surveyDone)}`;
+  h.innerHTML = `<div class="big${win?' win':''}">내 당첨 내역</div><div class="amt">${win?entry.label+' 당첨':'꽝'} · 스티커 ${code}</div>${cardHtml(entry.tier,entry.money,entry.label,'크리스마스 룰렛')}<p>이 스티커는 이미 참여한 번호예요. 룰렛은 스티커 1장에 1번만 돌릴 수 있어요.${win?'<br>포인트는 '+EVENT.creditDate+'까지 '+(entry.phoneMask||'')+' 번호로 적립돼요.':''}${entry.bonusMoney?'<br>설문 감사 포인트 1,000원도 함께 적립돼요.':''}</p>${actions(entry.surveyDone)}`;
   wire(h,'v-history'); go('v-history');
 }
 
@@ -243,14 +250,15 @@ $('btn-survey').addEventListener('click', async () => {
   if(!q2) return err.textContent='2번(만족도)에 별점을 눌러 주세요.';
   if(!f.q5.value||!f.q6.value) return err.textContent='5번과 6번도 골라 주세요. 나머지는 건너뛰어도 돼요.';
   err.textContent=''; btn.disabled=true; btn.textContent='저장 중…';
-  const pd = digits(phone);
+  const pd = phone ? digits(phone) : digits($('s-phone').value);
+  if(pd.length!==11){ btn.disabled=false; btn.textContent='제출하고 룰렛 한 번 더 돌리기'; return err.textContent='룰렛 돌릴 때 입력한 휴대폰 번호를 적어 주세요.'; }
   const data = { phone:pd, store:storeCode, code, q1:f.q1.value, q2, q3:[...f.querySelectorAll('[name=q3]:checked')].map(x=>x.value), q4:[...f.querySelectorAll('[name=q4]:checked')].map(x=>x.value), q5:f.q5.value, q6:f.q6.value, q7:f.q7.value.trim(), q8:f.q8.value.trim(), createdAt:serverTimestamp() };
   try{
     // 설문 문서 id = 휴대폰 번호 → 번호당 1회 (이미 있으면 규칙에서 거부)
     await setDoc(doc(db,'surveys',pd), data);
     await updateDoc(doc(db,'entries',code), { surveyDone:true });
-    entry.surveyDone = true; go('v-bonus');
-  }catch(e){ console.error(e); btn.disabled=false; btn.textContent='제출하고 룰렛 한 번 더 돌리기'; err.textContent = e.code==='permission-denied' ? '이 번호로는 이미 설문에 참여했어요.' : '저장이 안 됐어요. 다시 눌러 주세요.'; }
+    entry.surveyDone = true; if(!phone) phone = pd; go('v-bonus');
+  }catch(e){ console.error(e); btn.disabled=false; btn.textContent='제출하고 룰렛 한 번 더 돌리기'; err.textContent = e.code==='permission-denied' ? '이미 설문에 참여한 번호이거나, 룰렛 때 입력한 번호와 달라요.' : '저장이 안 됐어요. 다시 눌러 주세요.'; }
 });
 
 // ---------- 8. 보너스 룰렛 (1,000원 30% / 꽝 70%, 한도까지) ----------

@@ -12,7 +12,7 @@
 <link rel="stylesheet" href="css/event.css">
 <style>
   /* 안내 페이지 전용 · 긴 세로 한 장 */
-  .page{max-width:480px;margin:0 auto;background:var(--navy);min-height:100dvh;position:relative;overflow:hidden}
+  .page{max-width:480px;margin:0 auto;background:var(--navy);min-height:100dvh;position:relative;overflow-x:clip}
   .page>section{padding:28px 22px;position:relative;z-index:1}
   .page>section+section{border-top:1px solid rgba(255,255,255,.08)}
   .hero-top{padding:0!important;position:relative;aspect-ratio:640/975;overflow:hidden}
@@ -48,11 +48,11 @@
   .notice{list-style:none;margin:0;padding:0;display:grid;gap:8px;font-size:12.5px;color:var(--muted)}
   .notice li{padding-left:14px;position:relative}
   .notice li::before{content:"·";position:absolute;left:2px;color:var(--gold);font-weight:800}
-  .foot{text-align:center;font-size:11.5px;color:#8e9ab3;padding:20px 20px 36px!important}
-  .sticky{position:sticky;bottom:0;z-index:5;padding:12px 20px 18px;background:linear-gradient(to top,var(--navy) 60%,transparent)}
-  .sticky .btn{margin-top:0}
+  .foot{text-align:center;font-size:11.5px;color:#8e9ab3;padding:20px 20px 28px!important}
+  .sticky{position:sticky;bottom:0;z-index:5;padding:12px 20px calc(16px + env(safe-area-inset-bottom));background:var(--navy-deep);border-top:1px solid rgba(255,255,255,.12);display:flex;flex-direction:column;align-items:center;text-align:center}
+  .sticky .btn{margin-top:0;max-width:440px}
   .tagline{font-size:13px;color:var(--muted);text-align:center;margin:0 0 10px}
-  .snow{position:absolute;inset:0;z-index:0;pointer-events:none}
+  .snow{position:absolute;left:0;right:0;top:0;height:640px;z-index:0;pointer-events:none;overflow:hidden} /* 눈송이는 맨 위 그림 영역에만 (본문 글자와 안 겹치게) */
 </style>
 </head>
 <body>
@@ -102,7 +102,7 @@
     <h2 class="sec-title">룰렛 결과가 아쉬워도<br><em>기회는 두 번 더</em></h2>
     <div class="cardbox">
       <h3>① SNS 스토리 이벤트 · 5만원 상품권 추첨</h3>
-      <p>당첨 화면이나 매장 사진을 인스타그램 스토리에 올리고 <b>@cafein24</b>를 태그해 주세요. 친구를 태그하면(최대 5명) 당첨 확률이 올라가요. 이벤트 종료 후 추첨해서 <b>5만원 상품권</b>을 드립니다.</p>
+      <p>당첨 화면이나 매장 사진을 인스타그램 스토리에 올리고 <b>@cafein24.official</b>을 태그해 주세요. 친구를 태그하면(최대 5명) 당첨 확률이 올라가요. 이벤트 종료 후 추첨해서 <b>5만원 상품권</b>을 드립니다.</p>
     </div>
     <div class="cardbox">
       <h3>② 설문조사하고 룰렛 한 번 더</h3>
@@ -126,12 +126,12 @@
   </section>
 
   <section class="foot">
-    CAFEIN24 · 24 HOURS TOGETHER<br>문의 : 카페인24 본사 고객센터 · 인스타그램 @cafein24
+    CAFEIN24 · 24 HOURS TOGETHER<br>문의 : 카페인24 본사 고객센터 · 인스타그램 @cafein24.official
   </section>
 
   <div class="sticky">
     <p class="tagline">컵에 붙은 QR 스티커를 찍으면 바로 시작!</p>
-    <a class="btn" href="https://www.instagram.com/cafein24" target="_blank" rel="noopener">인스타그램에서 소식 보기</a>
+    <a class="btn" href="https://www.instagram.com/cafein24.official" target="_blank" rel="noopener">인스타그램에서 소식 보기</a>
   </div>
 </div>
 </body>

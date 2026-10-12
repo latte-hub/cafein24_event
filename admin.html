@@ -45,12 +45,12 @@
   <!-- 참여자 목록 : entries (필요할 때만 불러옴) -->
   <section class="panel" id="p-entries">
     <div class="row">
-      <select id="e-store"><option value="">전체 매장</option></select>
+      <input type="text" id="e-search" placeholder="매장 검색 (이름·코드)" style="width:170px"><select id="e-store"><option value="">전체 매장</option></select>
       <select id="e-tier"><option value="">전체 결과</option><option value="win">당첨만</option><option value="1">1등</option><option value="2">2등</option><option value="3">3등</option><option value="4">4등</option><option value="5">꽝</option></select>
       <button class="btn sm" id="btn-e-load">불러오기</button>
       <span class="sp"></span><button class="btn ghost sm" id="btn-e-csv" disabled>엑셀(CSV) 내려받기</button>
     </div>
-    <p class="note">전체를 불러오면 참여 수만큼 읽기가 발생해요(무료 한도 하루 5만 건). 평소엔 매장을 골라서 보세요.</p>
+    <p class="note">줄 끝의 '초기화'를 누르면 그 스티커를 처음 상태로 되돌려요(참여 기록·집계·설문까지 삭제). 전체를 불러오면 참여 수만큼 읽기가 발생해요(무료 한도 하루 5만 건). 평소엔 매장을 골라서 보세요.</p>
     <div class="prog" id="e-msg"></div>
     <div class="tscroll"><table id="e-tbl"></table></div>
   </section>
@@ -77,8 +77,21 @@
     <div class="box noprint">
       <h2>매장별 QR</h2>
       <p>매장을 고르면 그 매장 스티커 300장의 QR이 나와요. 인쇄소 파일 확인용·분실 재출력용입니다. (등수는 화면에 나오지 않아요)</p>
-      <div class="row"><select id="q-store"></select><button class="btn sm" id="btn-q-load">QR 보기</button><button class="btn ghost sm" id="btn-q-csv" disabled>이 매장 QR 주소 CSV</button><button class="btn ghost sm" onclick="print()">인쇄</button></div>
+      <div class="row"><input type="text" id="q-search" placeholder="매장 검색 (이름·코드)" style="width:170px"><select id="q-store"></select><button class="btn sm" id="btn-q-load">QR 보기</button><button class="btn ghost sm" id="btn-q-csv" disabled>이 매장 QR 주소 CSV</button><button class="btn ghost sm" onclick="print()">인쇄</button></div>
       <div class="prog" id="q-msg"></div>
+    </div>
+    <div class="box noprint">
+      <h2>전체 매장 QR 주소 내려받기</h2>
+      <p>모든 매장의 스티커 번호와 QR 주소를 엑셀(CSV) 하나로 받아요. 등수는 들어가지 않아 인쇄소에 그대로 줘도 돼요.</p>
+      <div class="row"><button class="btn" id="btn-q-all">전체 매장 QR 주소 CSV</button><span class="note" id="q-all-msg">번호 수만큼 읽기가 발생해요 (약 5만 7천 건).</span></div>
+    </div>
+    <div class="box noprint">
+      <h2>QR 초기화</h2>
+      <p>사용된 스티커를 <b>처음 상태</b>로 되돌려요. 그 스티커의 참여 기록, 매장 집계, 설문 보너스 기록, 설문 응답이 함께 지워지고 같은 QR로 룰렛을 다시 돌릴 수 있어요. 테스트한 QR이나 잘못 참여한 경우에만 쓰세요.</p>
+      <div class="row"><input type="text" id="r-code" placeholder="스티커 번호 또는 QR 주소 (예: 017-K4P9XQ)" style="width:320px"><button class="btn danger sm" id="btn-r-one">이 QR 초기화</button><span class="note" id="r-msg"></span></div>
+      <h3>사용된 QR 전체 초기화</h3>
+      <p>이벤트 시작 전에 테스트 기록을 한 번에 지울 때 써요. <b>이벤트 기간에는 절대 누르지 마세요.</b></p>
+      <div class="row"><button class="btn danger sm" id="btn-r-all">사용된 QR 전체 초기화</button><span class="note" id="r-all-msg"></span></div>
     </div>
     <div class="qr-grid" id="q-grid"></div>
   </section>
@@ -86,7 +99,7 @@
 
 <script type="module">
 import { db, EVENT, $, won, esc, fmtPhone, fmtTime, requireAdmin, downloadCsv, playUrl, baseUrl } from "./js/common.js";
-import { collection, getDocs, getDoc, doc, query, where, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { collection, getDocs, getDoc, doc, query, where, orderBy, writeBatch, increment, deleteField } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const TL = t => t===5 ? '꽝' : t+'등';
 let stores = {}, dashRows = [], entries = [], credit = [], surveys = [], qrCodes = [];
@@ -127,7 +140,7 @@ async function loadDash(){
   drawDash();
   // 매장 선택 목록
   const opts = dashRows.map(s => `<option value="${s.code}">${s.code} ${esc(s.name)}</option>`).join('');
-  $('e-store').innerHTML = '<option value="">전체 매장</option>' + opts; $('q-store').innerHTML = opts;
+  fillStores('e-store', true); fillStores('q-store', false);
 }
 function drawDash(){
   const q = $('dash-q').value.trim();
@@ -147,6 +160,68 @@ $('btn-refresh').addEventListener('click', loadDash);
 $('btn-dash-csv').addEventListener('click', () => downloadCsv(`매장별현황_${fmtTime(new Date()).slice(0,10)}.csv`,
   ['매장코드','매장명','지역','점주','룰렛참여','사용률(%)','당첨','당첨금','점주공유링크'],
   dashRows.map(r => [r.code,r.name,r.region||'',r.owner||'',r.scans,(100*r.scans/300).toFixed(1),r.wins,r.amount, baseUrl()+'store.html?s='+r.code])));
+
+// ---------- 매장 검색 (검색어로 선택 목록을 줄임) ----------
+function fillStores(selId, withAll){
+  const q = ($(selId==='e-store'?'e-search':'q-search').value||'').trim().toLowerCase();
+  const list = dashRows.filter(r => !q || (r.code+' '+(r.name||'')+' '+(r.region||'')+' '+(r.owner||'')).toLowerCase().includes(q));
+  const sel = $(selId), prev = sel.value;
+  sel.innerHTML = (withAll && !q ? '<option value="">전체 매장</option>' : '') + list.map(s => `<option value="${s.code}">${s.code} ${esc(s.name)}</option>`).join('');
+  if(!list.length) sel.innerHTML = '<option value="">검색 결과 없음</option>';
+  else if(list.some(s => s.code===prev)) sel.value = prev;
+}
+$('e-search').addEventListener('input', () => fillStores('e-store', true));
+$('q-search').addEventListener('input', () => fillStores('q-store', false));
+$('e-search').addEventListener('keydown', e => { if(e.key==='Enter') $('btn-e-load').click(); });
+$('q-search').addEventListener('keydown', e => { if(e.key==='Enter') $('btn-q-load').click(); });
+
+// ---------- QR 초기화 ----------
+const CODE_RE = /\d{3}-[A-Z0-9]{6}/;
+async function resetCode(code){
+  const cref = doc(db,'codes',code), eref = doc(db,'entries',code);
+  const [cs, es] = await Promise.all([getDoc(cref), getDoc(eref)]);
+  if(!cs.exists()) throw new Error('없는 스티커 번호예요: '+code);
+  const batch = writeBatch(db);
+  batch.update(cref, { used:false, usedAt:deleteField() });
+  const e = es.exists() ? es.data() : null;
+  if(e){
+    batch.delete(eref);
+    batch.set(doc(db,'stats','store_'+e.store), { scans:increment(-1), wins:increment(e.tier!==5?-1:0), amount:increment(-(e.money||0)) }, { merge:true });
+    if(e.bonusMoney) batch.set(doc(db,'stats','bonus'), { wins:increment(-1) }, { merge:true });
+    if(e.surveyDone && e.phone){ const sref = doc(db,'surveys',e.phone); const ss = await getDoc(sref); if(ss.exists() && ss.data().code===code) batch.delete(sref); }
+  }
+  await batch.commit();
+  return { wasUsed: !!cs.data().used, entry: e };
+}
+const resetText = (code, r) => r.entry ? `${code} 초기화 완료 (${TL(r.entry.tier)}${r.entry.money?' '+won(r.entry.money)+'원':''} 기록 삭제)` : `${code} 초기화 완료 (참여 기록은 없었어요)`;
+$('btn-r-one').addEventListener('click', async () => {
+  const m = ($('r-code').value||'').toUpperCase().match(CODE_RE), msg = $('r-msg');
+  if(!m) return msg.innerHTML = '<span class="danger">스티커 번호(예: 017-K4P9XQ)나 QR 주소를 넣어 주세요.</span>';
+  if(!confirm(`${m[0]} 스티커를 처음 상태로 되돌릴까요?\n참여 기록·당첨 내역이 지워지고 되돌릴 수 없어요.`)) return;
+  try{ msg.innerHTML = '<span class="ok">'+resetText(m[0], await resetCode(m[0]))+'</span>'; $('r-code').value=''; }
+  catch(e){ console.error(e); msg.innerHTML = '<span class="danger">'+esc(e.message)+'</span>'; }
+});
+$('btn-r-all').addEventListener('click', async () => {
+  const msg = $('r-all-msg');
+  msg.textContent = '사용된 QR을 찾는 중…';
+  const snap = await getDocs(query(collection(db,'codes'), where('used','==',true)));
+  if(snap.empty) return msg.textContent = '사용된 QR이 없어요.';
+  if(prompt(`사용된 QR ${snap.size}개를 모두 처음 상태로 되돌려요. 참여 기록이 모두 지워지고 되돌릴 수 없어요.\n계속하려면 "초기화" 라고 입력하세요.`) !== '초기화') return msg.textContent = '취소했어요.';
+  let n = 0;
+  for(const d of snap.docs){ try{ await resetCode(d.id); n++; msg.textContent = `${n} / ${snap.size} 초기화 중…`; }catch(e){ console.error(e); } }
+  msg.innerHTML = `<span class="ok">${n}개 초기화 완료</span>`;
+  loadDash();
+});
+// 참여자 표와 QR 카드의 '초기화' 버튼
+document.addEventListener('click', async ev => {
+  const b = ev.target.closest('[data-reset]'); if(!b) return;
+  const code = b.dataset.reset;
+  if(!confirm(`${code} 스티커를 처음 상태로 되돌릴까요?\n참여 기록·당첨 내역이 지워지고 되돌릴 수 없어요.`)) return;
+  b.disabled = true; b.textContent = '초기화 중…';
+  try{ const r = await resetCode(code); b.textContent = '초기화됨'; b.closest('tr')?.style.setProperty('opacity','.4'); const u = b.closest('.qr')?.querySelector('.danger'); if(u) u.textContent = '초기화됨'; alertMsg(resetText(code, r)); }
+  catch(e){ console.error(e); b.disabled = false; b.textContent = '초기화'; alertMsg(e.message); }
+});
+function alertMsg(t){ const el = $('e-msg'); if(el) el.textContent = t; const q = $('q-msg'); if(q) q.textContent = t; }
 
 // ---------- 참여자 ----------
 $('btn-e-load').addEventListener('click', async () => {
@@ -168,6 +243,7 @@ $('btn-e-load').addEventListener('click', async () => {
     { h:'설문', v:e=>e.surveyDone?1:0, f:e=>e.surveyDone?'✓':'' },
     { h:'보너스', v:e=>e.bonusMoney||0, num:1, f:e=>e.bonusMoney?won(e.bonusMoney):'' },
     { h:'마케팅동의', v:e=>e.agreeMarketing?1:0, f:e=>e.agreeMarketing?'✓':'' },
+    { h:'초기화', v:e=>'', f:e=>`<button class="btn danger sm" data-reset="${e.code}">초기화</button>` },
   ], entries.slice(0, 3000));
   if(entries.length > 3000) $('e-msg').textContent += ' · 화면엔 최근 3,000건만 표시 (CSV는 전체)';
 });
@@ -234,12 +310,26 @@ $('btn-q-load').addEventListener('click', async () => {
     const box = document.createElement('div'); box.className = 'qr';
     const q = document.createElement('div'); box.appendChild(q);
     new QRCode(q, { text:playUrl(c.code), width:100, height:100, correctLevel:QRCode.CorrectLevel.M });
-    box.insertAdjacentHTML('beforeend', `<div>${c.code}</div><div class="note">묶음 ${c.bundle||'-'}${c.used?' · <span class="danger">사용됨</span>':''}</div>`);
+    box.insertAdjacentHTML('beforeend', `<div>${c.code}</div><div class="note">묶음 ${c.bundle||'-'}${c.used?' · <span class="danger">사용됨</span>':''}</div>${c.used?`<button class="btn danger sm noprint" style="margin-top:4px" data-reset="${c.code}">초기화</button>`:''}`);
     frag.appendChild(box);
   });
   $('q-grid').appendChild(frag);
 });
 $('btn-q-csv').addEventListener('click', () => { const s = $('q-store').value; downloadCsv(`QR_${s}.csv`, ['매장코드','묶음','스티커번호','QR주소','사용'], qrCodes.map(c => [s, c.bundle||'', c.code, playUrl(c.code), c.used?'Y':''])); });
+
+// ---------- 전체 매장 QR 주소 ----------
+$('btn-q-all').addEventListener('click', async () => {
+  const b = $('btn-q-all'), msg = $('q-all-msg'); b.disabled = true; msg.textContent = '전체 번호를 읽는 중… (1~2분)';
+  try{
+    const snap = await getDocs(collection(db,'codes'));
+    const all = snap.docs.map(d => ({ code:d.id, ...d.data() }))
+      .sort((a,b) => a.store.localeCompare(b.store) || (a.seq||0)-(b.seq||0) || (a.bundle||0)-(b.bundle||0) || a.code.localeCompare(b.code));
+    downloadCsv(`전체매장_QR주소_${fmtTime(new Date()).slice(0,10)}.csv`, ['매장코드','매장명','지역','묶음','스티커번호','QR주소','사용'],
+      all.map(c => [c.store, stores[c.store]?.name||'', stores[c.store]?.region||'', c.bundle||'', c.code, playUrl(c.code), c.used?'Y':'']));
+    msg.innerHTML = `<span class="ok">${won(all.length)}개 · ${new Set(all.map(c=>c.store)).size}개 매장 내려받기 완료</span>`;
+  }catch(e){ console.error(e); msg.innerHTML = '<span class="danger">실패: '+esc(e.message)+'</span>'; }
+  b.disabled = false;
+});
 
 requireAdmin(loadDash);
 </script>

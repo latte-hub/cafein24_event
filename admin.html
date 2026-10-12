@@ -122,9 +122,28 @@ function table(el, cols, rows){
 }
 
 // ---------- 현황판 ----------
+// 오류를 쉬운 말로 바꿔서 보여주기
+function why(e){
+  const c = e?.code || '';
+  if(c.includes('resource-exhausted')) return 'Firebase 무료 요금제의 하루 한도(읽기 5만·쓰기 2만 건)를 다 썼어요. 내일 오후 4시 이후 다시 열거나 Blaze 요금제로 바꿔 주세요.';
+  if(c.includes('permission-denied')) return 'Firebase 보안 규칙이 최신이 아니에요. 깃허브의 firestore.rules 내용을 Firebase 콘솔 → Firestore → 규칙 탭에 다시 붙여넣고 게시해 주세요.';
+  if(c.includes('unavailable')) return '인터넷 연결이 불안정하거나 Firebase 서버에 닿지 않아요. 잠시 뒤 새로고침해 주세요.';
+  return '불러오지 못했어요 (' + (c || e?.message || '알 수 없는 오류') + ')';
+}
+const timeout = (p, ms=20000) => Promise.race([p, new Promise((_,rej) => setTimeout(() => rej({ code:'resource-exhausted-or-timeout', message:'응답 없음' }), ms))]);
 async function loadDash(){
   $('dash-time').textContent = '불러오는 중…';
-  const [ss, sp, st, bonus] = await Promise.all([getDocs(collection(db,'stores')), getDocs(collection(db,'storesPrivate')), getDocs(collection(db,'stats')), getDoc(doc(db,'stats','bonus'))]);
+  let ss, sp, st, bonus;
+  try{
+    [ss, st, bonus] = await timeout(Promise.all([getDocs(collection(db,'stores')), getDocs(collection(db,'stats')), getDoc(doc(db,'stats','bonus'))]));
+  }catch(e){
+    console.error(e);
+    const msg = e.code==='resource-exhausted-or-timeout' ? '20초 넘게 응답이 없어요. 대부분 Firebase 무료 요금제의 하루 읽기 한도(5만 건)를 다 쓴 경우예요. 내일 오후 4시 이후 다시 열거나 Blaze 요금제로 바꿔 주세요.' : why(e);
+    $('dash-time').innerHTML = '<span class="danger">'+esc(msg)+'</span>'; return;
+  }
+  // 점주 정보(본사 전용)는 따로: 실패해도 매장명·현황은 보이게
+  try{ sp = await getDocs(collection(db,'storesPrivate')); }
+  catch(e){ console.error(e); sp = { docs:[] }; setTimeout(() => { $('dash-time').innerHTML += ' · <span class="warn">점주 정보를 못 불러왔어요: '+esc(why(e))+'</span>'; }, 0); }
   const priv = {}; sp.docs.forEach(d => priv[d.id] = d.data());
   stores = {}; ss.docs.forEach(d => { const { phone:_p, owner:_o, ...pub } = d.data(); stores[d.id] = { code:d.id, ...pub, ...(priv[d.id]||{ owner:_o||'', phone:_p||'' }) }; });
   const stat = {}; st.docs.forEach(d => { if(d.id.startsWith('store_')) stat[d.id.slice(6)] = d.data(); });

@@ -46,7 +46,9 @@ const $ = id => document.getElementById(id), won = n => (n||0).toLocaleString('k
 const s = (new URLSearchParams(location.search).get('s')||'').padStart(3,'0');
 if(!/^\d{3}$/.test(s)){ $('name').textContent = '매장 코드가 없는 주소예요.'; }
 else{
-  const [st, x] = await Promise.all([getDoc(doc(db,'stores',s)), getDoc(doc(db,'stats','store_'+s))]);
+  let st, x;
+  try{ [st, x] = await Promise.all([getDoc(doc(db,'stores',s)), getDoc(doc(db,'stats','store_'+s))]); }
+  catch(e){ console.error(e); $('name').textContent = '지금 현황을 불러올 수 없어요. 잠시 뒤 새로고침해 주세요.'; throw e; }
   const d = x.exists() ? x.data() : {};
   $('name').textContent = st.exists() ? `${st.data().name} 점주님, 안녕하세요` : `매장 ${s}`;
   $('scans').textContent = won(d.scans)+'명';

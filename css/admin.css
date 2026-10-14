@@ -59,3 +59,8 @@ tr:hover td{background:#FDFBF7}
 .qr canvas,.qr img{width:100px;height:100px;display:block;margin:0 auto 4px}
 .ok{color:var(--ok)}.warn{color:var(--warn)}.danger{color:var(--danger)}
 @media print{.top,.tabs,.row,.box.noprint{display:none!important}.wrap{max-width:none;padding:0}.qr-grid{grid-template-columns:repeat(5,1fr)}.qr{break-inside:avoid;border-color:#ccc}}
+/* 당첨 보드 필터 칩 */
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 6px}
+.chip{font:inherit;font-size:13px;font-weight:600;border:1px solid var(--line);background:#fff;color:var(--ink2);border-radius:999px;padding:6px 12px;cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.chip span{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.chip.on{background:var(--navy);border-color:var(--navy);color:#fff}.chip.on span{color:#f3c56b}

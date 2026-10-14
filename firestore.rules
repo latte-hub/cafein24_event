@@ -31,13 +31,14 @@ service cloud.firestore {
     // ---------- 손님 전화번호 (문서 id = 스티커 번호) : 본사만 읽기 ----------
     match /phones/{code} {
       allow read, update, delete: if isAdmin();
-      // 룰렛을 돌리는 같은 순간(같은 트랜잭션)에 한 번만 만들 수 있음
+      // 당첨 스티커로 룰렛을 돌린 뒤, 번호를 입력할 때 1번만 만들 수 있음 (이미 있으면 거부)
       allow create: if isAdmin() || (
         request.resource.data.keys().hasOnly(['phone','store','createdAt'])
         && isPhone(request.resource.data.phone)
-        && request.resource.data.store == getAfter(/databases/$(database)/documents/codes/$(code)).data.store
-        && getAfter(/databases/$(database)/documents/codes/$(code)).data.used == true
-        && existsAfter(/databases/$(database)/documents/entries/$(code))
+        && request.resource.data.store == get(/databases/$(database)/documents/codes/$(code)).data.store
+        && get(/databases/$(database)/documents/codes/$(code)).data.used == true
+        && get(/databases/$(database)/documents/entries/$(code)).data.tier < 5
+        && getAfter(/databases/$(database)/documents/entries/$(code)).data.claimed == true
         && request.resource.data.createdAt == request.time
       );
     }
@@ -63,21 +64,28 @@ service cloud.firestore {
       // 만들 때: 같은 트랜잭션에서 잠근 codes 문서의 등수·매장과 반드시 일치해야 함
       allow create: if isAdmin() || (
         request.resource.data.code == code
-        && request.resource.data.keys().hasOnly(['code','store','storeName','phoneMask','tier','money','label','agreeMarketing','createdAt','surveyDone','bonusMoney'])
+        && request.resource.data.keys().hasOnly(['code','store','storeName','tier','money','label','createdAt','surveyDone','bonusMoney','claimed'])
         && request.resource.data.tier == getAfter(/databases/$(database)/documents/codes/$(code)).data.tier
         && request.resource.data.store == getAfter(/databases/$(database)/documents/codes/$(code)).data.store
         && getAfter(/databases/$(database)/documents/codes/$(code)).data.used == true
-        && request.resource.data.phoneMask is string && request.resource.data.phoneMask.size() <= 13
-        && existsAfter(/databases/$(database)/documents/phones/$(code))
+        && request.resource.data.claimed == false
         && request.resource.data.tier in [1, 2, 3, 4, 5]
         && request.resource.data.money == prizeOf(request.resource.data.tier)
         && request.resource.data.surveyDone == false
         && request.resource.data.bonusMoney == 0
         && request.resource.data.createdAt == request.time
       );
-      // 고칠 때: 설문 완료 표시(1회) 또는 보너스 결과 기록(1회)만
+      // 고칠 때: 번호 입력 완료(1회) · 설문 완료 표시(1회) · 보너스 결과 기록(1회)만
       allow update: if isAdmin() || (
         (
+          changedOnly(['claimed', 'phoneMask', 'agreeMarketing'])
+          && resource.data.claimed == false
+          && request.resource.data.claimed == true
+          && resource.data.tier < 5
+          && request.resource.data.phoneMask is string && request.resource.data.phoneMask.size() <= 13
+          && request.resource.data.agreeMarketing is bool
+          && existsAfter(/databases/$(database)/documents/phones/$(code))
+        ) || (
           changedOnly(['surveyDone'])
           && resource.data.surveyDone == false
           && request.resource.data.surveyDone == true
@@ -91,11 +99,17 @@ service cloud.firestore {
       );
     }
 
-    // ---------- 설문 (문서 id = 휴대폰 번호 → 번호당 1회) ----------
+    // ---------- 설문 ----------
+    // 당첨 손님: 문서 id = 휴대폰 번호 → 번호당 1회
+    // 꽝 손님: 문서 id = lose_무작위 → 번호 없이 저장 (당첨되면 claims 에 번호·지점)
     match /surveys/{phone} {
       allow read, delete: if isAdmin();
-      // 이미 있으면 create가 거부되므로 자동으로 1회 제한
       allow create: if isAdmin() || (
+        phone.matches('lose_[A-Za-z0-9]{20}')
+        && request.resource.data.src == 'lose'
+        && request.resource.data.keys().hasOnly(['src','store','code','q1','q2','q3','q4','q5','q6','q7','q8','createdAt'])
+        && request.resource.data.createdAt == request.time
+      ) || (
         isPhone(phone)
         && request.resource.data.phone == phone
         && request.resource.data.code is string
@@ -103,6 +117,23 @@ service cloud.firestore {
         && request.resource.data.createdAt == request.time
       );
       allow update: if isAdmin();
+    }
+
+    // ---------- 꽝 손님 설문 감사 포인트 신청 (문서 id = 휴대폰 번호 → 번호당 1회) ----------
+    // 조건: 당첨 스티커 설문으로 이미 참여한 번호는 안 됨 · 같은 순간에 선착순 카운터(stats/bonus)를 1 올려야 함 (1,200 넘으면 거부)
+    match /claims/{phone} {
+      allow read, update, delete: if isAdmin();
+      allow create: if isAdmin() || (
+        isPhone(phone)
+        && request.resource.data.phone == phone
+        && request.resource.data.keys().hasOnly(['phone','store','storeName','amount','src','code','agreeMarketing','createdAt'])
+        && request.resource.data.store is string && request.resource.data.store.matches('[0-9]{3}')
+        && exists(/databases/$(database)/documents/stores/$(request.resource.data.store))
+        && request.resource.data.amount == 1000
+        && request.resource.data.createdAt == request.time
+        && !exists(/databases/$(database)/documents/surveys/$(phone))
+        && getAfter(/databases/$(database)/documents/stats/bonus).data.wins == get(/databases/$(database)/documents/stats/bonus).data.wins + 1
+      );
     }
 
     // ---------- 집계 ----------
@@ -118,6 +149,11 @@ service cloud.firestore {
         && request.resource.data.wins == resource.data.wins + 1
         && request.resource.data.wins <= 1200
       );
+    }
+    // 꽝 공통 QR 참여 수 (개인정보 없음): 1씩만 올릴 수 있음
+    match /stats/lose {
+      allow create: if isAdmin() || (request.resource.data.keys().hasOnly(['scans']) && request.resource.data.scans == 1);
+      allow update: if isAdmin() || (changedOnly(['scans']) && request.resource.data.scans == resource.data.scans + 1);
     }
     // 매장별 공개 집계 (점주 공유 페이지 store.html 용 · 전화번호 없음)
     // scans +1, wins +0/1, amount +당첨금 만 허용

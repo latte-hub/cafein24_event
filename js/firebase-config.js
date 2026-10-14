@@ -19,6 +19,8 @@ export const EVENT = {
   adminDomain: "cafein24.co.kr", // 이 도메인 메일만 관리자
   bonusCap: 1200,               // 설문 보너스 1,000원 당첨 한도
   bonusRate: 0.3,               // 설문 보너스 당첨 확률
+  loseCode: "MERRY24",           // 꽝 공통 QR 번호 → play.html?c=MERRY24
+  prizeCounts: { 1:48, 2:191, 3:382, 4:3438 }, // 당첨 보드 목표 수량 (191개 매장 기준)
   instagram: "https://www.instagram.com/cafein24.official",
   prizes: { 1:[50000,"1등"], 2:[10000,"2등"], 3:[5000,"3등"], 4:[1000,"4등"], 5:[0,"꽝"] }
 };

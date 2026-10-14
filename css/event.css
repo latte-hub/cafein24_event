@@ -96,3 +96,22 @@ h1,h2{margin:0}
 .spinner{width:28px;height:28px;border:3px solid rgba(255,255,255,.25);border-top-color:var(--gold);border-radius:50%;animation:spin 1s linear infinite;margin:40px auto}
 @keyframes spin{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important}.wheel{transition-duration:.6s}}
+
+/* 당첨 후 번호·지점 입력 */
+.claim-prize{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.08);border:1px solid rgba(243,197,107,.5);border-radius:10px;padding:10px 14px;margin:4px 0 10px}
+.claim-prize b{font-size:22px;color:var(--gold);font-variant-numeric:tabular-nums}
+.claim-prize span:last-child{margin-left:auto;font-size:12px;color:var(--muted)}
+.tag{display:inline-block;font-size:11.5px;font-weight:700;color:#fff;border-radius:999px;padding:3px 9px;background:var(--gray)}
+.tag.t1{background:var(--orange)}.tag.t2{background:var(--blue)}.tag.t3{background:var(--okgreen)}.tag.t4{background:var(--yellow);color:#2a1f0a}
+.claim-note{background:rgba(243,197,107,.12);border:1px dashed var(--gold);border-radius:10px;padding:10px 12px;color:#fff!important}
+.store-fixed{background:#fff;color:var(--ink);border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;gap:2px}
+.store-fixed b{font-size:17px}.store-fixed span{font-size:12px;color:#6b6b6b}
+#store-q{font:inherit;font-size:17px;padding:12px 14px;border-radius:8px;border:1px solid rgba(255,255,255,.3);background:#fff;color:var(--ink);width:100%}
+#store-q:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(243,197,107,.3)}
+.store-list{display:grid;gap:6px;margin-top:8px}
+.store-opt{font:inherit;font-size:15px;text-align:left;display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:10px 12px;cursor:pointer}
+.store-opt span{font-size:12px;color:var(--muted)}
+.store-opt.on,.store-opt:active{border-color:var(--gold);background:rgba(243,197,107,.18)}
+.store-empty{font-size:12.5px;color:var(--muted)}
+.store-picked{font-size:13px;color:var(--muted)}.store-picked b{color:var(--gold);font-size:15px}
+[hidden]{display:none!important}

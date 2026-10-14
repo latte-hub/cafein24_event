@@ -8,12 +8,14 @@ GitHub Pages(화면) + Firebase Firestore(데이터) 구성입니다.
 | 파일 | 누가 | 하는 일 |
 |---|---|---|
 | `index.html` | 누구나 | 이벤트 안내 (긴 세로 한 장) |
-| `play.html?c=017-K4P9XQ` | QR 찍은 손님 | 번호 입력 → 룰렛 → 결과 → SNS·설문 → 보너스 룰렛 / 재접속 시 '내 당첨 내역' |
+| `play.html?c=017-K4P9XQ` | 당첨 스티커(고유 QR) 손님 | 룰렛 → 당첨 → 번호 입력(지점은 자동) → 설문 → 보너스 룰렛 / 재접속 시 '내 당첨 내역' |
+| `play.html?c=MERRY24` | 꽝 스티커(공통 QR 1종) 손님 | 룰렛 → 꽝 → 설문 → 보너스 룰렛 → 당첨 시 번호·지점 입력 |
 | `store.html?s=017` | 점주님 | 우리 매장 참여·당첨 현황 (전화번호 없음, 로그인 없음) |
-| `admin.html` | 본사 (@cafein24.co.kr) | 현황판 · 참여자 · 포인트 적립 목록 · 설문 · 매장별 QR · CSV |
+| `admin.html` | 본사 (@cafein24.co.kr) | 현황판 · **당첨 보드(전체 매장 1~5등)** · 참여자 · 포인트 적립 목록 · 설문 · QR·인쇄(꽝 공통 인쇄 목록) |
 | `seed.html` | 본사 (@cafein24.co.kr) | 매장 목록 올리기 · 스티커 번호 60,000개 생성 · 인쇄소 CSV (인쇄 전 1회) |
 | `firestore.rules` | — | Firebase 콘솔에 붙여넣는 보안 규칙 |
-| `js/firebase-config.js` | — | Firebase 설정 + 이벤트 기간·확률 등 설정값 |
+| `js/firebase-config.js` | — | Firebase 설정 + 이벤트 기간·확률·꽝 공통 번호(loseCode) |
+| `js/stores.js` | — | 지점 검색용 매장 목록 (코드·이름·지역만) |
 
 ## 올리는 순서
 
@@ -31,8 +33,10 @@ GitHub Pages(화면) + Firebase Firestore(데이터) 구성입니다.
 - `storesPrivate/{017}` 점주명·연락처·담당SV (본사만)
 - `codes/{017-K4P9XQ}` store, tier(1~5), used, usedAt, bundle(60장 묶음 1~5), seq — **등수는 여기에만**. QR 주소에는 없음
 - `entries/{스티커번호}` 룰렛 1회 기록 (가린 번호 010-****-5678만)
-- `phones/{스티커번호}` 손님 휴대폰 번호 원본 (본사만)
-- `surveys/{휴대폰번호}` 설문 (번호당 1회)
+- `phones/{스티커번호}` 당첨 손님 휴대폰 번호 원본 (본사만) — 당첨 후 번호 입력 때 생성
+- `claims/{휴대폰번호}` 꽝 손님 설문 보너스 1,000P 신청 (번호·적립 지점) (본사만)
+- `stats/lose` 꽝 공통 QR 참여 수 (개인정보 없음)
+- `surveys/{휴대폰번호}` 당첨 손님 설문 (번호당 1회) · `surveys/lose_…` 꽝 손님 설문 (번호 없음)
 - `stats/store_017` 매장별 참여·당첨 집계 (공개, 전화번호 없음)
 - `stats/bonus` 설문 보너스 당첨 수 (최대 1,200)
 
@@ -45,3 +49,10 @@ GitHub Pages(화면) + Firebase Firestore(데이터) 구성입니다.
 - 날짜는 한국 시간 기준이에요.
 - 본사 페이지(admin, seed, store)는 프리텐다드, 손님 페이지(index, play)는 IBM Plex Sans KR 폰트예요.
 - Firebase 무료 요금제는 하루 쓰기 2만·읽기 5만 건 한도가 있어요. 스티커 번호 생성과 이벤트 기간에는 Blaze 요금제를 권장해요.
+
+## 꽝 공통 QR 운영
+
+- 꽝 공통 QR 주소: `https://latte-hub.github.io/cafein24_event/play.html?c=MERRY24` (바꾸면 인쇄 스티커와 달라지니 바꾸지 마세요)
+- 인쇄용 목록: admin → QR·인쇄 → **인쇄용 목록 CSV (꽝 공통)** — 당첨 고유 QR + 매장·묶음별 꽝 공통 QR 수량
+- 꽝 공통 QR은 매장 구분이 없어요. 설문 보너스에 당첨된 꽝 손님이 고른 지점으로 적립돼요.
+- 당첨 스티커는 꽝 스티커와 QR 무늬가 달라 눈으로 구별돼요. 점주·직원이 골라내지 않도록 운영 안내가 필요해요.

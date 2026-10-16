@@ -61,13 +61,22 @@
   </div>
 
   <div class="box">
+    <h2>2-1. 예비 스티커 추가 (6만 장 맞추기)</h2>
+    <p>매장마다 <b>꽝 스티커를 예비로</b> 더 만들어요. 예비는 <b>묶음 6</b>으로 따로 포장돼서, 스티커가 찢어지거나 모자랄 때 써요. 모두 꽝이라 당첨 예산은 늘지 않아요.</p>
+    <div class="row"><label>매장당 예비 <input type="number" id="sp-n" value="14" style="width:70px"> 장</label><span class="note" id="sp-sum"></span></div>
+    <div class="row"><button class="btn" id="btn-spare">예비 스티커 추가하기</button><span class="note">여러 번 눌러도 매장당 (300 + 예비) 장을 넘게 만들지 않아요.</span></div>
+    <div class="bar"><i id="sp-bar" style="width:0"></i></div>
+    <div class="prog" id="sp-msg"></div>
+  </div>
+
+  <div class="box">
     <h2>3. 내려받기</h2>
     <div class="row">
       <button class="btn" id="btn-csv-print" disabled>인쇄소용 CSV (등수 없음)</button>
       <button class="btn ghost" id="btn-csv-internal" disabled>내부 보관용 CSV (등수 포함)</button>
       <button class="btn ghost" id="btn-csv-stores" disabled>매장별 요약 CSV</button>
     </div>
-    <p class="note">Firestore에 올라간 번호 전체를 읽어서 만들어요 (번호 수만큼 읽기가 발생 · 무료 요금제는 하루 5만 건까지).</p>
+    <p class="note">Firestore에 올라간 번호 전체를 읽어서 만들어요 (약 6만 건 읽기). 관리 화면 → QR·인쇄 → '① 전체 QR 목록'과 같은 파일이에요.</p>
   </div>
 
   <div class="box">
@@ -211,6 +220,35 @@ $('btn-gen').addEventListener('click', async () => {
   btn.disabled = false;
 });
 
+// ---- 2-1. 예비 스티커 (꽝 · 묶음 6) ----
+const spCalc = () => { const n = +$('sp-n').value||0; $('sp-sum').innerHTML = `${stores.length||191}개 매장 × (300 + ${n}) = <b>${won((stores.length||191)*(300+n))}장</b>`; };
+$('sp-n').addEventListener('input', spCalc); setTimeout(spCalc, 1500);
+$('btn-spare').addEventListener('click', async () => {
+  const n = +$('sp-n').value||0, target = 300 + n, btn = $('btn-spare'), msg = $('sp-msg');
+  if(!n) return msg.textContent = '예비 장수를 넣어 주세요.';
+  if(!confirm(`매장마다 꽝 예비 스티커를 더해서 매장당 ${target}장으로 맞출게요.\n(${stores.length}개 매장 · 이미 ${target}장인 매장은 건너뜀)`)) return;
+  btn.disabled = true; let added = 0, done = 0;
+  try{
+    for(const s of stores){
+      const have = (await getCountFromServer(query(collection(db,'codes'), where('store','==',s.code)))).data().count;
+      const need = target - have;
+      if(have >= 300 && need > 0){
+        const used = new Set(), batch = writeBatch(db);
+        for(let i=0;i<need;i++){
+          let c; do { c = randomCode(s.code); } while(used.has(c)); used.add(c);
+          batch.set(doc(db,'codes',c), { store:s.code, tier:5, used:false, bundle:6, seq:have+i+1, spare:true });
+        }
+        await withWatch(batch.commit(), () => { msg.innerHTML = QUOTA_MSG; });
+        added += need;
+      }
+      done++; $('sp-bar').style.width = Math.round(100*done/stores.length)+'%'; msg.textContent = `매장 ${done} / ${stores.length} 확인 · 예비 ${won(added)}장 추가`;
+    }
+    msg.innerHTML = `<span class="ok">완료!</span> 예비 ${won(added)}장을 추가했어요. 매장당 ${target}장이에요.`;
+    await refreshStatus();
+  }catch(e){ console.error(e); msg.innerHTML = `<span class="danger">멈췄어요: ${esc(e.message)}</span> 다시 누르면 남은 매장부터 이어서 돼요.`; }
+  btn.disabled = false;
+});
+
 // ---- 3. CSV (Firestore에서 읽어서 만듦) ----
 async function loadAllCodes(btn){
   const old = btn.textContent; btn.disabled = true; btn.textContent = '읽는 중…';
@@ -222,7 +260,7 @@ async function loadAllCodes(btn){
   }finally{ btn.disabled = false; btn.textContent = old; }
 }
 $('btn-csv-print').addEventListener('click', async e => { const all = await loadAllCodes(e.target); downloadCsv('cafein24_qr_print.csv',
-  ['매장코드','매장명','묶음','스티커번호','QR주소'], all.map(m => [m.store, m.storeName, m.bundle, m.code, playUrl(m.code)])); });
+  ['매장코드','매장명','묶음','스티커번호','QR주소'], all.map(m => [m.store, m.storeName, (m.bundle||1)===6?'예비':m.bundle, m.code, playUrl(m.code)])); });
 $('btn-csv-internal').addEventListener('click', async e => { const all = await loadAllCodes(e.target); downloadCsv('cafein24_qr_INTERNAL_등수포함_외부반출금지.csv',
   ['매장코드','매장명','묶음','스티커번호','등수','금액','사용','QR주소'], all.map(m => [m.store, m.storeName, m.bundle, m.code, m.tier===5?'꽝':m.tier+'등', TIER_MONEY[m.tier], m.used?'Y':'', playUrl(m.code)])); });
 $('btn-csv-stores').addEventListener('click', async e => {

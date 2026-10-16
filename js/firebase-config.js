@@ -21,7 +21,7 @@ export const EVENT = {
   bonusRate: 0.3,               // 설문 보너스 당첨 확률
   loseCode: "MERRY24",           // (예전) 전 매장 공통 꽝 QR → play.html?c=MERRY24 (계속 동작은 함)
   loseSuffix: "MERRY",           // 매장별 꽝 QR → play.html?c=017-MERRY (매장마다 1종)
-  prizeCounts: { 1:48, 2:191, 3:382, 4:3438 }, // 당첨 보드 목표 수량 (191개 매장 기준)
+  prizeCounts: { 1:48, 2:194, 3:388, 4:3492 }, // 당첨 보드 목표 수량 (194개 매장 기준)
   instagram: "https://www.instagram.com/cafein24.official",
   prizes: { 1:[50000,"1등"], 2:[10000,"2등"], 3:[5000,"3등"], 4:[1000,"4등"], 5:[0,"꽝"] }
 };

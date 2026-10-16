@@ -63,7 +63,7 @@
   <div class="box">
     <h2>2-1. 예비 스티커 추가 (6만 장 맞추기)</h2>
     <p>매장마다 <b>꽝 스티커를 예비로</b> 더 만들어요. 예비는 <b>묶음 6</b>으로 따로 포장돼서, 스티커가 찢어지거나 모자랄 때 써요. 모두 꽝이라 당첨 예산은 늘지 않아요.</p>
-    <div class="row"><label>매장당 예비 <input type="number" id="sp-n" value="14" style="width:70px"> 장</label><span class="note" id="sp-sum"></span></div>
+    <div class="row"><label>매장당 예비 <input type="number" id="sp-n" value="9" style="width:70px"> 장</label><span class="note" id="sp-sum"></span></div>
     <div class="row"><button class="btn" id="btn-spare">예비 스티커 추가하기</button><span class="note">여러 번 눌러도 매장당 (300 + 예비) 장을 넘게 만들지 않아요.</span></div>
     <div class="bar"><i id="sp-bar" style="width:0"></i></div>
     <div class="prog" id="sp-msg"></div>
@@ -221,7 +221,7 @@ $('btn-gen').addEventListener('click', async () => {
 });
 
 // ---- 2-1. 예비 스티커 (꽝 · 묶음 6) ----
-const spCalc = () => { const n = +$('sp-n').value||0; $('sp-sum').innerHTML = `${stores.length||191}개 매장 × (300 + ${n}) = <b>${won((stores.length||191)*(300+n))}장</b>`; };
+const spCalc = () => { const n = +$('sp-n').value||0; $('sp-sum').innerHTML = `${stores.length||194}개 매장 × (300 + ${n}) = <b>${won((stores.length||194)*(300+n))}장</b>`; };
 $('sp-n').addEventListener('input', spCalc); setTimeout(spCalc, 1500);
 $('btn-spare').addEventListener('click', async () => {
   const n = +$('sp-n').value||0, target = 300 + n, btn = $('btn-spare'), msg = $('sp-msg');

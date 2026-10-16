@@ -53,7 +53,7 @@ else{
   $('name').textContent = st.exists() ? `${st.data().name} 점주님, 안녕하세요` : `매장 ${s}`;
   $('scans').textContent = won(d.scans)+'명';
   $('bar').style.width = Math.min(100, 100*(d.scans||0)/300)+'%';
-  $('left').textContent = `이벤트 스티커 300장 중 ${won(d.scans||0)}장 사용 · 남은 스티커 약 ${won(Math.max(0,300-(d.scans||0)))}장 (예비 14장 별도)`;
+  $('left').textContent = `이벤트 스티커 300장 중 ${won(d.scans||0)}장 사용 · 남은 스티커 약 ${won(Math.max(0,300-(d.scans||0)))}장 (예비 9장 별도)`;
   $('wins').textContent = won(d.wins)+'명';
   $('amount').textContent = won(d.amount)+'원';
   const n = new Date(), p = v => String(v).padStart(2,'0');

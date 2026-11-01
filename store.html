@@ -19,7 +19,7 @@
 <main class="wrap">
   <p class="note" id="when"></p>
   <div class="hello" id="name">불러오는 중…</div>
-  <p class="note">12월 18일(금) ~ 27일(일) · 매장 스티커 300장</p>
+  <p class="note">12월 18일(금) ~ 27일(일) · 매장 스티커 200장</p>
 
   <div class="box">
     <div class="note">룰렛에 참여한 손님</div>
@@ -52,8 +52,8 @@ else{
   const d = x.exists() ? x.data() : {};
   $('name').textContent = st.exists() ? `${st.data().name} 점주님, 안녕하세요` : `매장 ${s}`;
   $('scans').textContent = won(d.scans)+'명';
-  $('bar').style.width = Math.min(100, 100*(d.scans||0)/300)+'%';
-  $('left').textContent = `이벤트 스티커 300장 중 ${won(d.scans||0)}장 사용 · 남은 스티커 약 ${won(Math.max(0,300-(d.scans||0)))}장 (예비 9장 별도)`;
+  $('bar').style.width = Math.min(100, 100*(d.scans||0)/200)+'%';
+  $('left').textContent = `이벤트 스티커 200장 중 ${won(d.scans||0)}장 사용 · 남은 스티커 약 ${won(Math.max(0,200-(d.scans||0)))}장`;
   $('wins').textContent = won(d.wins)+'명';
   $('amount').textContent = won(d.amount)+'원';
   const n = new Date(), p = v => String(v).padStart(2,'0');

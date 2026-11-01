@@ -54,9 +54,13 @@
       <label>4등(1천P) 매장당 <input type="number" id="p-t4" value="24" style="width:60px"></label>
     </div>
     <div class="row">
-      <label>다라미 텀블러 전체 <input type="number" id="p-t6" value="" placeholder="개수" style="width:80px"> 개</label>
-      <label>다라미 양산 전체 <input type="number" id="p-t7" value="" placeholder="개수" style="width:80px"> 개</label>
-      <span class="note">룰렛 굿즈 칸 당첨 수예요. 1등·굿즈는 '운영' 매장에만 무작위로 들어가요 (예비·미진행 매장 제외).</span>
+      <label style="flex:1;min-width:260px">1등 매장 (운영팀 지정, 매장번호 쉼표로) <input type="text" id="p-t1list" placeholder="예: 003, 017, 045 …" style="width:100%"></label>
+      <span class="note" id="t1-msg">비워 두면 운영 매장 중 무작위 10곳. 적으면 그 매장에 1장씩 들어가요.</span>
+    </div>
+    <div class="row">
+      <label>다라미 텀블러 전체 <input type="number" id="p-t6" value="10" style="width:80px"> 개</label>
+      <label>다라미 양산 전체 <input type="number" id="p-t7" value="10" style="width:80px"> 개</label>
+      <span class="note">룰렛 굿즈 칸 당첨 수예요. 전국 운영 매장에 무작위로 들어가요 (예비·미진행 매장 제외).</span>
     </div>
     <p id="p-sum" class="note"></p>
     <div class="row"><button class="btn" id="btn-gen" disabled>등수 정하고 Firestore에 올리기 (이어 올리기)</button><span class="note">매장 단위로 올려요. 이미 200장이 있는 매장은 건너뛰니, 중간에 멈춰도 다시 누르면 이어서 올라가요.</span></div>
@@ -174,8 +178,19 @@ $('qr-file').addEventListener('change', async e => {
   const off = Object.entries(by).filter(([k,n]) => n !== PER);
   const ok = !bad.length && !dup && !off.length;
   $('qr-file-msg').innerHTML = `${won(qrRows.length)}장 · 매장 ${Object.keys(by).length}곳` + (ok ? ' <span class="ok">확인 완료</span>' : ` <span class="danger">문제: 형식 오류 ${bad.length} · 중복 ${dup} · 200장 아닌 매장 ${off.map(o=>o[0]).join(',')||0}</span>`);
-  $('btn-gen').disabled = !ok; calcSum();
+  $('btn-gen').disabled = !ok; checkT1(); calcSum();
 });
+const T1LIST = () => [...new Set($('p-t1list').value.split(/[^0-9]+/).filter(Boolean).map(x => x.padStart(3,'0')))];
+function checkT1(){
+  const l = T1LIST(), st = new Set(qrRows.map(r=>r.store)), m = $('t1-msg');
+  if(!l.length){ m.textContent = '비워 두면 운영 매장 중 무작위 10곳. 적으면 그 매장에 1장씩 들어가요.'; $('p-t1').disabled = false; return true; }
+  $('p-t1').value = l.length; $('p-t1').disabled = true;
+  const bad = qrRows.length ? l.filter(c => !st.has(c)) : [];
+  const notOp = qrRows.length ? l.filter(c => st.has(c) && qrRows.find(r=>r.store===c).kind !== '운영') : [];
+  m.innerHTML = `${l.length}곳: ${l.join(', ')}` + (bad.length ? ` <span class="danger">QR 목록에 없는 매장: ${bad.join(', ')}</span>` : '') + (notOp.length ? ` <span class="danger">운영 매장 아님: ${notOp.join(', ')}</span>` : (bad.length?'':' <span class="ok">확인</span>'));
+  return !bad.length;
+}
+$('p-t1list').addEventListener('input', () => { checkT1(); calcSum(); });
 const P = () => ({ t1:+$('p-t1').value, t2:+$('p-t2').value, t3:+$('p-t3').value, t4:+$('p-t4').value, t6:+$('p-t6').value||0, t7:+$('p-t7').value||0 });
 function calcSum(){
   const p = P(), st = [...new Set(qrRows.map(r=>r.store))], n = st.length || 210;
@@ -191,6 +206,7 @@ const QUOTA_MSG = '<span class="danger">45초 넘게 응답이 없어요. Fireba
 
 $('btn-gen').addEventListener('click', async () => {
   const p = P(), btn = $('btn-gen'), msg = $('gen-msg');
+  if(!checkT1()){ alert('1등 매장 번호를 확인해 주세요. QR 목록에 없는 매장이 있어요.'); return; }
   if(($('p-t6').value==='' || $('p-t7').value==='') && !confirm('다라미 텀블러·양산 개수가 비어 있어요. 0개로 올릴까요?')) return;
   btn.disabled = true;
   try{
@@ -221,10 +237,12 @@ $('btn-gen').addEventListener('click', async () => {
     const pool = todo.filter(c => byStore[c][0].kind === '운영');
     const pick = n => { const out = []; let bag = []; while(out.length < n && pool.length){ if(!bag.length) bag = shuffle(pool.slice()); out.push(bag.pop()); } return out; };
     const extra = {}; const add = (c,t) => (extra[c] ??= []).push(t);
-    pick(Math.min(Math.max(0,p.t1-h1), pool.length)).forEach(c => add(c,1));   // 1등은 매장당 최대 1장
+    const t1list = T1LIST();
+    if(t1list.length) t1list.filter(c => todo.includes(c)).forEach(c => add(c,1));   // 운영팀 지정 매장에 1장씩
+    else pick(Math.min(Math.max(0,p.t1-h1), pool.length)).forEach(c => add(c,1));   // 지정 없으면 무작위, 매장당 최대 1장
     pick(Math.max(0,p.t6-h6)).forEach(c => add(c,6));
     pick(Math.max(0,p.t7-h7)).forEach(c => add(c,7));
-    if(!confirm(`이미 끝난 매장 ${all.length-todo.length}곳은 건너뛰고, 남은 ${todo.length}곳(${won(todo.length*PER)}장)을 올릴게요.\n1등 ${Math.max(0,p.t1-h1)} · 텀블러 ${Math.max(0,p.t6-h6)} · 양산 ${Math.max(0,p.t7-h7)}개를 운영 매장에 무작위로 넣어요.\n\n무료 요금제는 하루 쓰기 2만 건 한도라 Blaze 요금제를 권장해요.`)){ btn.disabled=false; return; }
+    if(!confirm(`이미 끝난 매장 ${all.length-todo.length}곳은 건너뛰고, 남은 ${todo.length}곳(${won(todo.length*PER)}장)을 올릴게요.\n1등 ${t1list.length ? '지정 '+t1list.filter(c=>todo.includes(c)).length+'곳('+t1list.join(',')+')' : '무작위 '+Math.max(0,p.t1-h1)} · 텀블러 ${Math.max(0,p.t6-h6)} · 양산 ${Math.max(0,p.t7-h7)}개를 운영 매장에 무작위로 넣어요.\n\n무료 요금제는 하루 쓰기 2만 건 한도라 Blaze 요금제를 권장해요.`)){ btn.disabled=false; return; }
     // 4) 매장 하나씩 200장을 한 번에 저장
     let n = 0;
     for(const c of todo){

@@ -46,7 +46,7 @@
 
   <div class="box">
     <h2>2. QR 목록 올리기 (인쇄용 CSV)</h2>
-    <p>인쇄소에 보낸 <b>QR 목록 CSV</b>를 올리면 그 번호 그대로 서버에 등록돼요. 매장당 200장(40장 × 5묶음, 묶음마다 핫 20 + 아이스 20).</p>
+    <p>인쇄소에 보낸 <b>QR 목록 CSV</b>를 올리면 그 번호 그대로 서버에 등록돼요. 매장당 200장(40장 × 5묶음).</p>
     <div class="row"><input type="file" id="qr-file" accept=".csv"><span class="note" id="qr-file-msg"></span></div>
     <div class="row">
       <label>1등(5만P) 매장 수 <input type="number" id="p-t1" value="10" style="width:70px"></label>
@@ -184,10 +184,10 @@ $('qr-file').addEventListener('change', async e => {
   const lines = text.split(/\r?\n/).filter(Boolean);
   const head = lines[0].split(',').map(x=>x.trim());
   const col = n => head.indexOf(n);
-  const need = ['매장번호','매장명','구분','묶음','순번','컵','고유번호'];
+  const need = ['매장번호','매장명','구분','묶음','순번','고유번호'];   // '컵' 칸은 있어도 되고 없어도 돼요
   const miss = need.filter(n => col(n) < 0);
   if(miss.length){ $('qr-file-msg').innerHTML = `<span class="danger">머리글이 없어요: ${miss.join(', ')}</span>`; return; }
-  qrRows = lines.slice(1).map(l => { const c = l.split(','); return { store:c[col('매장번호')].padStart(3,'0'), name:c[col('매장명')], kind:c[col('구분')], bundle:+c[col('묶음')], seq:+c[col('순번')], cup:c[col('컵')], code:c[col('고유번호')].trim().toUpperCase() }; });
+  qrRows = lines.slice(1).map(l => { const c = l.split(','); return { store:c[col('매장번호')].padStart(3,'0'), name:c[col('매장명')], kind:c[col('구분')], bundle:+c[col('묶음')], seq:+c[col('순번')], cup: col('컵') >= 0 ? c[col('컵')] : '', code:c[col('고유번호')].trim().toUpperCase() }; });
   const bad = qrRows.filter(r => !/^\d{3}-[A-Z0-9]{6}$/.test(r.code) || r.code.slice(0,3)!==r.store);
   const dup = qrRows.length - new Set(qrRows.map(r=>r.code)).size;
   const by = {}; qrRows.forEach(r => by[r.store] = (by[r.store]||0)+1);
@@ -270,7 +270,7 @@ $('btn-gen').addEventListener('click', async () => {
       shuffle(tiers);
       const batch = writeBatch(db);
       byStore[c].forEach((r, i) => {   // 등수는 tiers에만 (codes에는 넣지 않음)
-        batch.set(doc(db,'codes',r.code), { store:c, used:false, bundle:r.bundle, seq:(r.bundle-1)*40+r.seq, cup:r.cup });
+        batch.set(doc(db,'codes',r.code), { store:c, used:false, bundle:r.bundle, seq:(r.bundle-1)*40+r.seq, ...(r.cup ? { cup:r.cup } : {}) });
         batch.set(doc(db,'tiers',r.code), { store:c, tier:tiers[i] });
       });
       await withWatch(batch.commit(), () => { msg.innerHTML = QUOTA_MSG; });

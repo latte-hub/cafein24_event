@@ -25,9 +25,9 @@
     <ol class="steps">
       <li><b>매장 목록 올리기</b> — 매장목록 엑셀 파일을 올리고 'Firestore에 매장 저장' (테스트 매장은 자동으로 빠지고, 예비 매장은 2번에서 자동으로 생겨요)</li>
       <li><b>QR 목록 올리기</b> — 인쇄소에 보낸 <b>럭키룰렛_QR목록_210매장_인쇄용.csv</b> 파일을 그대로 올려요. 파일 속 QR 번호에 등수를 무작위로 정해서 Firestore(codes)에 저장해요. 인쇄물과 서버 번호가 똑같아져요.</li>
-      <li><b>등수는 서버에만</b> 있어요. 내부 보관용 CSV(등수 포함)는 본사 밖으로 절대 내보내지 마세요.</li>
+      <li><b>등수는 서버의 tiers에만</b> 있어요. 손님 화면은 스티커를 쓴 뒤에만 등수를 읽을 수 있어요. 내부 보관용 CSV(등수 포함)는 본사 밖으로 절대 내보내지 마세요.</li>
     </ol>
-    <p class="note">현재 Firestore 상태 : 매장 <b id="st-stores">-</b>개 · 스티커 번호 <b id="st-codes">-</b>개</p>
+    <p class="note">현재 Firestore 상태 : 매장 <b id="st-stores">-</b>개 · 스티커 번호 <b id="st-codes">-</b>개 · 등수 <b id="st-tiers">-</b>개</p>
   </div>
 
   <div class="box">
@@ -69,6 +69,13 @@
   </div>
 
   <div class="box">
+    <h2>2-1. 등수 분리 (11/4 이전에 번호를 올린 경우 1번만)</h2>
+    <p>11/4 이전 방식은 스티커 번호(codes)에 등수가 같이 있어서 QR만 알면 등수를 미리 볼 수 있었어요. 이 버튼은 등수를 tiers로 옮기고 codes에서 지워요. <b>새 보안 규칙을 게시한 직후</b> 눌러 주세요. 중간에 멈춰도 다시 누르면 이어서 해요.</p>
+    <p class="note">등수가 남아 있는 스티커 번호 : <b id="st-leak">-</b>개 (0이 되어야 해요)</p>
+    <div class="row"><button class="btn" id="btn-migrate">등수 분리 시작</button><span class="note" id="mig-msg"></span></div>
+  </div>
+
+  <div class="box">
     <h2>3. 내려받기</h2>
     <div class="row">
       <button class="btn" id="btn-csv-print" disabled>인쇄소용 CSV (등수 없음)</button>
@@ -81,13 +88,13 @@
   <div class="box">
     <h2>위험 구역</h2>
     <p>번호를 잘못 만들었을 때만. 참여 기록(entries)이 있으면 지우지 마세요.</p>
-    <div class="row"><button class="btn danger" id="btn-wipe">codes 전체 삭제</button><span class="note" id="wipe-msg"></span></div>
+    <div class="row"><button class="btn danger" id="btn-wipe">codes·tiers 전체 삭제</button><span class="note" id="wipe-msg"></span></div>
   </div>
 </main>
 
 <script type="module">
 import { db, EVENT, $, won, esc, requireAdmin, downloadCsv, randomCode, shuffle, playUrl } from "./js/common.js";
-import { collection, doc, getDocs, getCountFromServer, writeBatch, query, where, limit, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { collection, doc, getDocs, getCountFromServer, writeBatch, query, where, limit, setDoc, orderBy, startAfter, documentId, deleteField } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 let stores = [];      // Firestore에 있는 매장 [{code,name,...}]
 let parsed = [];      // 붙여넣기 미리보기
@@ -95,9 +102,10 @@ const TIER_MONEY = {1:50000,2:10000,3:5000,4:1000,5:0,6:0,7:0};
 const TIER_LABEL = t => EVENT.prizes[t]?.[1] || t+'등';
 
 async function refreshStatus(){
-  const [s, c] = await Promise.all([getDocs(collection(db,'stores')), getCountFromServer(collection(db,'codes'))]);
+  const [s, c, t, lk] = await Promise.all([getDocs(collection(db,'stores')), getCountFromServer(collection(db,'codes')), getCountFromServer(collection(db,'tiers')), getCountFromServer(query(collection(db,'codes'), where('tier','in',[1,2,3,4,5,6,7])))]);
   stores = s.docs.map(d => ({ code:d.id, ...d.data() })).sort((a,b) => a.code.localeCompare(b.code));
-  $('st-stores').textContent = stores.length; $('st-codes').textContent = won(c.data().count);
+  $('st-stores').textContent = stores.length; $('st-codes').textContent = won(c.data().count); $('st-tiers').textContent = won(t.data().count);
+  $('st-leak').innerHTML = lk.data().count ? `<span class="danger">${won(lk.data().count)}</span>` : '<span class="ok">0</span>';
   
   ['btn-csv-print','btn-csv-internal','btn-csv-stores'].forEach(id => $(id).disabled = c.data().count === 0);
   calcSum();
@@ -232,7 +240,7 @@ $('btn-gen').addEventListener('click', async () => {
     const todo = all.filter(c => !have[c]);
     if(!todo.length){ msg.innerHTML = '<span class="ok">모든 매장의 번호가 이미 올라가 있어요.</span>'; btn.disabled=false; return; }
     // 3) 1등·굿즈: 이미 배정된 수를 빼고, 남은 '운영' 매장 중에서 무작위
-    const cnt = async t => (await getCountFromServer(query(collection(db,'codes'), where('tier','==',t)))).data().count;
+    const cnt = async t => (await getCountFromServer(query(collection(db,'tiers'), where('tier','==',t)))).data().count;
     const [h1,h6,h7] = await Promise.all([cnt(1),cnt(6),cnt(7)]);
     const pool = todo.filter(c => byStore[c][0].kind === '운영');
     const pick = n => { const out = []; let bag = []; while(out.length < n && pool.length){ if(!bag.length) bag = shuffle(pool.slice()); out.push(bag.pop()); } return out; };
@@ -253,7 +261,10 @@ $('btn-gen').addEventListener('click', async () => {
       while(tiers.length < PER) tiers.push(5);
       shuffle(tiers);
       const batch = writeBatch(db);
-      byStore[c].forEach((r, i) => batch.set(doc(db,'codes',r.code), { store:c, tier:tiers[i], used:false, bundle:r.bundle, seq:(r.bundle-1)*40+r.seq, cup:r.cup }));
+      byStore[c].forEach((r, i) => {   // 등수는 tiers에만 (codes에는 넣지 않음)
+        batch.set(doc(db,'codes',r.code), { store:c, used:false, bundle:r.bundle, seq:(r.bundle-1)*40+r.seq, cup:r.cup });
+        batch.set(doc(db,'tiers',r.code), { store:c, tier:tiers[i] });
+      });
       await withWatch(batch.commit(), () => { msg.innerHTML = QUOTA_MSG; });
       n++;
       $('gen-bar').style.width = Math.round(100*(all.length-todo.length+n)/all.length)+'%';
@@ -270,9 +281,10 @@ $('btn-gen').addEventListener('click', async () => {
 async function loadAllCodes(btn){
   const old = btn.textContent; btn.disabled = true; btn.textContent = '읽는 중…';
   try{
-    const snap = await getDocs(collection(db,'codes'));
+    const [snap, ts] = await Promise.all([getDocs(collection(db,'codes')), getDocs(collection(db,'tiers'))]);
+    const tierOf = Object.fromEntries(ts.docs.map(d => [d.id, d.data().tier]));
     const name = Object.fromEntries(stores.map(s => [s.code, s.name||'']));
-    return snap.docs.map(d => ({ code:d.id, ...d.data(), storeName:name[d.data().store]||'' }))
+    return snap.docs.map(d => ({ code:d.id, ...d.data(), tier: tierOf[d.id] ?? d.data().tier, storeName:name[d.data().store]||'' }))
       .sort((a,b) => a.store.localeCompare(b.store) || (a.seq||0)-(b.seq||0) || (a.bundle||0)-(b.bundle||0) || a.code.localeCompare(b.code));
   }finally{ btn.disabled = false; btn.textContent = old; }
 }
@@ -292,14 +304,40 @@ $('btn-wipe').addEventListener('click', async () => {
   if(prompt('정말 codes 전체를 삭제하려면 "삭제" 라고 입력하세요.') !== '삭제') return;
   const msg = $('wipe-msg'); let n = 0;
   try{
-    while(true){
-      const snap = await getDocs(query(collection(db,'codes'), limit(500)));
+    for(const col of ['codes','tiers']) while(true){
+      const snap = await getDocs(query(collection(db,col), limit(500)));
       if(snap.empty) break;
       const batch = writeBatch(db); snap.docs.forEach(d => batch.delete(d.ref)); await batch.commit();
-      n += snap.size; msg.textContent = `${won(n)}개 삭제…`;
+      n += snap.size; msg.textContent = `${won(n)}개 삭제… (${col})`;
     }
     msg.textContent = `${won(n)}개 삭제 완료`; await refreshStatus();
   }catch(e){ console.error(e); msg.textContent = '삭제 실패: '+e.message; }
+});
+
+// ---- 2-1. 등수 분리: codes.tier → tiers/{번호} ----
+$('btn-migrate').addEventListener('click', async () => {
+  const btn = $('btn-migrate'), msg = $('mig-msg'); btn.disabled = true;
+  let last = null, moved = 0, seen = 0;
+  try{
+    while(true){
+      const q = last ? query(collection(db,'codes'), orderBy(documentId()), startAfter(last), limit(240))
+                     : query(collection(db,'codes'), orderBy(documentId()), limit(240));
+      const snap = await getDocs(q);
+      if(snap.empty) break;
+      last = snap.docs[snap.docs.length-1].id; seen += snap.size;
+      const todo = snap.docs.filter(d => d.data().tier !== undefined);
+      if(todo.length){
+        const b = writeBatch(db);
+        todo.forEach(d => { b.set(doc(db,'tiers',d.id), { store:d.data().store, tier:d.data().tier }); b.update(d.ref, { tier:deleteField() }); });
+        await withWatch(b.commit(), () => { msg.innerHTML = QUOTA_MSG; });
+        moved += todo.length;
+      }
+      msg.textContent = `${won(seen)}개 확인 · ${won(moved)}개 분리…`;
+    }
+    msg.innerHTML = `<span class="ok">완료!</span> ${won(seen)}개 확인 · ${won(moved)}개 분리`;
+    await refreshStatus();
+  }catch(e){ console.error(e); msg.innerHTML = `<span class="danger">멈췄어요: ${esc(e.message)}</span> 다시 누르면 이어서 해요.`; }
+  btn.disabled = false;
 });
 
 requireAdmin(() => { document.querySelector('[data-logout]').hidden = false; refreshStatus(); });

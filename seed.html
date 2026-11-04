@@ -10,7 +10,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
-<header class="top"><span class="logo">CAFEIN<b>24</b></span><span class="ttl">스티커 번호 만들기 (인쇄 전 1회)</span><span class="sp"></span><span class="me" data-user></span><a class="btn-sm" href="admin.html">관리 현황 →</a><button data-logout hidden>로그아웃</button></header>
+<header class="top"><span class="logo">CAFEIN<b>24</b></span><span class="ttl">스티커 번호 만들기 (인쇄 전 1회)</span><span class="sp"></span><span class="me" data-user></span><a class="btn-sm" href="admin.html#guide">사용 설명서</a><a class="btn-sm" href="admin.html">관리 현황 →</a><button data-logout hidden>로그아웃</button></header>
 
 <section class="gate" id="gate">
   <h1>본사 관리자 로그인</h1>
@@ -20,6 +20,7 @@
 </section>
 
 <main class="wrap" id="main" hidden>
+  <div class="callout" style="margin-bottom:14px">처음이면 <a href="admin.html#g-make"><b>사용 설명서 › 1. QR 만들기</b></a>를 먼저 읽어 주세요. 이 페이지는 <b>인쇄 전 1번</b>만 써요. 등수 확인·QR 초기화는 <a href="admin.html">본사 관리</a> 페이지에서 해요.</div>
   <div class="box">
     <h2>진행 순서</h2>
     <ol class="steps">
@@ -54,7 +55,7 @@
       <label>4등(1천P) 매장당 <input type="number" id="p-t4" value="24" style="width:60px"></label>
     </div>
     <div class="row">
-      <label style="flex:1;min-width:260px">1등 매장 (운영팀 지정, 매장번호 쉼표로) <input type="text" id="p-t1list" value="120, 106, 085, 075, 127, 134, 135, 128, 082, 029" placeholder="예: 003, 017, 045 …" style="width:100%"></label>
+      <label style="flex:1;min-width:260px">1등 매장 (운영팀 지정, 매장번호 쉼표로) <input type="text" id="p-t1list" value="" placeholder="예: 003, 017, 045 …" style="width:100%"></label>
       <span class="note" id="t1-msg">비워 두면 운영 매장 중 무작위 10곳. 적으면 그 매장에 1장씩 들어가요.</span>
     </div>
     <div class="row">
@@ -77,8 +78,8 @@
 
   <div class="box">
     <h2>2-2. 1등 매장 맞추기 (번호를 이미 올린 경우)</h2>
-    <p>1등(5만P) 10곳 확정 (11/4, 점검 평균 상위 9곳 + 고양삼송점). 이미 올린 번호에서 1등이 다른 매장에 들어가 있으면, 그 1등은 꽝으로 바꾸고 아래 매장의 꽝 1장을 1등으로 바꿔요. 매장당 1장 · 전체 10장이 그대로 유지돼요. <b>2-1 등수 분리를 먼저</b> 끝내 주세요.</p>
-    <div class="row"><input type="text" id="t1-fix" value="120, 106, 085, 075, 127, 134, 135, 128, 082, 029" style="flex:1;min-width:260px"></div>
+    <p>1등(5만P) 매장 번호 10개를 아래에 붙여넣어요(목록은 공개 저장소에 두지 않아요). 이미 올린 번호에서 1등이 다른 매장에 들어가 있으면, 그 1등은 꽝으로 바꾸고 아래 매장의 꽝 1장을 1등으로 바꿔요. 매장당 1장 · 전체 10장이 그대로 유지돼요. <b>2-1 등수 분리를 먼저</b> 끝내 주세요.</p>
+    <div class="row"><input type="text" id="t1-fix" value="" placeholder="1등 매장 번호 10개를 쉼표로 (공유받은 목록 붙여넣기)" style="flex:1;min-width:260px"></div>
     <div class="row"><button class="btn ghost" id="btn-t1-check">지금 1등 매장 확인</button><button class="btn" id="btn-t1-fix">1등 매장 맞추기</button><span class="note" id="t1-fix-msg"></span></div>
   </div>
 

@@ -72,3 +72,25 @@ tr:hover td{background:#FDFBF7}
 .bn-day{display:grid;grid-template-columns:48px 1fr 56px;gap:10px;align-items:center;font-size:13px;font-variant-numeric:tabular-nums}
 .bn-day div{height:10px;background:var(--line);border-radius:5px;overflow:hidden}.bn-day i{display:block;height:100%;background:var(--t4)}
 .bn-day b{text-align:right}
+
+/* 사용 설명서 */
+.tabs button.tab-guide{color:var(--accent)}
+#p-guide .box{scroll-margin-top:70px}
+.guide-hero{background:var(--navy)!important;border-color:var(--navy)!important}
+.guide-hero h2{color:#fff;font-size:19px}.guide-hero p{color:rgba(255,255,255,.8)!important}
+.gnav{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.gnav a{font-size:13px;font-weight:600;color:#fff;text-decoration:none;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:5px 11px}
+.gnav a:hover{background:rgba(255,255,255,.22)}
+.where{font-size:12.5px;font-weight:600;color:var(--muted);margin-left:6px}
+.kbd{display:inline-block;font-size:12.5px;font-weight:700;color:var(--ink);background:var(--accent-soft);border:1px solid #F7C9AA;border-radius:6px;padding:0 7px;line-height:1.7}
+.guide-hero .kbd{color:var(--ink)}
+.gtbl{margin:6px 0 10px;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.gtbl th{cursor:default;position:static}.gtbl td{white-space:normal;vertical-align:top;font-size:13px}
+#p-guide .steps{margin:6px 0 10px}
+.callout{background:#FFF8EC;border:1px solid #F1D9A8;border-radius:10px;padding:12px 14px;font-size:13.5px;line-height:1.7;margin:10px 0}
+.callout.danger-c{background:#FDF0EF;border-color:#F0C3BF}
+#p-guide details{border-top:1px solid var(--line);padding:10px 0}
+#p-guide summary{cursor:pointer;font-weight:600;font-size:14px}
+#p-guide details p{margin:6px 0 0 16px}
+code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;background:#F1EEE8;border-radius:4px;padding:1px 5px}
+@media (max-width:640px){.wrap{padding:14px}.gtbl{display:block;overflow-x:auto}.top{flex-wrap:wrap;gap:8px;padding:10px 14px}.top .me{display:none}.top .ttl{font-size:14px}}

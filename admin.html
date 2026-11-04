@@ -10,7 +10,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
-<header class="top"><span class="logo">CAFEIN<b>24</b></span><span class="ttl">크리스마스 룰렛 · 본사 관리</span><span class="sp"></span><span class="me" data-user></span><a class="btn-sm" href="seed.html">번호 만들기</a><button data-logout hidden>로그아웃</button></header>
+<header class="top"><span class="logo">CAFEIN<b>24</b></span><span class="ttl">크리스마스 룰렛 · 본사 관리</span><span class="sp"></span><span class="me" data-user></span><a class="btn-sm" href="#guide" id="lnk-guide">사용 설명서</a><a class="btn-sm" href="seed.html">번호 만들기</a><button data-logout hidden>로그아웃</button></header>
 
 <section class="gate" id="gate">
   <h1>본사 관리자 로그인</h1>
@@ -21,6 +21,7 @@
 
 <main class="wrap" id="main" hidden>
   <nav class="tabs">
+    <button data-tab="p-guide" class="tab-guide">사용 설명서</button>
     <button class="on" data-tab="p-dash">현황판</button>
     <button data-tab="p-board">당첨 보드</button>
     <button data-tab="p-bonus">응모권 현황</button>
@@ -102,9 +103,15 @@
   <!-- QR -->
   <section class="panel" id="p-qr">
     <div class="box noprint">
+      <h2>QR 등수 확인 <span class="note">본사 전용 · 화면 공유 금지</span></h2>
+      <p>스티커 번호나 QR 주소를 넣으면 그 QR의 매장 · 등수 · 사용 여부가 나와요. 손님·점주 문의 대응과 테스트용이에요.</p>
+      <div class="row"><input type="text" id="t-code" placeholder="스티커 번호 또는 QR 주소 (예: 017-K4P9XQ)" style="width:320px"><button class="btn sm" id="btn-t-look">등수 확인</button></div>
+      <div class="prog" id="t-msg"></div>
+    </div>
+    <div class="box noprint">
       <h2>매장별 QR</h2>
-      <p>매장을 고르면 그 매장 스티커 200장의 QR이 나와요. 인쇄소 파일 확인용·분실 재출력용입니다. (등수는 화면에 나오지 않아요)</p>
-      <div class="row"><input type="text" id="q-search" placeholder="매장 검색 (이름·코드)" style="width:170px"><select id="q-store"></select><button class="btn sm" id="btn-q-load">QR 보기</button><button class="btn ghost sm" id="btn-q-csv" disabled>이 매장 QR 주소 CSV</button><button class="btn ghost sm" onclick="print()">인쇄</button></div>
+      <p>매장을 고르면 그 매장 스티커 200장의 QR이 나와요. 인쇄소 파일 확인용·분실 재출력용입니다. (등수는 '등수 함께 보기'를 체크했을 때만 나와요)</p>
+      <div class="row"><input type="text" id="q-search" placeholder="매장 검색 (이름·코드)" style="width:170px"><select id="q-store"></select><label class="note"><input type="checkbox" id="q-tier"> 등수 함께 보기 (인쇄 전 해제)</label><button class="btn sm" id="btn-q-load">QR 보기</button><button class="btn ghost sm" id="btn-q-csv" disabled>이 매장 QR 주소 CSV</button><button class="btn ghost sm" onclick="print()">인쇄</button></div>
       <div class="prog" id="q-msg"></div>
     </div>
     <div class="box noprint">
@@ -123,6 +130,149 @@
     </div>
     <div class="qr-grid" id="q-grid"></div>
   </section>
+  <!-- 사용 설명서 -->
+  <section class="panel" id="p-guide">
+    <div class="box guide-hero">
+      <h2>관리자 사용 설명서</h2>
+      <p>처음이면 위에서부터 순서대로 읽어 주세요. 버튼 이름은 <span class="kbd">이렇게</span> 표시했어요. 화면 위치는 <b>[페이지 › 탭 › 상자]</b> 순서로 적었어요.</p>
+      <div class="gnav">
+        <a href="#g-map">0. 한눈에 보기</a><a href="#g-make">1. QR 만들기</a><a href="#g-tier">2. 등수 확인</a><a href="#g-test">3. 테스트</a><a href="#g-reset">4. QR 초기화</a><a href="#g-run">5. 이벤트 기간</a><a href="#g-credit">6. 포인트 적립</a><a href="#g-end">7. 끝난 뒤</a><a href="#g-faq">자주 묻는 질문</a>
+      </div>
+    </div>
+
+    <div class="box" id="g-map">
+      <h2>0. 한눈에 보기</h2>
+      <h3>관리자 페이지는 2개예요</h3>
+      <table class="gtbl">
+        <tr><th>페이지</th><th>주소</th><th>언제 써요</th></tr>
+        <tr><td><b>번호 만들기</b></td><td><a href="seed.html">seed.html</a></td><td>인쇄 전에 <b>1번만</b>. 매장 목록과 QR 번호를 서버에 올리고 등수를 정해요.</td></tr>
+        <tr><td><b>본사 관리</b> (지금 이 화면)</td><td><a href="admin.html">admin.html</a></td><td>테스트·이벤트 기간 내내. 현황 보기, 등수 확인, QR 초기화, 적립 목록.</td></tr>
+      </table>
+      <p class="note">둘 다 <b>@cafein24.co.kr 구글 계정</b>으로만 들어갈 수 있어요. 점주님용 페이지는 <code>store.html?s=매장번호</code>(현황판에서 매장명을 누르면 열려요), 손님 화면은 <code>play.html</code>(컵 QR)과 <code>index.html</code>(매장 비치 QR)이에요.</p>
+      <h3>일정</h3>
+      <table class="gtbl">
+        <tr><th>언제</th><th>할 일</th><th>설명서</th></tr>
+        <tr><td>인쇄 전 (11월)</td><td>매장 목록·QR 번호 올리기, 1등 매장 10곳 지정</td><td><a href="#g-make">1번</a></td></tr>
+        <tr><td>~ 12/7 (일)</td><td>테스트 기간. 손님 화면 위에 노란 띠가 보이고, 아무 QR이나 실제처럼 돌려볼 수 있어요</td><td><a href="#g-test">3번</a></td></tr>
+        <tr><td><b>12/7 (일) 밤</b></td><td><b>사용된 QR 전체 초기화</b> (테스트 기록 지우기)</td><td><a href="#g-reset">4번</a></td></tr>
+        <tr><td>12/8 ~ 12/17</td><td>잠김. 스티커 발송 기간이라 QR을 찍어도 돌릴 수 없어요</td><td></td></tr>
+        <tr><td>12/18 ~ 12/27</td><td>이벤트 기간. 현황 확인, 점주 문의 대응</td><td><a href="#g-run">5번</a></td></tr>
+        <tr><td>12/28 (월)</td><td>포인트 적립 목록을 매장별로 전달 → 매장 적립 → 마켓봄 포인트 정산</td><td><a href="#g-credit">6번</a></td></tr>
+        <tr><td>2027년 2월 25일경</td><td>손님 휴대폰 번호 삭제 (종료 60일 뒤)</td><td><a href="#g-end">7번</a></td></tr>
+      </table>
+      <p class="note">날짜 제한은 서버(Firebase 규칙)에서 막고 있어요. 손님이 휴대폰 날짜를 바꿔도 기간 밖에는 참여할 수 없어요.</p>
+    </div>
+
+    <div class="box" id="g-make">
+      <h2>1. QR 만들기 (인쇄 전 1번) <span class="where">[번호 만들기(seed.html)]</span></h2>
+      <p>준비물: ① 매장목록 엑셀 파일 ② 인쇄소에 보낸 <b>럭키룰렛_QR목록_210매장_인쇄용.csv</b></p>
+      <ol class="steps">
+        <li><b>매장 목록 올리기</b> — '1. 매장 목록'에서 매장목록 엑셀 파일을 고르면 표가 나와요. 매장 수가 맞는지 보고 <span class="kbd">Firestore에 매장 저장</span>. ('테스트'가 들어간 매장은 자동으로 빠져요)</li>
+        <li><b>QR 목록 파일 고르기</b> — '2. QR 목록 올리기'에서 인쇄용 CSV를 골라요. 옆에 <span class="ok">확인 완료</span>가 떠야 해요. 빨간 글씨가 나오면 파일이 잘못된 거예요.</li>
+        <li><b>1등 매장 확인</b> — '1등 매장' 칸에 확정된 10곳의 매장번호를 쉼표로 붙여넣어요. (목록은 본사 내부 문서에서 확인 · 이 페이지는 공개 주소라 적어 두지 않아요) 옆에 <span class="ok">확인</span>이 떠야 해요.</li>
+        <li><b>굿즈 수 넣기</b> — 다라미 텀블러·양산 '전체 개수'를 넣어요. 운영 매장에 무작위로 들어가요.</li>
+        <li><b>합계 확인</b> — 아래 회색 글씨에 1~4등·굿즈·꽝 장수와 포인트 액면 합계가 나와요. 예산과 맞는지 확인해요.</li>
+        <li><span class="kbd">등수 정하고 Firestore에 올리기</span> → 확인 창에서 <span class="kbd">확인</span>. 매장 하나씩 올라가고 10~20분 걸려요. <b>창을 닫지 마세요.</b> 멈추면 다시 누르면 남은 매장부터 이어서 올라가요.</li>
+        <li><b>확인</b> — 맨 위 '현재 Firestore 상태'가 <b>매장 210 · 스티커 번호 42,000 · 등수 42,000</b>이면 끝이에요.</li>
+      </ol>
+      <div class="callout">
+        <b>'2-1. 등수 분리'와 '2-2. 1등 매장 맞추기'는 언제 써요?</b><br>
+        <b>11/4 이전에 QR을 이미 올린 경우에만</b> 써요. 처음 올리는 거면 건너뛰세요.<br>
+        · 2-1: 예전 방식은 등수가 QR 번호에 같이 있어서 미리 볼 수 있었어요. 등수를 따로 옮겨요. '등수가 남아 있는 스티커 번호'가 0이 되면 끝.<br>
+        · 2-2: 예전에 1등이 무작위 매장에 들어갔다면 확정 10곳으로 옮겨요. <span class="kbd">지금 1등 매장 확인</span> → <span class="kbd">1등 매장 맞추기</span>.
+      </div>
+      <p class="note">'위험 구역 › codes·tiers 전체 삭제'는 번호를 처음부터 다시 만들 때만 써요. 인쇄한 뒤에는 절대 누르지 마세요(인쇄된 QR이 모두 '등록되지 않은 QR'이 돼요).</p>
+    </div>
+
+    <div class="box" id="g-tier">
+      <h2>2. 등수 확인 <span class="where">[본사 관리 › QR·인쇄]</span></h2>
+      <p>등수는 손님 화면에는 돌리기 전까지 절대 안 보이고, 본사 관리자만 볼 수 있어요.</p>
+      <h3>QR 하나의 등수 보기</h3>
+      <ol class="steps">
+        <li>위 탭에서 <span class="kbd">QR·인쇄</span>를 눌러요.</li>
+        <li>'QR 등수 확인' 칸에 스티커 번호(예: <code>017-K4P9XQ</code>)나 QR 주소를 통째로 붙여넣고 <span class="kbd">등수 확인</span>.</li>
+        <li>매장 · 등수 · 사용 여부가 나와요. 사용된 QR이면 참여한 번호(가린 번호)와 시간도 나와요.</li>
+      </ol>
+      <h3>매장 하나의 등수 전체 보기</h3>
+      <ol class="steps">
+        <li>'매장별 QR'에서 매장을 고르고 <span class="kbd">등수 함께 보기</span>에 체크한 뒤 <span class="kbd">QR 보기</span>.</li>
+        <li>QR 카드마다 등수가 붙고, 위에 그 매장의 등수별 장수가 나와요.</li>
+        <li><b>인쇄할 때는 체크를 꼭 풀어 주세요.</b></li>
+      </ol>
+      <h3>전체 등수 파일</h3>
+      <p>[번호 만들기 › 3. 내려받기] <span class="kbd">내부 보관용 CSV (등수 포함)</span> · <span class="kbd">매장별 요약 CSV</span></p>
+      <div class="callout danger-c">등수가 들어간 화면·파일은 <b>본사 밖으로 절대 보내지 마세요.</b> 점주님·인쇄소·카톡방 공유 금지. 인쇄소에는 '① 전체 QR 목록' 파일만 보내요(등수 없음).</div>
+    </div>
+
+    <div class="box" id="g-test">
+      <h2>3. 테스트 (12/7까지)</h2>
+      <ol class="steps">
+        <li>[QR·인쇄 › 매장별 QR]에서 아무 매장이나 골라 <span class="kbd">QR 보기</span> → 휴대폰 카메라로 QR을 찍어요.</li>
+        <li>손님 화면 맨 위에 <b>노란 띠(테스트 기간)</b>가 보이면 정상이에요. 번호를 넣고 룰렛을 돌려 봐요.</li>
+        <li>당첨·꽝을 둘 다 해 보려면 <a href="#g-tier">등수 확인</a>으로 당첨 QR과 꽝 QR을 하나씩 골라 찍어요.</li>
+        <li>꽝이면 만족도 조사 → 응모권 룰렛까지 해 봐요. 창을 닫았다가 같은 QR을 다시 찍으면 '처음 넣은 번호 확인' 후 이어서 할 수 있어요.</li>
+        <li><span class="kbd">현황판</span> · <span class="kbd">당첨 보드</span> · <span class="kbd">응모권 현황</span>에 기록이 잡히는지 확인해요.</li>
+        <li>점주 화면: 현황판에서 매장명을 누르면 점주 페이지가 열려요. 숫자가 맞는지 봐요.</li>
+      </ol>
+      <p class="note">테스트 기록은 12/7 밤에 한 번에 지워요(<a href="#g-reset">4번</a>). 하나씩 지워도 돼요.</p>
+    </div>
+
+    <div class="box" id="g-reset">
+      <h2>4. QR 초기화 <span class="where">[본사 관리 › QR·인쇄 › QR 초기화]</span></h2>
+      <p>사용된 QR을 <b>처음 상태</b>로 되돌려요. 그 QR의 참여 기록·당첨 롤링·매장 집계·설문·응모권 당첨이 같이 지워지고, 같은 QR로 다시 돌릴 수 있어요. <b>등수는 그대로</b>예요(같은 QR은 다시 돌려도 같은 결과).</p>
+      <h3>QR 하나만</h3>
+      <ol class="steps">
+        <li>스티커 번호나 QR 주소를 붙여넣고 <span class="kbd">이 QR 초기화</span> → 확인.</li>
+        <li>또는 [당첨 QR 참여자] 표나 [매장별 QR] 카드의 빨간 <span class="kbd">초기화</span> 버튼.</li>
+      </ol>
+      <h3>테스트 기록 전체 (12/7 밤 1번)</h3>
+      <ol class="steps">
+        <li><span class="kbd">사용된 QR 전체 초기화</span> → 입력창에 <code>초기화</code>라고 적고 확인.</li>
+        <li>'완료' 문구가 나올 때까지 기다려요. 현황판의 참여·당첨·응모권이 모두 <b>0</b>인지 확인해요.</li>
+      </ol>
+      <div class="callout danger-c"><b>12/18 이후에는 전체 초기화를 절대 누르지 마세요.</b> 손님 당첨 기록이 지워지고 되돌릴 수 없어요. 이벤트 기간에는 잘못된 1건만 개별 초기화해요.</div>
+    </div>
+
+    <div class="box" id="g-run">
+      <h2>5. 이벤트 기간 (12/18 ~ 12/27)</h2>
+      <table class="gtbl">
+        <tr><th>보고 싶은 것</th><th>탭</th><th>메모</th></tr>
+        <tr><td>전체·매장별 참여 수, 당첨 금액</td><td>현황판</td><td>가벼워서 수시로 봐도 돼요. <span class="kbd">매장별 현황 CSV</span></td></tr>
+        <tr><td>누가 무엇에 당첨됐는지</td><td>당첨 보드</td><td><span class="kbd">불러오기</span>를 눌러야 나와요(기록 수만큼 읽기 발생). 하루 1~2번 권장</td></tr>
+        <tr><td>응모권 1,000P 선착순 남은 수</td><td>응모권 현황</td><td>240명이 차면 자동 마감</td></tr>
+        <tr><td>한 매장의 참여자 목록</td><td>당첨 QR 참여자</td><td>매장을 골라서 불러오세요(전체는 무거워요)</td></tr>
+        <tr><td>설문 응답</td><td>만족도 조사</td><td>CSV로 내려받아 분석</td></tr>
+        <tr><td>굿즈(텀블러·양산) 당첨자 연락</td><td>당첨 보드</td><td>상태가 '굿즈 안내 필요'인 줄. <b>전화번호 전체 보기</b> 체크</td></tr>
+      </table>
+    </div>
+
+    <div class="box" id="g-credit">
+      <h2>6. 포인트 적립 (12/28 월) <span class="where">[본사 관리 › 포인트 적립 목록]</span></h2>
+      <ol class="steps">
+        <li><span class="kbd">적립 목록 만들기</span> — 룰렛 당첨금 + 응모권 1,000P를 <b>휴대폰 번호·매장별로 합산</b>해요.</li>
+        <li><span class="kbd">적립용 CSV (매장 순)</span> — 매장별로 나눠 점주님(담당 SV)께 전달해요. 매장은 손님 번호로 적립해요.</li>
+        <li><span class="kbd">매장별 정산 합계 CSV</span> — 매장별 합계만큼 본사가 마켓봄 포인트로 정산해요.</li>
+      </ol>
+      <p class="note">포인트는 룰렛을 돌린 매장에서만 적립·사용돼요. 굿즈 당첨은 금액 0원으로 나오고 따로 발송해요.</p>
+    </div>
+
+    <div class="box" id="g-end">
+      <h2>7. 끝난 뒤</h2>
+      <p>개인정보 동의 문구에 '이벤트 종료 60일 후 파기'라고 적혀 있어요. <b>2027년 2월 25일경</b> 적립·정산이 모두 끝났는지 확인하고, Firebase 콘솔 › Firestore에서 <code>phones</code> · <code>surveys</code> · <code>surveyed</code> · <code>claims</code> 컬렉션을 삭제해요. (필요한 통계는 그 전에 CSV로 받아 두세요)</p>
+    </div>
+
+    <div class="box" id="g-faq">
+      <h2>자주 묻는 질문</h2>
+      <details><summary>손님이 '등록되지 않은 QR이에요'라고 해요</summary><p>서버에 그 번호가 없어요. [QR 등수 확인]에 번호를 넣어 봐요. 안 나오면 seed.html 상태(스티커 번호 42,000)를 확인하고, 인쇄용 CSV와 같은 파일을 올렸는지 확인해요.</p></details>
+      <details><summary>손님이 '이미 참여한 QR이에요'라고 해요</summary><p>[QR 등수 확인]으로 언제·어떤 번호(가린 번호)로 참여했는지 봐요. 본인이 아니면 다른 사람이 먼저 찍은 거예요. 직원 테스트였다면 그 QR만 초기화해 줘요.</p></details>
+      <details><summary>손님 화면이 '지금은 참여 기간이 아니에요'로 나와요</summary><p>12/8~17 잠김 기간이거나 12/27이 지났어요. 서버에서 막는 거라 정상이에요.</p></details>
+      <details><summary>꽝 손님이 창을 닫아서 설문을 못 했대요</summary><p>같은 컵 QR을 다시 찍으면 '처음 넣은 번호를 확인해 주세요'가 나오고, 같은 번호를 넣으면 설문·응모권을 이어서 할 수 있어요.</p></details>
+      <details><summary>손님이 번호를 잘못 넣었어요</summary><p>당첨 금액은 [포인트 적립 목록]에 잘못 넣은 번호로 잡혀요. 적립할 때 매장에서 올바른 번호로 적립하도록 SV를 통해 안내해 주세요. (QR을 초기화하면 당첨 기록이 사라지니 하지 마세요)</p></details>
+      <details><summary>번호 올리기가 45초 넘게 멈춰 있어요</summary><p>Firebase 무료 요금제의 하루 쓰기 한도(2만 건)에 걸렸을 가능성이 커요. Blaze 요금제로 바꾸거나 다음 날 다시 누르면 남은 매장부터 이어서 올라가요.</p></details>
+      <details><summary>로그인이 안 돼요</summary><p>@cafein24.co.kr 구글 계정만 들어갈 수 있어요. 팝업이 막혔으면 주소창 오른쪽에서 팝업을 허용해요.</p></details>
+    </div>
+  </section>
+
 </main>
 
 <script type="module">
@@ -134,10 +284,33 @@ const PR_MONEY = Object.fromEntries(Object.entries(EVENT.prizes).map(([k,v]) => 
 let stores = {}, dashRows = [], entries = [], credit = [], surveys = [], qrCodes = [];
 
 // 탭
-document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => {
-  document.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('on', x===b));
-  document.querySelectorAll('.panel').forEach(p => p.classList.toggle('on', p.id===b.dataset.tab));
-}));
+const openTab = id => {
+  document.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('on', x.dataset.tab===id));
+  document.querySelectorAll('.panel').forEach(p => p.classList.toggle('on', p.id===id));
+};
+document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => openTab(b.dataset.tab)));
+// 사용 설명서: 주소 끝이 #guide 이거나 위 '사용 설명서' 버튼
+const openGuide = () => { openTab('p-guide'); const g = location.hash.startsWith('#g-') && document.querySelector(location.hash); (g || $('p-guide')).scrollIntoView({block:'start'}); };
+if(location.hash === '#guide' || location.hash.startsWith('#g-')) openGuide();
+$('lnk-guide').addEventListener('click', e => { e.preventDefault(); history.replaceState(null,'','#guide'); openGuide(); });
+document.querySelectorAll('#p-guide a[href^="#g-"]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); document.querySelector(a.getAttribute('href')).scrollIntoView({behavior:'smooth',block:'start'}); }));
+
+// ---------- QR 등수 확인 ----------
+$('btn-t-look').addEventListener('click', async () => {
+  const m = ($('t-code').value||'').toUpperCase().match(/\d{3}-[A-Z0-9]{6}/), msg = $('t-msg');
+  if(!m) return msg.innerHTML = '<span class="danger">스티커 번호(예: 017-K4P9XQ)나 QR 주소를 넣어 주세요.</span>';
+  const code = m[0]; msg.textContent = '확인 중…';
+  try{
+    const [cs, ts, es] = await Promise.all([getDoc(doc(db,'codes',code)), getDoc(doc(db,'tiers',code)), getDoc(doc(db,'entries',code))]);
+    if(!cs.exists()) return msg.innerHTML = `<span class="danger">${code} — 서버에 없는 번호예요.</span> 손님에게는 '등록되지 않은 QR'로 보여요.`;
+    const c = cs.data(), t = ts.exists() ? ts.data().tier : c.tier;
+    const e = es.exists() ? es.data() : null;
+    msg.innerHTML = `<b>${code}</b> · ${c.store} ${esc(stores[c.store]?.name||'')} · 묶음 ${c.bundle||'-'} ${c.cup?'· '+esc(c.cup):''}<br>`
+      + `등수 : ${t===undefined ? '<span class="danger">등수 없음</span>' : `<span class="tag t${t}">${TL(t)}</span>${PR_MONEY[t]?' '+won(PR_MONEY[t])+'P':''}`}<br>`
+      + (c.used ? `<span class="danger">사용됨</span>${c.usedAt?' · '+fmtTime(c.usedAt):''}${e?` · 참여 번호 ${esc(e.phoneMask)}${e.tier===5?` · 설문 ${e.surveyDone?'완료':'안 함'} · 응모권 ${e.bonusDone?(e.bonus?'1,000P 당첨':'꽝'):'안 함'}`:''}`:' · <span class="warn">참여 기록 없음(돌리던 중 끊김 → 같은 번호로 다시 찍으면 이어서 끝나요)</span>'} · <button class="btn danger sm" data-reset="${code}">이 QR 초기화</button>` : '<span class="ok">아직 사용 안 함</span>');
+  }catch(err){ console.error(err); msg.innerHTML = '<span class="danger">'+esc(err.message)+'</span>'; }
+});
+$('t-code').addEventListener('keydown', e => { if(e.key==='Enter') $('btn-t-look').click(); });
 
 // 정렬 가능한 표
 function table(el, cols, rows){
@@ -435,16 +608,20 @@ $('btn-s-csv').addEventListener('click', () => downloadCsv(`만족도조사_${fm
 $('btn-q-load').addEventListener('click', async () => {
   const s = $('q-store').value; if(!s) return;
   $('q-msg').textContent = '불러오는 중…'; $('q-grid').innerHTML = '';
-  const snap = await getDocs(query(collection(db,'codes'), where('store','==',s)));
-  qrCodes = snap.docs.map(d => ({ code:d.id, ...d.data() })).sort((a,b)=>(a.bundle||0)-(b.bundle||0)||a.code.localeCompare(b.code));
-  $('q-msg').textContent = `${s} ${stores[s]?.name||''} · ${qrCodes.length}장 · 사용 ${qrCodes.filter(c=>c.used).length}장`;
+  const showTier = $('q-tier').checked;
+  const [snap, ts] = await Promise.all([getDocs(query(collection(db,'codes'), where('store','==',s))), showTier ? getDocs(query(collection(db,'tiers'), where('store','==',s))) : null]);
+  const tierOf = ts ? Object.fromEntries(ts.docs.map(d => [d.id, d.data().tier])) : {};
+  qrCodes = snap.docs.map(d => ({ code:d.id, ...d.data(), tier: showTier ? (tierOf[d.id] ?? d.data().tier) : undefined })).sort((a,b)=>(a.bundle||0)-(b.bundle||0)||a.code.localeCompare(b.code));
+  let dist = '';
+  if(showTier){ const n = {}; qrCodes.forEach(c => n[c.tier] = (n[c.tier]||0)+1); dist = ' · 등수: ' + [1,2,3,4,6,7,5].filter(t=>n[t]).map(t => `${TL(t)} ${n[t]}`).join(' · '); }
+  $('q-msg').textContent = `${s} ${stores[s]?.name||''} · ${qrCodes.length}장 · 사용 ${qrCodes.filter(c=>c.used).length}장${dist}`;
   $('btn-q-csv').disabled = !qrCodes.length;
   const frag = document.createDocumentFragment();
   qrCodes.forEach(c => {
     const box = document.createElement('div'); box.className = 'qr';
     const q = document.createElement('div'); box.appendChild(q);
     new QRCode(q, { text:playUrl(c.code), width:100, height:100, correctLevel:QRCode.CorrectLevel.M });
-    box.insertAdjacentHTML('beforeend', `<div>${c.code}</div><div class="note">묶음 ${c.bundle||'-'}${c.used?' · <span class="danger">사용됨</span>':''}</div>${c.used?`<button class="btn danger sm noprint" style="margin-top:4px" data-reset="${c.code}">초기화</button>`:''}`);
+    box.insertAdjacentHTML('beforeend', `<div>${c.code}</div>${c.tier!==undefined?`<span class="tag t${c.tier}">${TL(c.tier)}</span>`:''}<div class="note">묶음 ${c.bundle||'-'}${c.used?' · <span class="danger">사용됨</span>':''}</div>${c.used?`<button class="btn danger sm noprint" style="margin-top:4px" data-reset="${c.code}">초기화</button>`:''}`);
     frag.appendChild(box);
   });
   $('q-grid').appendChild(frag);

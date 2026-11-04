@@ -54,7 +54,7 @@
       <label>4등(1천P) 매장당 <input type="number" id="p-t4" value="24" style="width:60px"></label>
     </div>
     <div class="row">
-      <label style="flex:1;min-width:260px">1등 매장 (운영팀 지정, 매장번호 쉼표로) <input type="text" id="p-t1list" placeholder="예: 003, 017, 045 …" style="width:100%"></label>
+      <label style="flex:1;min-width:260px">1등 매장 (운영팀 지정, 매장번호 쉼표로) <input type="text" id="p-t1list" value="120, 106, 085, 075, 127, 134, 135, 128, 082, 029" placeholder="예: 003, 017, 045 …" style="width:100%"></label>
       <span class="note" id="t1-msg">비워 두면 운영 매장 중 무작위 10곳. 적으면 그 매장에 1장씩 들어가요.</span>
     </div>
     <div class="row">
@@ -73,6 +73,13 @@
     <p>11/4 이전 방식은 스티커 번호(codes)에 등수가 같이 있어서 QR만 알면 등수를 미리 볼 수 있었어요. 이 버튼은 등수를 tiers로 옮기고 codes에서 지워요. <b>새 보안 규칙을 게시한 직후</b> 눌러 주세요. 중간에 멈춰도 다시 누르면 이어서 해요.</p>
     <p class="note">등수가 남아 있는 스티커 번호 : <b id="st-leak">-</b>개 (0이 되어야 해요)</p>
     <div class="row"><button class="btn" id="btn-migrate">등수 분리 시작</button><span class="note" id="mig-msg"></span></div>
+  </div>
+
+  <div class="box">
+    <h2>2-2. 1등 매장 맞추기 (번호를 이미 올린 경우)</h2>
+    <p>1등(5만P) 10곳 확정 (11/4, 점검 평균 상위 9곳 + 고양삼송점). 이미 올린 번호에서 1등이 다른 매장에 들어가 있으면, 그 1등은 꽝으로 바꾸고 아래 매장의 꽝 1장을 1등으로 바꿔요. 매장당 1장 · 전체 10장이 그대로 유지돼요. <b>2-1 등수 분리를 먼저</b> 끝내 주세요.</p>
+    <div class="row"><input type="text" id="t1-fix" value="120, 106, 085, 075, 127, 134, 135, 128, 082, 029" style="flex:1;min-width:260px"></div>
+    <div class="row"><button class="btn ghost" id="btn-t1-check">지금 1등 매장 확인</button><button class="btn" id="btn-t1-fix">1등 매장 맞추기</button><span class="note" id="t1-fix-msg"></span></div>
   </div>
 
   <div class="box">
@@ -337,6 +344,49 @@ $('btn-migrate').addEventListener('click', async () => {
     msg.innerHTML = `<span class="ok">완료!</span> ${won(seen)}개 확인 · ${won(moved)}개 분리`;
     await refreshStatus();
   }catch(e){ console.error(e); msg.innerHTML = `<span class="danger">멈췄어요: ${esc(e.message)}</span> 다시 누르면 이어서 해요.`; }
+  btn.disabled = false;
+});
+
+// ---- 2-2. 1등 매장 맞추기 (tiers 기준) ----
+const T1FIX = () => [...new Set($('t1-fix').value.split(/[^0-9]+/).filter(Boolean).map(x => x.padStart(3,'0')))];
+async function t1State(){
+  const snap = await getDocs(query(collection(db,'tiers'), where('tier','==',1)));
+  const list = await Promise.all(snap.docs.map(async d => ({ code:d.id, store:d.data().store, used: !!(await getDocs(query(collection(db,'codes'), where(documentId(),'==',d.id)))).docs[0]?.data().used })));
+  return list;
+}
+const nm = c => (stores.find(s=>s.code===c)||{}).name || c;
+$('btn-t1-check').addEventListener('click', async () => {
+  const msg = $('t1-fix-msg'); msg.textContent = '확인 중…';
+  try{
+    const want = T1FIX(), cur = await t1State(), have = new Set(cur.map(x=>x.store));
+    const extra = cur.filter(x => !want.includes(x.store)), miss = want.filter(c => !have.has(c));
+    msg.innerHTML = `지금 1등 ${cur.length}장: ${cur.map(x=>x.store+' '+nm(x.store)+(x.used?'(사용됨)':'')).join(', ')||'없음'}<br>` +
+      (extra.length||miss.length ? `<span class="danger">바꿀 것 — 빼기: ${extra.map(x=>x.store).join(', ')||'없음'} · 넣기: ${miss.join(', ')||'없음'}</span>` : '<span class="ok">확정 매장과 같아요</span>');
+  }catch(e){ console.error(e); msg.innerHTML = '<span class="danger">'+esc(e.message)+'</span>'; }
+});
+$('btn-t1-fix').addEventListener('click', async () => {
+  const msg = $('t1-fix-msg'), btn = $('btn-t1-fix'), want = T1FIX();
+  const unknown = want.filter(c => !stores.find(s=>s.code===c));
+  if(unknown.length) return msg.innerHTML = `<span class="danger">매장 목록에 없는 번호: ${unknown.join(', ')}</span>`;
+  btn.disabled = true; msg.textContent = '확인 중…';
+  try{
+    const cur = await t1State(), have = new Set(cur.map(x=>x.store));
+    const extra = cur.filter(x => !want.includes(x.store) && !x.used), miss = want.filter(c => !have.has(c));
+    const usedOut = cur.filter(x => !want.includes(x.store) && x.used);
+    if(!extra.length && !miss.length){ msg.innerHTML = '<span class="ok">이미 확정 매장과 같아요</span>'; btn.disabled = false; return; }
+    if(!confirm(`1등 빼기 ${extra.length}장(${extra.map(x=>x.store+' '+nm(x.store)).join(', ')||'없음'}) → 꽝\n1등 넣기 ${miss.length}곳(${miss.map(c=>c+' '+nm(c)).join(', ')||'없음'}) ← 그 매장 꽝 1장\n${usedOut.length?'※ 이미 사용된 1등 '+usedOut.length+'장은 그대로 둬요(테스트 기록이면 먼저 admin에서 초기화).\n':''}진행할까요?`)){ btn.disabled = false; return; }
+    const b = writeBatch(db);
+    extra.forEach(x => b.update(doc(db,'tiers',x.code), { tier:5 }));
+    for(const c of miss){
+      const cand = await getDocs(query(collection(db,'tiers'), where('store','==',c), where('tier','==',5), limit(30)));
+      let pick = null;
+      for(const d of shuffle(cand.docs.slice())){ const cs = await getDocs(query(collection(db,'codes'), where(documentId(),'==',d.id))); if(cs.docs[0] && !cs.docs[0].data().used){ pick = d; break; } }
+      if(!pick) throw new Error(c+' 매장에 바꿀 꽝 스티커가 없어요 (번호가 아직 안 올라갔을 수 있어요)');
+      b.update(pick.ref, { tier:1 });
+    }
+    await b.commit();
+    msg.innerHTML = `<span class="ok">완료!</span> 빼기 ${extra.length} · 넣기 ${miss.length}. '지금 1등 매장 확인'으로 다시 확인해 보세요.`;
+  }catch(e){ console.error(e); msg.innerHTML = '<span class="danger">멈췄어요(바뀐 것 없음): '+esc(e.message)+'</span>'; }
   btn.disabled = false;
 });
 

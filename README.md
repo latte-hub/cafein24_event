@@ -1,7 +1,15 @@
 # 카페인24 크리스마스 럭키룰렛 (2026.12.18 ~ 12.27)
 
 GitHub Pages(화면) + Firebase Firestore(데이터) 구성입니다. **2026-11-04 최신화** (등수 분리 · 서버 날짜 제한 · 집계 조작 방지 · 꽝 손님 이어하기)
-주소: `https://latte-hub.github.io/cafein24_event/`
+주소: `https://xmas26.cafein24.co.kr/` (GitHub Pages 사용자 도메인 · 예전 주소 latte-hub.github.io/cafein24_event 는 자동으로 넘어가요)
+
+### 이벤트 주소 규칙 (다음 이벤트도 같은 방식)
+
+- 주소: `[이벤트 영문][연도 2자리].cafein24.co.kr` — 예: 2026 크리스마스 `xmas26`, 2027 봄 `spring27`, 2027 여름 `summer27`
+- QR 주소: `https://[주소]/play.html?c=[매장번호 3자리]-[영문·숫자 6자리]` (헷갈리는 0·O·1·I 제외)
+- 이벤트마다 저장소 1개 + Firebase 프로젝트 1개를 새로 만들고, 저장소 첫 화면 `CNAME` 파일에 주소 한 줄
+- 아임웹 › 설정 › 도메인·SSL › 네임서버 설정에 CNAME 한 줄 추가: 이름 `[주소]` · 값 `latte-hub.github.io`
+- 이미 쓰는 주소(event · pulse · staging-pulse · darami)는 쓰지 않아요
 
 ## 링크
 

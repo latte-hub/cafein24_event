@@ -46,7 +46,7 @@
 
   <div class="box">
     <h2>2. QR 목록 올리기 (인쇄용 CSV)</h2>
-    <p>인쇄소에 보낸 <b>QR 목록 CSV</b>를 올리면 그 번호 그대로 서버에 등록돼요. 매장당 200장(40장 × 5묶음).</p>
+    <p>인쇄소에 보낸 <b>QR 목록 CSV</b>를 올리면 그 번호 그대로 서버에 등록돼요. 매장당 200장. 칸은 <b>매장번호 · 매장명 · 구분 · 순번 · 고유번호</b>가 있으면 돼요 (묶음·컵 칸은 없어도 돼요).</p>
     <div class="row"><input type="file" id="qr-file" accept=".csv"><span class="note" id="qr-file-msg"></span></div>
     <div class="row">
       <label>1등(5만P) 매장 수 <input type="number" id="p-t1" value="10" style="width:70px"></label>
@@ -176,7 +176,7 @@ $('btn-save-stores').addEventListener('click', async () => {
 });
 
 // ---- 2. QR 목록 (인쇄용 CSV) → 등수 정해서 올리기 ----
-let qrRows = [];   // [{store,name,kind,bundle,seq,cup,code}]
+let qrRows = [];   // [{store,name,kind,seq,code}]
 const PER = EVENT.perStore || 200;
 $('qr-file').addEventListener('change', async e => {
   const f = e.target.files[0]; if(!f) return;
@@ -184,10 +184,10 @@ $('qr-file').addEventListener('change', async e => {
   const lines = text.split(/\r?\n/).filter(Boolean);
   const head = lines[0].split(',').map(x=>x.trim());
   const col = n => head.indexOf(n);
-  const need = ['매장번호','매장명','구분','묶음','순번','고유번호'];   // '컵' 칸은 있어도 되고 없어도 돼요
+  const need = ['매장번호','매장명','구분','순번','고유번호'];   // '묶음'·'컵' 칸은 있어도 되고 없어도 돼요
   const miss = need.filter(n => col(n) < 0);
   if(miss.length){ $('qr-file-msg').innerHTML = `<span class="danger">머리글이 없어요: ${miss.join(', ')}</span>`; return; }
-  qrRows = lines.slice(1).map(l => { const c = l.split(','); return { store:c[col('매장번호')].padStart(3,'0'), name:c[col('매장명')], kind:c[col('구분')], bundle:+c[col('묶음')], seq:+c[col('순번')], cup: col('컵') >= 0 ? c[col('컵')] : '', code:c[col('고유번호')].trim().toUpperCase() }; });
+  qrRows = lines.slice(1).map(l => { const c = l.split(','); return { store:c[col('매장번호')].padStart(3,'0'), name:c[col('매장명')], kind:c[col('구분')], seq: col('묶음') >= 0 ? (+c[col('묶음')]-1)*40 + +c[col('순번')] : +c[col('순번')], code:c[col('고유번호')].trim().toUpperCase() }; });
   const bad = qrRows.filter(r => !/^\d{3}-[A-Z0-9]{6}$/.test(r.code) || r.code.slice(0,3)!==r.store);
   const dup = qrRows.length - new Set(qrRows.map(r=>r.code)).size;
   const by = {}; qrRows.forEach(r => by[r.store] = (by[r.store]||0)+1);
@@ -270,7 +270,7 @@ $('btn-gen').addEventListener('click', async () => {
       shuffle(tiers);
       const batch = writeBatch(db);
       byStore[c].forEach((r, i) => {   // 등수는 tiers에만 (codes에는 넣지 않음)
-        batch.set(doc(db,'codes',r.code), { store:c, used:false, bundle:r.bundle, seq:(r.bundle-1)*40+r.seq, ...(r.cup ? { cup:r.cup } : {}) });
+        batch.set(doc(db,'codes',r.code), { store:c, used:false, seq:r.seq });
         batch.set(doc(db,'tiers',r.code), { store:c, tier:tiers[i] });
       });
       await withWatch(batch.commit(), () => { msg.innerHTML = QUOTA_MSG; });
@@ -293,13 +293,13 @@ async function loadAllCodes(btn){
     const tierOf = Object.fromEntries(ts.docs.map(d => [d.id, d.data().tier]));
     const name = Object.fromEntries(stores.map(s => [s.code, s.name||'']));
     return snap.docs.map(d => ({ code:d.id, ...d.data(), tier: tierOf[d.id] ?? d.data().tier, storeName:name[d.data().store]||'' }))
-      .sort((a,b) => a.store.localeCompare(b.store) || (a.seq||0)-(b.seq||0) || (a.bundle||0)-(b.bundle||0) || a.code.localeCompare(b.code));
+      .sort((a,b) => a.store.localeCompare(b.store) || (a.seq||0)-(b.seq||0) || a.code.localeCompare(b.code));
   }finally{ btn.disabled = false; btn.textContent = old; }
 }
 $('btn-csv-print').addEventListener('click', async e => { const all = await loadAllCodes(e.target); downloadCsv('cafein24_qr_print.csv',
-  ['매장코드','매장명','묶음','컵','스티커번호','QR주소'], all.map(m => [m.store, m.storeName, m.bundle, m.cup||'', m.code, playUrl(m.code)])); });
+  ['매장코드','매장명','순번','스티커번호','QR주소'], all.map(m => [m.store, m.storeName, m.seq||'', m.code, playUrl(m.code)])); });
 $('btn-csv-internal').addEventListener('click', async e => { const all = await loadAllCodes(e.target); downloadCsv('cafein24_qr_INTERNAL_등수포함_외부반출금지.csv',
-  ['매장코드','매장명','묶음','스티커번호','등수','금액','사용','QR주소'], all.map(m => [m.store, m.storeName, m.bundle, m.code, TIER_LABEL(m.tier), TIER_MONEY[m.tier], m.used?'Y':'', playUrl(m.code)])); });
+  ['매장코드','매장명','순번','스티커번호','등수','금액','사용','QR주소'], all.map(m => [m.store, m.storeName, m.seq||'', m.code, TIER_LABEL(m.tier), TIER_MONEY[m.tier], m.used?'Y':'', playUrl(m.code)])); });
 $('btn-csv-stores').addEventListener('click', async e => {
   const all = await loadAllCodes(e.target), by = {};
   all.forEach(m => { const o = by[m.store] ??= { name:m.storeName, n:0, t1:0,t2:0,t3:0,t4:0,t5:0,t6:0,t7:0, money:0 }; o.n++; o['t'+m.tier]++; o.money += TIER_MONEY[m.tier]; });

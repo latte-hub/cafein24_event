@@ -116,9 +116,9 @@
     </div>
     <div class="box noprint">
       <h2>인쇄소에 보낼 파일 (모든 스티커 고유 QR)</h2>
-      <p><b>① 전체 QR 목록</b>: 모든 스티커의 번호와 QR 주소가 한 줄씩 들어 있어요 (매장 → 묶음 순서). 묶음 1~5는 이벤트용, 묶음 6은 예비예요. <b>등수는 들어가지 않아</b> 인쇄소에 그대로 보내면 돼요.<br>
-      <b>② 매장·묶음별 수량표</b>: 매장마다 묶음별 장수를 정리한 표예요. 포장·발송 확인용이에요.</p>
-      <div class="row"><button class="btn" id="btn-q-all">① 전체 QR 목록 CSV</button><button class="btn ghost" id="btn-q-alloc">② 매장·묶음별 수량표 CSV</button><span class="note" id="q-all-msg">번호 수만큼 읽기가 발생해요 (약 6만 건).</span></div>
+      <p><b>① 전체 QR 목록</b>: 모든 스티커의 번호와 QR 주소가 한 줄씩 들어 있어요 (매장 → 순번 순서). <b>등수는 들어가지 않아</b> 인쇄소에 그대로 보내면 돼요.<br>
+      <b>② 매장별 수량표</b>: 매장마다 스티커 장수를 정리한 표예요. 포장·발송 확인용이에요.</p>
+      <div class="row"><button class="btn" id="btn-q-all">① 전체 QR 목록 CSV</button><button class="btn ghost" id="btn-q-alloc">② 매장별 수량표 CSV</button><span class="note" id="q-all-msg">번호 수만큼 읽기가 발생해요 (약 6만 건).</span></div>
     </div>
     <div class="box noprint">
       <h2>QR 초기화</h2>
@@ -305,7 +305,7 @@ $('btn-t-look').addEventListener('click', async () => {
     if(!cs.exists()) return msg.innerHTML = `<span class="danger">${code} — 서버에 없는 번호예요.</span> 손님에게는 '등록되지 않은 QR'로 보여요.`;
     const c = cs.data(), t = ts.exists() ? ts.data().tier : c.tier;
     const e = es.exists() ? es.data() : null;
-    msg.innerHTML = `<b>${code}</b> · ${c.store} ${esc(stores[c.store]?.name||'')} · 묶음 ${c.bundle||'-'} ${c.cup?'· '+esc(c.cup):''}<br>`
+    msg.innerHTML = `<b>${code}</b> · ${c.store} ${esc(stores[c.store]?.name||'')} · 순번 ${c.seq||'-'}<br>`
       + `등수 : ${t===undefined ? '<span class="danger">등수 없음</span>' : `<span class="tag t${t}">${TL(t)}</span>${PR_MONEY[t]?' '+won(PR_MONEY[t])+'P':''}`}<br>`
       + (c.used ? `<span class="danger">사용됨</span>${c.usedAt?' · '+fmtTime(c.usedAt):''}${e?` · 참여 번호 ${esc(e.phoneMask)}${e.tier===5?` · 설문 ${e.surveyDone?'완료':'안 함'} · 응모권 ${e.bonusDone?(e.bonus?'1,000P 당첨':'꽝'):'안 함'}`:''}`:' · <span class="warn">참여 기록 없음(돌리던 중 끊김 → 같은 번호로 다시 찍으면 이어서 끝나요)</span>'} · <button class="btn danger sm" data-reset="${code}">이 QR 초기화</button>` : '<span class="ok">아직 사용 안 함</span>');
   }catch(err){ console.error(err); msg.innerHTML = '<span class="danger">'+esc(err.message)+'</span>'; }
@@ -611,7 +611,7 @@ $('btn-q-load').addEventListener('click', async () => {
   const showTier = $('q-tier').checked;
   const [snap, ts] = await Promise.all([getDocs(query(collection(db,'codes'), where('store','==',s))), showTier ? getDocs(query(collection(db,'tiers'), where('store','==',s))) : null]);
   const tierOf = ts ? Object.fromEntries(ts.docs.map(d => [d.id, d.data().tier])) : {};
-  qrCodes = snap.docs.map(d => ({ code:d.id, ...d.data(), tier: showTier ? (tierOf[d.id] ?? d.data().tier) : undefined })).sort((a,b)=>(a.bundle||0)-(b.bundle||0)||a.code.localeCompare(b.code));
+  qrCodes = snap.docs.map(d => ({ code:d.id, ...d.data(), tier: showTier ? (tierOf[d.id] ?? d.data().tier) : undefined })).sort((a,b)=>(a.seq||0)-(b.seq||0)||a.code.localeCompare(b.code));
   let dist = '';
   if(showTier){ const n = {}; qrCodes.forEach(c => n[c.tier] = (n[c.tier]||0)+1); dist = ' · 등수: ' + [1,2,3,4,6,7,5].filter(t=>n[t]).map(t => `${TL(t)} ${n[t]}`).join(' · '); }
   $('q-msg').textContent = `${s} ${stores[s]?.name||''} · ${qrCodes.length}장 · 사용 ${qrCodes.filter(c=>c.used).length}장${dist}`;
@@ -621,12 +621,12 @@ $('btn-q-load').addEventListener('click', async () => {
     const box = document.createElement('div'); box.className = 'qr';
     const q = document.createElement('div'); box.appendChild(q);
     new QRCode(q, { text:playUrl(c.code), width:100, height:100, correctLevel:QRCode.CorrectLevel.M });
-    box.insertAdjacentHTML('beforeend', `<div>${c.code}</div>${c.tier!==undefined?`<span class="tag t${c.tier}">${TL(c.tier)}</span>`:''}<div class="note">묶음 ${c.bundle||'-'}${c.used?' · <span class="danger">사용됨</span>':''}</div>${c.used?`<button class="btn danger sm noprint" style="margin-top:4px" data-reset="${c.code}">초기화</button>`:''}`);
+    box.insertAdjacentHTML('beforeend', `<div>${c.code}</div>${c.tier!==undefined?`<span class="tag t${c.tier}">${TL(c.tier)}</span>`:''}<div class="note">순번 ${c.seq||'-'}${c.used?' · <span class="danger">사용됨</span>':''}</div>${c.used?`<button class="btn danger sm noprint" style="margin-top:4px" data-reset="${c.code}">초기화</button>`:''}`);
     frag.appendChild(box);
   });
   $('q-grid').appendChild(frag);
 });
-$('btn-q-csv').addEventListener('click', () => { const s = $('q-store').value; downloadCsv(`QR_${s}.csv`, ['매장코드','묶음','스티커번호','QR주소','사용'], qrCodes.map(c => [s, c.bundle||'', c.code, playUrl(c.code), c.used?'Y':''])); });
+$('btn-q-csv').addEventListener('click', () => { const s = $('q-store').value; downloadCsv(`QR_${s}.csv`, ['매장코드','순번','스티커번호','QR주소','사용'], qrCodes.map(c => [s, c.seq||'', c.code, playUrl(c.code), c.used?'Y':''])); });
 
 // ---------- 전체 매장 QR 주소 ----------
 $('btn-q-all').addEventListener('click', async () => {
@@ -634,26 +634,25 @@ $('btn-q-all').addEventListener('click', async () => {
   try{
     const snap = await getDocs(collection(db,'codes'));
     const all = snap.docs.map(d => ({ code:d.id, ...d.data() }))
-      .sort((a,b) => a.store.localeCompare(b.store) || (a.seq||0)-(b.seq||0) || (a.bundle||0)-(b.bundle||0) || a.code.localeCompare(b.code));
-    downloadCsv(`전체매장_QR주소_${fmtTime(new Date()).slice(0,10)}.csv`, ['매장코드','매장명','지역','묶음','스티커번호','QR주소','사용'],
-      all.map(c => [c.store, stores[c.store]?.name||'', stores[c.store]?.region||'', (c.bundle||1)===6?'예비':(c.bundle||1), c.code, playUrl(c.code), c.used?'Y':'']));
+      .sort((a,b) => a.store.localeCompare(b.store) || (a.seq||0)-(b.seq||0) || a.code.localeCompare(b.code));
+    downloadCsv(`전체매장_QR주소_${fmtTime(new Date()).slice(0,10)}.csv`, ['매장코드','매장명','지역','순번','스티커번호','QR주소','사용'],
+      all.map(c => [c.store, stores[c.store]?.name||'', stores[c.store]?.region||'', c.seq||'', c.code, playUrl(c.code), c.used?'Y':'']));
     msg.innerHTML = `<span class="ok">${won(all.length)}개 · ${new Set(all.map(c=>c.store)).size}개 매장 내려받기 완료</span>`;
   }catch(e){ console.error(e); msg.innerHTML = '<span class="danger">실패: '+esc(e.message)+'</span>'; }
   b.disabled = false;
 });
 
-// ---------- 인쇄: 매장·묶음별 수량표 ----------
+// ---------- 인쇄: 매장별 수량표 ----------
 $('btn-q-alloc').addEventListener('click', async () => {
   const b = $('btn-q-alloc'), msg = $('q-all-msg'); b.disabled = true; msg.textContent = '전체 번호를 읽는 중… (1~2분)';
   try{
     const snap = await getDocs(collection(db,'codes'));
-    const by = {}; snap.docs.forEach(d => { const c = d.data(); const o = by[c.store] ??= {}; o[c.bundle||1] = (o[c.bundle||1]||0) + 1; });
-    const rows = Object.keys(by).sort().map(sc => { const o = by[sc]; const t = Object.values(o).reduce((a,v)=>a+v,0);
-      return [sc, stores[sc]?.name||'', o[1]||0, o[2]||0, o[3]||0, o[4]||0, o[5]||0, o[6]||0, t]; });
+    const by = {}; snap.docs.forEach(d => { const c = d.data(); by[c.store] = (by[c.store]||0) + 1; });
+    const rows = Object.keys(by).sort().map(sc => [sc, stores[sc]?.name||'', by[sc]]);
     const sum = i => rows.reduce((a,r)=>a+r[i],0);
-    rows.push(['합계','',sum(2),sum(3),sum(4),sum(5),sum(6),sum(7),sum(8)]);
-    downloadCsv(`인쇄_매장묶음별수량_${fmtTime(new Date()).slice(0,10)}.csv`, ['매장코드','매장명','묶음1','묶음2','묶음3','묶음4','묶음5','예비(묶음6)','합계'], rows);
-    msg.innerHTML = `<span class="ok">${won(rows.length-1)}개 매장 · 총 ${won(sum(8))}장</span>`;
+    const total = sum(2); rows.push(['합계','',total]);
+    downloadCsv(`인쇄_매장별수량_${fmtTime(new Date()).slice(0,10)}.csv`, ['매장코드','매장명','합계'], rows);
+    msg.innerHTML = `<span class="ok">${won(rows.length-1)}개 매장 · 총 ${won(total)}장</span>`;
   }catch(e){ console.error(e); msg.innerHTML = '<span class="danger">'+esc(why(e))+'</span>'; }
   b.disabled = false;
 });

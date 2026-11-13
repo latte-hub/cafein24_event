@@ -36,7 +36,7 @@ export function requireAdmin(onReady){
       onReady(user);
     }else{
       gate.hidden = false; main.hidden = true;
-      if(user){ msg.textContent = `${user.email} 은(는) 관리자 계정이 아니에요. @${EVENT.adminDomain} 구글 계정으로 로그인해 주세요.`; signOut(auth); }
+      if(user){ msg.textContent = `${user.email} 은(는) 관리자 계정이 아니에요. 본사 계정으로 다시 로그인해 주세요.`; signOut(auth); }
     }
   });
 }

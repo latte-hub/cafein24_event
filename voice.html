@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>점주님의 한마디 · 2026 카페인24</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+:root{--orange:#FF4D00;--cream:#FEF7E9;--dark:#362E2C;--brown:#6A463D;--gray:#7C7772;--line:rgba(54,46,44,.16);--white:#fff;--err:#C7322B;
+  --font:'Pretendard',-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--cream);color:var(--dark);font-family:var(--font);font-size:16px;line-height:1.6;word-break:keep-all;-webkit-font-smoothing:antialiased}
+[hidden]{display:none!important}
+.wrap{max-width:640px;margin:0 auto;padding:28px max(18px,env(safe-area-inset-left)) 120px max(18px,env(safe-area-inset-right))}
+.brand{font-size:13px;font-weight:800;letter-spacing:.06em;color:var(--orange)}
+h1{font-size:28px;line-height:1.25;letter-spacing:-.03em;margin:10px 0 12px;font-weight:800}
+h1 span{font-weight:400}
+.intro{font-size:15px;color:var(--brown);margin:0}
+.intro b{color:var(--dark)}
+.req-note{font-size:13px;color:var(--gray);margin:10px 0 0}
+.req-note i,.q h3 i{font-style:normal;color:var(--orange);font-weight:800}
+.sec{margin-top:34px;padding-top:18px;border-top:2px solid var(--dark)}
+.sec>em{font-style:normal;font-size:13px;font-weight:800;color:var(--orange)}
+.sec>h2{font-size:20px;letter-spacing:-.02em;margin:2px 0 0;font-weight:800}
+.q{background:var(--white);border-radius:14px;padding:18px;margin-top:14px;border:1.5px solid transparent}
+.q.bad{border-color:var(--err)}
+.q h3{font-size:16px;font-weight:700;margin:0;line-height:1.45}
+.q h3 small{font-weight:500;color:var(--gray);font-size:13px;margin-left:4px}
+.q .hint{font-size:13px;color:var(--gray);margin:4px 0 0}
+.q .msg{font-size:13px;color:var(--err);font-weight:600;margin:8px 0 0}
+.scale{display:grid;gap:6px;margin-top:12px}
+.scale.s5{grid-template-columns:repeat(5,1fr)}
+.scale.s11{grid-template-columns:repeat(11,1fr);gap:4px}
+.scale button,.opt{font:inherit;color:var(--dark);background:var(--cream);border:1.5px solid transparent;border-radius:10px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.scale button{font-weight:800;font-size:16px;min-height:46px;padding:0}
+.scale.s11 button{font-size:14px;min-height:42px;border-radius:8px}
+.scale button[aria-pressed=true],.opt[aria-pressed=true]{background:var(--orange);color:var(--white)}
+.ends{display:flex;justify-content:space-between;font-size:12px;color:var(--gray);margin-top:5px}
+.opts{display:grid;gap:7px;margin-top:12px}
+.opt{text-align:left;font-size:15px;font-weight:600;padding:11px 14px;min-height:46px;line-height:1.4}
+input[type=text],input[type=tel],textarea{font:inherit;font-size:16px;width:100%;margin-top:12px;padding:12px 14px;border:1.5px solid var(--line);border-radius:10px;background:var(--white);color:var(--dark)}
+textarea{min-height:110px;resize:vertical}
+input:focus,textarea:focus{outline:none;border-color:var(--orange)}
+button:focus-visible{outline:3px solid rgba(255,77,0,.45);outline-offset:2px}
+.mx{display:grid;gap:12px;margin-top:12px}
+.mxr>span{display:block;font-size:14px;font-weight:700}
+.mxr>div{display:grid;grid-template-columns:repeat(5,1fr) 1.5fr;gap:5px;margin-top:5px}
+.mxr button{font:inherit;font-size:14px;font-weight:800;min-height:42px;padding:0;border:0;border-radius:8px;background:var(--cream);color:var(--dark);cursor:pointer}
+.mxr button.na{font-size:12px;font-weight:600;color:var(--gray)}
+.mxr button[aria-pressed=true]{background:var(--orange);color:var(--white)}
+.sub{font-size:14px;font-weight:700;margin:14px 0 0}
+.agree{display:flex;gap:10px;align-items:flex-start;margin-top:12px;font-size:14px;color:var(--brown);cursor:pointer}
+.agree input{width:20px;height:20px;margin:2px 0 0;accent-color:var(--orange);flex:none}
+.bar{position:fixed;left:0;right:0;bottom:0;background:rgba(254,247,233,.96);border-top:1px solid var(--line);padding:12px max(18px,env(safe-area-inset-left)) calc(12px + env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-right))}
+.bar>div{max-width:640px;margin:0 auto;display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center}
+.bar p{margin:0;font-size:13px;color:var(--brown)}
+.bar p b{color:var(--orange)}
+.send{font:inherit;font-size:16px;font-weight:800;color:var(--white);background:var(--orange);border:0;border-radius:999px;padding:13px 26px;cursor:pointer}
+.send:disabled{opacity:.5;cursor:default}
+.done{text-align:center;padding:14vh 0}
+.done h1{font-size:30px}
+.done p{color:var(--brown);margin:0}
+.toast{position:fixed;left:50%;bottom:92px;transform:translateX(-50%);background:var(--dark);color:var(--cream);font-size:14px;font-weight:600;border-radius:999px;padding:10px 18px;max-width:90vw;text-align:center}
+@media (max-width:420px){h1{font-size:25px}.scale.s11 button{font-size:13px;min-height:40px}.mxr>div{grid-template-columns:repeat(5,1fr) 1.7fr}}
+@media (prefers-reduced-motion:no-preference){.scale button,.opt,.mxr button{transition:background .12s,color .12s}}
+</style>
+</head>
+<body>
+<main class="wrap" id="form">
+  <span class="brand">CAFE'IN24 · OWNER REPORT 2026</span>
+  <h1>점주님의 한마디<br><span>2026 카페인24에 남겨주세요</span></h1>
+  <p class="intro">올 한 해 함께해 주셔서 감사합니다. 좋았던 점도, 아쉬웠던 점도 편하게 남겨주세요. <b>5분이면 충분합니다.</b> 이름을 남기지 않아도 되고, 남겨주신 의견은 2027 계획과 매장 지원에 반영하겠습니다.</p>
+  <p class="req-note"><i>★</i> 표시는 꼭 답해 주셔야 하는 문항입니다. (6문항)</p>
+  <div id="qs"></div>
+</main>
+<main class="wrap done" id="done" hidden>
+  <span class="brand">CAFE'IN24 · OWNER REPORT 2026</span>
+  <h1>소중한 의견<br>감사합니다</h1>
+  <p>2027년에도 우리 동네 가장 가까운 카페로 함께하겠습니다.</p>
+</main>
+<div class="bar" id="bar"><div><p id="prog"></p><button class="send" id="send" type="button">의견 보내기</button></div></div>
+<div class="toast" id="toast" hidden role="status"></div>
+
+<script type="module">
+import { firebaseConfig } from "./js/firebase-config.js";
+
+/* ── 문항 (2026-11-05 설계 v2 · 22문항 · 필수 6) ── */
+const SECTIONS = [
+ { t:'올 한 해 만족도', q:[
+  {id:1,req:1,type:'scale',t:'올해 카페인24와 함께한 한 해, 전체적으로 얼마나 만족하셨나요?',lo:'많이 아쉬웠어요',hi:'아주 만족해요'},
+  {id:2,type:'text',t:'그렇게 답하신 가장 큰 이유는 무엇인가요?'},
+  {id:3,req:1,type:'nps',t:'주변 지인에게 카페인24 창업을 추천하실 의향이 있나요?',lo:'전혀 아니다',hi:'꼭 추천하겠다'}]},
+ { t:'항목별 만족도', q:[
+  {id:4,req:1,type:'matrix',t:'아래 항목은 얼마나 만족하셨나요?',hint:'1점 많이 아쉬웠어요 ~ 5점 아주 만족해요',
+   rows:['원두 · 음료 맛과 품질','신메뉴 (문경 오미자티 · 딸기라떼 등)','디저트 · 다과','홍보물 · POP · 머신 화면','이벤트 (위크인24 · 크리스마스 럭키룰렛)','담당 SV 소통 · 방문','발주 · 물류','머신 · 기기 관리','본사 공지 · 다라미 커뮤니티 소통']},
+  {id:5,type:'long',t:'점수가 낮은 항목이 있다면, 어떤 점이 아쉬웠는지 알려주세요.'}]},
+ { t:'좋았던 점 · 아쉬운 점', q:[
+  {id:6,type:'multi',max:2,t:'올해 가장 좋았던 것은 무엇인가요?',o:['신메뉴 · 시즌 메뉴','디저트 · 다과 거치대','위크인24','크리스마스 럭키룰렛','담당 SV 방문 · 코칭','QSC 점검','네이버 플레이스 지원','3D 다라미 · 새 홍보물','기타']},
+  {id:7,type:'text',t:'좋았던 점을 조금 더 이야기해 주세요.'},
+  {id:8,req:1,type:'long',t:'올해 가장 아쉬웠던 점은 무엇인가요?'}]},
+ { t:'개선을 바라는 점', q:[
+  {id:9,req:1,type:'multi',max:3,exact:3,t:'내년에 꼭 나아졌으면 하는 것 3가지를 골라주세요.',o:['원두 · 음료 맛','신메뉴 개발','디저트 종류 · 가격','머신 · 기기','발주 · 물류','홍보물 · POP','이벤트 · 프로모션','담당 SV 소통','매출 분석 · 리포트','포인트 · 정산','본사 공지 · 소통 방식','기타']},
+  {id:10,type:'long',t:'그중 가장 급한 하나는 무엇이고, 어떻게 바뀌면 좋을까요?'},
+  {id:11,type:'multi',max:3,t:'내년에 이런 메뉴가 나오면 좋겠어요.',o:['커피 시그니처','논커피 라떼','에이드 · 티','지역 산지 음료','짜 먹는 파우치 음료','단짠 디저트','아이들이 좋아할 음료 · 디저트','건강 간식 (PICK PEAK)','계절 한정 메뉴','기타']},
+  {id:12,type:'text',t:'꼭 나왔으면 하는 메뉴가 있다면 이름이나 예시를 적어주세요.'}]},
+ { t:'2027 계획', q:[
+  {id:13,type:'one',t:'2027 계획 중 우리 매장에 가장 도움이 될 것 같은 것은 무엇인가요?',o:['브랜드 강화 (인스타그램 · 3D 다라미 · 매장 외관)','디저트 판매율 (PICK PEAK · 새 디저트)','위크인24 (매달 이벤트)','매장별 매출 리포트 + 담당 SV']},
+  {id:14,type:'one',t:'내년 위크인24에 참여하실 생각이 있으신가요?',o:['매번 참여할게요','상황 보고 참여할게요','참여가 어려워요']},
+  {id:15,type:'multi',max:5,t:'참여를 망설이게 하는 이유는 무엇인가요?',when:a=>a[14]&&a[14]!=='매번 참여할게요',o:['할인 부담','준비 · 부착이 번거로움','효과를 잘 모르겠음','공지를 늦게 봄','기타']},
+  {id:16,type:'pair',t:'매출 리포트는 어떻게, 얼마나 자주 받고 싶으세요?',parts:[['way','받는 방식',['카카오톡','다라미 커뮤니티 앱','이메일','담당 SV 방문 때 직접']],['cycle','받는 주기',['매달','분기마다']]]}]},
+ { t:'칭찬 한마디', q:[
+  {id:17,type:'text',t:'올해 고마웠던 사람이나 팀이 있나요?',ph:'예: 담당 SV 최프로님, 운영팀'},
+  {id:18,type:'long',t:'칭찬 한마디를 남겨주세요. 꼭 전해드릴게요.'},
+  {id:19,type:'one',t:'남겨주신 칭찬을 다라미 커뮤니티나 다음 리포트에 소개해도 될까요?',o:['네, 소개해도 좋아요','전달만 해주세요']}]},
+ { t:'자유 의견 · 답변 받기', q:[
+  {id:20,req:1,type:'long',t:'본사에 하고 싶은 말을 자유롭게 남겨주세요.'},
+  {id:21,type:'one',t:'남긴 의견에 답변을 받고 싶으신가요?',o:['네, 연락 주세요','괜찮아요']},
+  {id:22,type:'contact',t:'매장명과 연락처를 남겨주세요.',when:a=>a[21]==='네, 연락 주세요'}]}
+];
+const ALL = SECTIONS.flatMap(s=>s.q), KEY='cafein24-voice-2026';
+const $=s=>document.querySelector(s), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let ans={}; try{ans=JSON.parse(localStorage.getItem(KEY)||'{}')||{}}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(ans))}catch(e){}};
+
+/* ── 그리기 ── */
+function body(q){
+  const a=ans[q.id];
+  if(q.type==='scale') return `<div class="scale s5">${[1,2,3,4,5].map(n=>`<button type="button" data-n="${n}" aria-pressed="${a===n}">${n}</button>`).join('')}</div><div class="ends"><span>1 ${q.lo}</span><span>5 ${q.hi}</span></div>`;
+  if(q.type==='nps') return `<div class="scale s11">${[0,1,2,3,4,5,6,7,8,9,10].map(n=>`<button type="button" data-n="${n}" aria-pressed="${a===n}">${n}</button>`).join('')}</div><div class="ends"><span>0 ${q.lo}</span><span>10 ${q.hi}</span></div>`;
+  if(q.type==='text') return `<input type="text" maxlength="200" value="${esc(a||'')}" placeholder="${esc(q.ph||'')}" aria-label="${esc(q.t)}">`;
+  if(q.type==='long') return `<textarea maxlength="2000" aria-label="${esc(q.t)}">${esc(a||'')}</textarea>`;
+  if(q.type==='matrix') return `<p class="hint">${q.hint}</p><div class="mx">${q.rows.map((r,i)=>`<div class="mxr"><span>${r}</span><div>${[1,2,3,4,5].map(n=>`<button type="button" data-r="${i}" data-n="${n}" aria-pressed="${a?.[i]===n}">${n}</button>`).join('')}<button type="button" class="na" data-r="${i}" data-n="0" aria-pressed="${a?.[i]===0}">해당 없음</button></div></div>`).join('')}</div>`;
+  if(q.type==='multi'||q.type==='one') return `<div class="opts">${q.o.map(o=>`<button type="button" class="opt" data-o="${esc(o)}" aria-pressed="${q.type==='one'?a===o:(a||[]).includes(o)}">${o}</button>`).join('')}</div>`;
+  if(q.type==='pair') return q.parts.map(([k,label,os])=>`<p class="sub">${label}</p><div class="opts">${os.map(o=>`<button type="button" class="opt" data-k="${k}" data-o="${esc(o)}" aria-pressed="${a?.[k]===o}">${o}</button>`).join('')}</div>`).join('');
+  if(q.type==='contact') return `<input type="text" maxlength="40" data-f="store" value="${esc(a?.store||'')}" placeholder="매장명 (예: 학동점)" aria-label="매장명"><input type="tel" maxlength="20" data-f="phone" value="${esc(a?.phone||'')}" placeholder="연락처 (예: 010-1234-5678)" aria-label="연락처" inputmode="tel"><label class="agree"><input type="checkbox" data-f="agree" ${a?.agree?'checked':''}><span>개인정보 수집 · 이용에 동의합니다. (목적: 의견 회신 / 항목: 매장명, 연락처 / 보관: 회신 후 3개월)</span></label>`;
+  return '';
+}
+const sub=q=>q.type==='multi'?`<small>${q.exact?`${q.exact}개 선택`:q.max<5?`최대 ${q.max}개`:'여러 개 선택'}</small>`:'';
+function render(){
+  $('#qs').innerHTML=SECTIONS.map((s,si)=>`<section class="sec"><em>${si+1} / ${SECTIONS.length}</em><h2>${s.t}</h2>${s.q.map(q=>`<div class="q" id="q${q.id}" ${q.when&&!q.when(ans)?'hidden':''}><h3>${q.req?'<i>★</i> ':''}${q.t}${sub(q)}</h3><div class="b">${body(q)}</div><p class="msg" hidden></p></div>`).join('')}</section>`).join('');
+  progress();
+}
+const filled=q=>{const a=ans[q.id];
+  if(q.type==='matrix') return a&&q.rows.every((r,i)=>a[i]!==undefined);
+  if(q.type==='multi') return (a||[]).length>=(q.exact||1);
+  return a!==undefined&&a!==''};
+function progress(){const req=ALL.filter(q=>q.req),n=req.filter(filled).length;$('#prog').innerHTML=n===req.length?'필수 문항을 모두 답하셨어요.':`필수 문항 <b>${n}</b> / ${req.length}`}
+function toast(m){const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,2600)}
+function refresh(q){const el=$('#q'+q.id);el.querySelectorAll('[aria-pressed]').forEach(b=>{const o=b.dataset.o,n=b.dataset.n===undefined?null:+b.dataset.n,a=ans[q.id];
+  b.setAttribute('aria-pressed',String(q.type==='matrix'?a?.[b.dataset.r]===n:q.type==='pair'?a?.[b.dataset.k]===o:q.type==='multi'?(a||[]).includes(o):q.type==='one'?a===o:a===n))});
+  el.classList.remove('bad');el.querySelector('.msg').hidden=true;
+  ALL.filter(x=>x.when).forEach(x=>{const show=x.when(ans),box=$('#q'+x.id);if(!show&&!box.hidden){delete ans[x.id];box.querySelector('.b').innerHTML=body(x);box.classList.remove('bad');box.querySelector('.msg').hidden=true}box.hidden=!show});
+  save();progress()}
+
+$('#qs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const q=ALL.find(x=>'q'+x.id===b.closest('.q').id);
+  if(q.type==='scale'||q.type==='nps')ans[q.id]=+b.dataset.n;
+  else if(q.type==='matrix')ans[q.id]={...(ans[q.id]||{}),[b.dataset.r]:+b.dataset.n};
+  else if(q.type==='one')ans[q.id]=ans[q.id]===b.dataset.o?undefined:b.dataset.o;
+  else if(q.type==='pair')ans[q.id]={...(ans[q.id]||{}),[b.dataset.k]:b.dataset.o};
+  else if(q.type==='multi'){const cur=ans[q.id]||[],o=b.dataset.o;
+    if(cur.includes(o))ans[q.id]=cur.filter(x=>x!==o);
+    else if(cur.length>=q.max){toast(`최대 ${q.max}개까지 고를 수 있어요.`);return}
+    else ans[q.id]=[...cur,o]}
+  if(ans[q.id]===undefined)delete ans[q.id];
+  refresh(q)});
+$('#qs').addEventListener('input',e=>{const el=e.target,q=ALL.find(x=>'q'+x.id===el.closest('.q').id);
+  if(q.type==='contact')ans[q.id]={...(ans[q.id]||{}),[el.dataset.f]:el.type==='checkbox'?el.checked:el.value};
+  else if(el.value.trim())ans[q.id]=el.value;else delete ans[q.id];
+  $('#q'+q.id).classList.remove('bad');$('#q'+q.id).querySelector('.msg').hidden=true;save();progress()});
+
+/* ── 보내기 ── */
+function check(){let first=null;const bad=(q,m)=>{const el=$('#q'+q.id);el.classList.add('bad');const p=el.querySelector('.msg');p.textContent=m;p.hidden=false;first??=el};
+  ALL.forEach(q=>{if(q.when&&!q.when(ans))return;const a=ans[q.id];
+    if(q.req&&!filled(q))bad(q,q.type==='matrix'?'모든 항목에 답해 주세요. 해당하지 않으면 "해당 없음"을 골라주세요.':q.exact?`${q.exact}개를 골라주세요.`:'꼭 답해 주셔야 하는 문항이에요.');
+    else if(q.type==='contact'){if(!a?.store?.trim()||!a?.phone?.trim())bad(q,'매장명과 연락처를 적어주세요.');else if(!/^[0-9\-\s]{9,15}$/.test(a.phone.trim()))bad(q,'연락처는 숫자로 적어주세요.');else if(!a.agree)bad(q,'개인정보 수집 · 이용에 동의해 주셔야 연락드릴 수 있어요.')}});
+  if(first){first.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth',block:'center'});toast('빠진 문항이 있어요.')}
+  return !first}
+function payload(ts){const t=v=>typeof v==='string'?v.trim():v,d={v:1,createdAt:ts};
+  ALL.forEach(q=>{if(q.when&&!q.when(ans))return;const a=ans[q.id];if(a===undefined)return;
+    if(q.type==='matrix')d['q'+q.id]=q.rows.map((r,i)=>a[i]??null);
+    else if(q.type==='contact')d['q'+q.id]={store:t(a.store),phone:t(a.phone),agree:true};
+    else if(q.type==='pair')d['q'+q.id]={way:a.way||'',cycle:a.cycle||''};
+    else d['q'+q.id]=t(a)});
+  return d}
+$('#send').addEventListener('click',async()=>{if(!check())return;const btn=$('#send');btn.disabled=true;btn.textContent='보내는 중…';
+  try{
+    const [{initializeApp},{getFirestore,collection,addDoc,serverTimestamp}]=await Promise.all([import("https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js"),import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js")]);
+    const db=getFirestore(initializeApp(firebaseConfig));
+    await addDoc(collection(db,'voices'),payload(serverTimestamp()));
+    try{localStorage.removeItem(KEY)}catch(e){}
+    $('#form').hidden=true;$('#bar').hidden=true;$('#done').hidden=false;scrollTo(0,0);
+  }catch(e){console.error(e);btn.disabled=false;btn.textContent='의견 보내기';toast('보내지 못했어요. 잠시 뒤 다시 눌러 주세요. 적은 내용은 그대로 남아 있어요.')}});
+render();
+</script>
+</body>
+</html>

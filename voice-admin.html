@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>점주 의견 결과 · 카페인24 OWNER REPORT 2026</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="css/admin.css">
+<style>
+.vlist{display:grid;gap:12px}
+.vc{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+.vc header{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:12.5px;color:var(--ink2)}
+.vc header b{font-size:14px;color:var(--ink)}
+.pill{display:inline-block;font-size:12px;font-weight:700;border-radius:999px;padding:2px 10px;background:var(--accent-soft);color:var(--accent)}
+.pill.g{background:#EEF1EC;color:var(--ok)}
+.vc dl{margin:10px 0 0;display:grid;grid-template-columns:150px 1fr;gap:6px 14px;font-size:13.5px}
+.vc dt{color:var(--muted);font-weight:600}
+.vc dd{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
+.bars{display:grid;gap:6px;margin-top:8px}
+.bars div{display:grid;grid-template-columns:220px 1fr 44px;gap:10px;align-items:center;font-size:13px}
+.bars i{display:block;height:10px;border-radius:999px;background:var(--line);overflow:hidden}
+.bars i em{display:block;height:100%;background:var(--accent);border-radius:999px}
+.bars b{text-align:right;font-variant-numeric:tabular-nums}
+@media (max-width:640px){.vc dl{grid-template-columns:1fr}.bars div{grid-template-columns:1fr 80px 40px}}
+</style>
+</head>
+<body>
+<header class="top"><span class="logo">CAFEIN<b>24</b></span><span class="ttl">OWNER REPORT 2026 · 점주 의견 결과</span><span class="sp"></span><span class="me" data-user></span><button data-logout hidden>로그아웃</button></header>
+
+<section class="gate" id="gate">
+  <h1>본사 관리자 로그인</h1>
+  <p>@cafein24.co.kr 구글 계정으로만 들어올 수 있어요.</p>
+  <button class="btn" id="btn-login">구글 계정으로 로그인</button>
+  <div class="err" id="gate-msg"></div>
+</section>
+
+<main class="wrap" id="main" hidden>
+  <div class="cards" id="cards"></div>
+  <div class="box"><b>항목별 만족도 평균 (5점 만점 · "해당 없음" 제외)</b><div class="bars" id="mx"></div></div>
+  <div class="box"><b>내년에 꼭 나아졌으면 하는 것 (많이 고른 순)</b><div class="bars" id="imp"></div></div>
+  <div class="row"><input type="text" id="q" placeholder="내용 · 매장명으로 찾기" style="width:260px"><label class="note"><input type="checkbox" id="only"> 답변을 원하는 의견만</label><span class="sp"></span><span class="note" id="count"></span><button class="btn ghost sm" id="reload">새로 고침</button><button class="btn sm" id="csv">엑셀(CSV)로 받기</button></div>
+  <div class="vlist" id="list"></div>
+</main>
+
+<script type="module">
+import { db, $, esc, fmtTime, requireAdmin, downloadCsv } from "./js/common.js";
+import { collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const ROWS=['원두 · 음료 맛과 품질','신메뉴','디저트 · 다과','홍보물 · POP · 머신 화면','이벤트','담당 SV 소통 · 방문','발주 · 물류','머신 · 기기 관리','본사 공지 · 커뮤니티 소통'];
+const LABEL={q1:'전체 만족도(1~5)',q2:'만족도 이유',q3:'추천 의향(0~10)',q5:'낮은 점수 이유',q6:'가장 좋았던 것',q7:'좋았던 점',q8:'가장 아쉬웠던 점',q9:'나아졌으면 하는 것',q10:'가장 급한 것',q11:'바라는 메뉴',q12:'메뉴 예시',q13:'도움 될 2027 계획',q14:'위크인24 참여',q15:'망설이는 이유',q16:'매출 리포트 받기',q17:'고마웠던 사람 · 팀',q18:'칭찬 한마디',q19:'칭찬 소개',q20:'자유 의견',q21:'답변 받기',q22:'매장 · 연락처'};
+let all=[];
+const show=(k,v)=>Array.isArray(v)?v.join(' · '):k==='q16'?[v.way,v.cycle].filter(Boolean).join(' · '):k==='q22'?`${v.store} · ${v.phone}`:String(v);
+const avg=a=>a.length?(a.reduce((x,y)=>x+y,0)/a.length):null;
+
+async function load(){
+  $('list').innerHTML='<p class="note">불러오는 중…</p>';
+  try{ const s=await getDocs(query(collection(db,'voices'),orderBy('createdAt','desc'))); all=s.docs.map(d=>({id:d.id,...d.data()})); }
+  catch(e){ console.error(e); $('list').innerHTML='<p class="err">불러오지 못했어요. Firestore 규칙에 voices가 들어갔는지 확인해 주세요. ('+esc(e.code||e.message)+')</p>'; return; }
+  const n=all.length, a1=avg(all.map(v=>v.q1).filter(Number.isFinite)), nps=all.map(v=>v.q3).filter(Number.isFinite);
+  const npsScore=nps.length?Math.round((nps.filter(x=>x>=9).length-nps.filter(x=>x<=6).length)/nps.length*100):null;
+  $('cards').innerHTML=`<div class="card"><div class="k">받은 의견</div><div class="v">${n}</div><div class="s">건</div></div>`
+   +`<div class="card"><div class="k">전체 만족도 평균</div><div class="v">${a1===null?'-':a1.toFixed(2)}</div><div class="s">5점 만점</div></div>`
+   +`<div class="card"><div class="k">점주 추천지수(NPS)</div><div class="v">${npsScore===null?'-':npsScore}</div><div class="s">추천(9~10) 비율 − 비추천(0~6) 비율</div></div>`
+   +`<div class="card"><div class="k">답변을 원하는 의견</div><div class="v">${all.filter(v=>v.q22).length}</div><div class="s">건</div></div>`;
+  $('mx').innerHTML=ROWS.map((r,i)=>{const m=avg(all.map(v=>v.q4?.[i]).filter(x=>x>=1));return `<div><span>${r}</span><i><em style="width:${m?m/5*100:0}%"></em></i><b>${m?m.toFixed(2):'-'}</b></div>`}).join('');
+  const cnt={}; all.forEach(v=>(v.q9||[]).forEach(o=>cnt[o]=(cnt[o]||0)+1));
+  $('imp').innerHTML=Object.entries(cnt).sort((a,b)=>b[1]-a[1]).map(([o,c])=>`<div><span>${esc(o)}</span><i><em style="width:${n?c/n*100:0}%"></em></i><b>${c}</b></div>`).join('')||'<p class="note">아직 없어요.</p>';
+  draw();
+}
+function draw(){
+  const kw=$('q').value.trim().toLowerCase(), only=$('only').checked;
+  const rows=all.filter(v=>(!only||v.q22)&&(!kw||JSON.stringify(v).toLowerCase().includes(kw)));
+  $('count').textContent=`${rows.length}건`;
+  $('list').innerHTML=rows.map(v=>`<article class="vc"><header><b>${esc(fmtTime(v.createdAt))}</b><span class="pill">만족도 ${v.q1}</span><span class="pill">추천 ${v.q3}</span>${v.q22?`<span class="pill g">답변 요청 · ${esc(v.q22.store)}</span>`:''}</header><dl>`
+    +`<dt>항목별 만족도</dt><dd>${ROWS.map((r,i)=>`${r} ${v.q4?.[i]?v.q4[i]:'해당 없음'}`).join(' / ')}</dd>`
+    +Object.keys(LABEL).filter(k=>k!=='q1'&&k!=='q3'&&v[k]!==undefined&&v[k]!=='').map(k=>`<dt>${LABEL[k]}</dt><dd>${esc(show(k,v[k]))}</dd>`).join('')+`</dl></article>`).join('')||'<p class="note">아직 받은 의견이 없어요.</p>';
+}
+$('q').addEventListener('input',draw); $('only').addEventListener('change',draw); $('reload').addEventListener('click',load);
+$('csv').addEventListener('click',()=>{const keys=Object.keys(LABEL);
+  downloadCsv('카페인24_점주의견_2026.csv',['작성 시각',...keys.map(k=>LABEL[k]),...ROWS.map(r=>'만족도: '+r)],
+    all.map(v=>[fmtTime(v.createdAt),...keys.map(k=>v[k]===undefined?'':show(k,v[k])),...ROWS.map((r,i)=>v.q4?.[i]?v.q4[i]:'해당 없음')]))});
+requireAdmin(load);
+</script>
+</body>
+</html>

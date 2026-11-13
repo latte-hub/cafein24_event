@@ -1,5 +1,5 @@
 rules_version = '2';
-// 카페인24 크리스마스 럭키룰렛 · Firestore 보안 규칙 (2026-11-04 최신화 · 매장당 200장 · 210개 매장)
+// 카페인24 크리스마스 럭키룰렛 · Firestore 보안 규칙 (2026-11-13 최신화 · 매장당 200장 · 210개 매장 · 점주 의견 voices 추가)
 // 11/4 변경: 등수를 tiers 컬렉션으로 분리(스티커를 쓴 뒤에만 읽힘) · 참여 가능 날짜를 서버에서 강제 · 집계/선착순 카운터를 실제 기록과 묶음
 // 등수: 1~4 포인트 · 5 꽝 · 6 다라미 텀블러 · 7 다라미 양산
 // Firebase 콘솔 → Firestore Database → 규칙 탭: 전체를 지우고 이 파일 내용을 통째로 붙여넣고 '게시'.
@@ -220,6 +220,31 @@ service cloud.firestore {
     // 그 밖의 모든 경로는 차단
     match /{document=**} {
       allow read, write: if false;
+    }
+    // ---------- 점주 의견 (OWNER REPORT 2026 · voice.html) ----------
+    // 누구나 1건씩 새로 남길 수 있음(수정·삭제 불가) · 읽기는 본사만
+    match /voices/{id} {
+      function txt(k, n) { return !(k in request.resource.data) || (request.resource.data[k] is string && request.resource.data[k].size() <= n); }
+      function lst(k, n) { return !(k in request.resource.data) || (request.resource.data[k] is list && request.resource.data[k].size() <= n); }
+      allow read, delete: if isAdmin();
+      allow create: if request.resource.data.keys().hasOnly(['v','createdAt','q1','q2','q3','q4','q5','q6','q7','q8','q9','q10','q11','q12','q13','q14','q15','q16','q17','q18','q19','q20','q21','q22'])
+        && request.resource.data.keys().hasAll(['v','createdAt','q1','q3','q4','q8','q9','q20'])
+        && request.resource.data.v == 1
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.q1 is int && request.resource.data.q1 >= 1 && request.resource.data.q1 <= 5
+        && request.resource.data.q3 is int && request.resource.data.q3 >= 0 && request.resource.data.q3 <= 10
+        && request.resource.data.q4 is list && request.resource.data.q4.size() == 9
+        && request.resource.data.q9 is list && request.resource.data.q9.size() == 3
+        && request.resource.data.q8 is string && request.resource.data.q8.size() > 0 && request.resource.data.q8.size() <= 2000
+        && request.resource.data.q20 is string && request.resource.data.q20.size() > 0 && request.resource.data.q20.size() <= 2000
+        && txt('q2', 200) && txt('q5', 2000) && txt('q7', 200) && txt('q10', 2000) && txt('q12', 200)
+        && txt('q13', 60) && txt('q14', 60) && txt('q17', 200) && txt('q18', 2000) && txt('q19', 60) && txt('q21', 60)
+        && lst('q6', 2) && lst('q11', 3) && lst('q15', 5)
+        && (!('q16' in request.resource.data) || (request.resource.data.q16 is map && request.resource.data.q16.keys().hasOnly(['way','cycle'])))
+        && (!('q22' in request.resource.data) || (request.resource.data.q22 is map && request.resource.data.q22.keys().hasOnly(['store','phone','agree'])
+            && request.resource.data.q22.store is string && request.resource.data.q22.store.size() <= 40
+            && request.resource.data.q22.phone is string && request.resource.data.q22.phone.size() <= 20
+            && request.resource.data.q22.agree == true));
     }
   }
 }

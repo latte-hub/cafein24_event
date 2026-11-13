@@ -227,24 +227,18 @@ service cloud.firestore {
       function txt(k, n) { return !(k in request.resource.data) || (request.resource.data[k] is string && request.resource.data[k].size() <= n); }
       function lst(k, n) { return !(k in request.resource.data) || (request.resource.data[k] is list && request.resource.data[k].size() <= n); }
       allow read, delete: if isAdmin();
-      allow create: if request.resource.data.keys().hasOnly(['v','createdAt','q1','q2','q3','q4','q5','q6','q7','q8','q9','q10','q11','q12','q13','q14','q15','q16','q17','q18','q19','q20','q21','q22'])
-        && request.resource.data.keys().hasAll(['v','createdAt','q1','q3','q4','q8','q9','q20'])
+      allow create: if request.resource.data.keys().hasOnly(['v','createdAt','q1','q2','q4','q5','q6','q7','q8','q9','q10','q11','q12','q13','q14','q15','q17','q18','q20','q23','q24'])
+        && request.resource.data.keys().hasAll(['v','createdAt','q1','q4','q8','q9','q20'])
         && request.resource.data.v == 1
         && request.resource.data.createdAt == request.time
         && request.resource.data.q1 is int && request.resource.data.q1 >= 1 && request.resource.data.q1 <= 5
-        && request.resource.data.q3 is int && request.resource.data.q3 >= 0 && request.resource.data.q3 <= 10
         && request.resource.data.q4 is list && request.resource.data.q4.size() == 9
         && request.resource.data.q9 is list && request.resource.data.q9.size() == 3
         && request.resource.data.q8 is string && request.resource.data.q8.size() > 0 && request.resource.data.q8.size() <= 2000
         && request.resource.data.q20 is string && request.resource.data.q20.size() > 0 && request.resource.data.q20.size() <= 2000
         && txt('q2', 200) && txt('q5', 2000) && txt('q7', 200) && txt('q10', 2000) && txt('q12', 200)
-        && txt('q13', 60) && txt('q14', 60) && txt('q17', 200) && txt('q18', 2000) && txt('q19', 60) && txt('q21', 60)
-        && lst('q6', 2) && lst('q11', 3) && lst('q15', 5)
-        && (!('q16' in request.resource.data) || (request.resource.data.q16 is map && request.resource.data.q16.keys().hasOnly(['way','cycle'])))
-        && (!('q22' in request.resource.data) || (request.resource.data.q22 is map && request.resource.data.q22.keys().hasOnly(['store','phone','agree'])
-            && request.resource.data.q22.store is string && request.resource.data.q22.store.size() <= 40
-            && request.resource.data.q22.phone is string && request.resource.data.q22.phone.size() <= 20
-            && request.resource.data.q22.agree == true));
+        && txt('q13', 60) && txt('q14', 60) && txt('q17', 200) && txt('q18', 2000) && txt('q23', 2000) && txt('q24', 2000)
+        && lst('q6', 2) && lst('q11', 3) && lst('q15', 5);
     }
   }
 }

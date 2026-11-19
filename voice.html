@@ -87,30 +87,35 @@ button:focus-visible{outline:3px solid rgba(255,77,0,.45);outline-offset:2px}
 <script type="module">
 import { firebaseConfig } from "./js/firebase-config.js";
 
-/* ── 문항 (2026-11-13 수정 · 19문항 · 필수 5) ── */
+/* ── 문항 (2026-11-19 수정 · 23문항 · 필수 5) ── */
 const SECTIONS = [
  { t:'올 한 해 만족도', q:[
   {id:1,req:1,type:'scale',t:'올해 카페인24와 함께한 한 해, 전체적으로 얼마나 만족하셨나요?',lo:'많이 아쉬웠어요',hi:'아주 만족해요'},
   {id:2,type:'text',t:'그렇게 답하신 가장 큰 이유는 무엇인가요?'}]},
  { t:'항목별 만족도', q:[
   {id:4,req:1,type:'matrix',t:'아래 항목은 얼마나 만족하셨나요?',hint:'1점 많이 아쉬웠어요 ~ 5점 아주 만족해요',
-   rows:['원두 · 음료 맛과 품질','신메뉴 (문경 오미자티 · 딸기라떼 등)','디저트 · 다과','홍보물 · POP · 머신 화면','이벤트 (위크인24 · 크리스마스 럭키룰렛)','담당 SV 소통 · 방문','발주 · 물류','머신 · 기기 관리','본사 공지 · 다라미 커뮤니티 소통']},
+   rows:['원두 · 음료 맛과 품질','신메뉴 (문경 오미자티 · 딸기라떼 등)','디저트 · 다과','홍보물 · POP · 머신 화면','이벤트 (WEEK IN 24 · 크리스마스 럭키룰렛)','담당 SV 소통 · 방문','발주 · 물류','머신 · 기기 관리','본사 공지 · 다라미 커뮤니티 소통']},
   {id:5,type:'long',t:'점수가 낮은 항목이 있다면, 어떤 점이 아쉬웠는지 알려주세요.'}]},
  { t:'좋았던 점 · 아쉬운 점', q:[
-  {id:6,type:'multi',max:2,t:'올해 가장 좋았던 것은 무엇인가요?',o:['신메뉴 · 시즌 메뉴','디저트 · 다과 거치대','위크인24','담당 SV 방문 · 코칭','QSC 점검','네이버 플레이스 지원','인스타 콘텐츠 (3D 다라미 · 신메뉴 콘텐츠)','기타']},
+  {id:6,type:'multi',max:2,t:'올해 가장 좋았던 것은 무엇인가요?',o:['신메뉴 · 시즌 메뉴','디저트 · 다과 거치대','WEEK IN 24','담당 SV 방문 · 코칭','QSC 점검','네이버 플레이스 지원','인스타 콘텐츠 (3D 다라미 · 신메뉴 콘텐츠)','기타']},
   {id:7,type:'text',t:'좋았던 점을 조금 더 이야기해 주세요.'},
   {id:8,req:1,type:'long',t:'올해 가장 아쉬웠던 점은 무엇인가요?'}]},
  { t:'개선을 바라는 점', q:[
   {id:9,req:1,type:'multi',max:3,exact:3,t:'내년에 꼭 나아졌으면 하는 것 3가지를 골라주세요.',o:['원두 · 음료 맛','신메뉴 개발','디저트 종류 · 가격','머신 · 기기','발주 · 물류','홍보물 · POP','이벤트 · 프로모션','담당 SV 소통','매출 분석 · 리포트','포인트 · 정산','본사 공지 · 소통 방식','기타']},
-  {id:10,type:'long',t:'그중 가장 급한 하나는 무엇이고, 어떻게 바뀌면 좋을까요?'},
-  {id:11,type:'multi',max:3,t:'내년에 이런 메뉴가 나오면 좋겠어요.',o:['논커피 라떼','에이드 · 티','지역 산지 음료','짜 먹는 파우치 음료','단짠 디저트','아이들이 좋아할 음료 · 디저트','건강 간식 (PICK PEAK)','계절 한정 메뉴','기타']},
-  {id:12,type:'text',t:'꼭 나왔으면 하는 메뉴가 있다면 이름이나 예시를 적어주세요.'}]},
+  {id:10,type:'long',t:'그중 가장 급한 하나는 무엇이고, 어떻게 바뀌면 좋을까요?'}]},
+ { t:'내년 메뉴', q:[
+  {id:11,type:'multi',max:3,t:'내년에 이런 메뉴가 나오면 좋겠어요.',o:['생우유와 맛이 비슷한 고원유 함량 밀크파우더 (기존 대비 공급가 20% 인상)','에너지 드링크 등 기능성 음료용 액상 원료','에이드 · 티','짜 먹는 파우치 음료','단짠 디저트','아이들이 좋아할 음료 · 디저트','건강 간식 (PICK PEAK)','계절 한정 메뉴','기타']},
+  {id:25,type:'one',t:'분유 맛과 단맛이 없고 생우유와 맛이 비슷한 고원유 함량 밀크파우더가 출시된다면, 기존 대비 공급가가 20% 인상되어도 도입하실 의향이 있으신가요?',o:['도입할게요','맛을 보고 정할게요','도입하지 않을래요']},
+  {id:26,type:'long',t:'카페인24 전체 매장 관점에서, 어떤 디저트가 출시되면 좋을까요?'},
+  {id:27,type:'duo',t:'내년에 꼭 출시되었으면 하는 메뉴명이나 참고 상품을 디저트 1종, 음료 1종씩 적어 주세요.',f:[['dessert','디저트','예: ○○ 쿠키, 편의점 ○○ 같은 디저트'],['drink','음료','예: ○○ 라떼, ○○ 브랜드의 ○○ 음료']]},
+  {id:29,type:'one',t:'웰니스 디저트 브랜드 ‘피크피크’의 제품이 카페인24 프리미엄 디저트 라인으로 출시된다면 도입하실 의향이 있으신가요?',hint:'소비자 판매가 3,000~5,000원',o:['도입할게요','제품을 보고 정할게요','도입하지 않을래요']}]},
  { t:'2027 계획', q:[
-  {id:13,type:'one',t:'2027 계획 중 우리 매장에 가장 도움이 될 것 같은 것은 무엇인가요?',o:['브랜드 강화 (인스타그램 · 3D 다라미 · 매장 외관)','디저트 판매율 (PICK PEAK · 새 디저트)','위크인24 (매달 이벤트)','매장별 매출 리포트 + 담당 SV']},
+  {id:13,type:'one',t:'2027 계획 중 우리 매장에 가장 도움이 될 것 같은 것은 무엇인가요?',o:['브랜드 강화 (인스타그램 · 3D 다라미 · 매장 외관)','디저트 판매율 (PICK PEAK · 새 디저트)','WEEK IN 24 (분기별 이벤트)','매장별 매출 리포트 + 담당 SV']},
   {id:24,type:'long',t:'2027 계획 중 더 들어갔으면 하는 의견이 있으신가요?'},
-  {id:14,type:'one',t:'내년 위크인24에 참여하실 생각이 있으신가요?',o:['매번 참여할게요','상황 보고 참여할게요','참여가 어려워요','해당 이벤트가 별로예요']},
+  {id:14,type:'one',t:'내년 분기별로 진행되는 WEEK IN 24 이벤트에 참여하실 의향이 있으신가요?',o:['매번 참여할게요','상황 보고 참여할게요','참여가 어려워요','해당 이벤트가 별로예요']},
   {id:23,type:'long',t:'아쉽다고 생각하신 이유는 무엇인가요?',when:a=>a[14]==='해당 이벤트가 별로예요'},
-  {id:15,type:'multi',max:5,t:'참여를 망설이게 하는 이유는 무엇인가요?',when:a=>a[14]==='상황 보고 참여할게요'||a[14]==='참여가 어려워요',o:['할인 부담','준비 · 부착이 번거로움','효과를 잘 모르겠음','공지를 늦게 봄','기타']}]},
+  {id:15,type:'multi',max:5,t:'참여를 망설이게 하는 이유는 무엇인가요?',when:a=>a[14]==='상황 보고 참여할게요'||a[14]==='참여가 어려워요',o:['할인 부담','준비 · 부착이 번거로움','효과를 잘 모르겠음','공지를 늦게 봄','기타']},
+  {id:30,type:'long',t:'WEEK IN 24에서 진행했으면 하는 이벤트가 있다면 적어 주세요.',hint:'매장 머신의 기능으로 구현할 수 있는 이벤트를 기준으로 작성해 주세요.'}]},
  { t:'칭찬 한마디', q:[
   {id:17,type:'text',t:'올해 고마웠던 사람이나 팀이 있나요?',ph:'예: 담당 SV 최프로님, 운영팀'},
   {id:18,type:'long',t:'칭찬 한마디를 남겨주세요. 꼭 전해드릴게요.'}]},
@@ -127,6 +132,7 @@ function body(q){
   const a=ans[q.id];
   if(q.type==='scale') return `<div class="scale s5">${[1,2,3,4,5].map(n=>`<button type="button" data-n="${n}" aria-pressed="${a===n}">${n}</button>`).join('')}</div><div class="ends"><span>1 ${q.lo}</span><span>5 ${q.hi}</span></div>`;
   if(q.type==='nps') return `<div class="scale s11">${[0,1,2,3,4,5,6,7,8,9,10].map(n=>`<button type="button" data-n="${n}" aria-pressed="${a===n}">${n}</button>`).join('')}</div><div class="ends"><span>0 ${q.lo}</span><span>10 ${q.hi}</span></div>`;
+  if(q.type==='duo') return q.f.map(([k,label,ph])=>`<p class="sub">${label}</p><input type="text" maxlength="200" data-f="${k}" value="${esc(a?.[k]||'')}" placeholder="${esc(ph)}" aria-label="${esc(label)}">`).join('');
   if(q.type==='text') return `<input type="text" maxlength="200" value="${esc(a||'')}" placeholder="${esc(q.ph||'')}" aria-label="${esc(q.t)}">`;
   if(q.type==='long') return `<textarea maxlength="2000" aria-label="${esc(q.t)}">${esc(a||'')}</textarea>`;
   if(q.type==='matrix') return `<p class="hint">${q.hint}</p><div class="mx">${q.rows.map((r,i)=>`<div class="mxr"><span>${r}</span><div>${[1,2,3,4,5].map(n=>`<button type="button" data-r="${i}" data-n="${n}" aria-pressed="${a?.[i]===n}">${n}</button>`).join('')}<button type="button" class="na" data-r="${i}" data-n="0" aria-pressed="${a?.[i]===0}">해당 없음</button></div></div>`).join('')}</div>`;
@@ -137,7 +143,7 @@ function body(q){
 }
 const sub=q=>q.type==='multi'?`<small>${q.exact?`${q.exact}개 선택`:q.max<5?`최대 ${q.max}개`:'여러 개 선택'}</small>`:'';
 function render(){
-  $('#qs').innerHTML=SECTIONS.map((s,si)=>`<section class="sec"><em>${si+1} / ${SECTIONS.length}</em><h2>${s.t}</h2>${s.q.map(q=>`<div class="q" id="q${q.id}" ${q.when&&!q.when(ans)?'hidden':''}><h3>${q.req?'<i>★</i> ':''}${q.t}${sub(q)}</h3><div class="b">${body(q)}</div><p class="msg" hidden></p></div>`).join('')}</section>`).join('');
+  $('#qs').innerHTML=SECTIONS.map((s,si)=>`<section class="sec"><em>${si+1} / ${SECTIONS.length}</em><h2>${s.t}</h2>${s.q.map(q=>`<div class="q" id="q${q.id}" ${q.when&&!q.when(ans)?'hidden':''}><h3>${q.req?'<i>★</i> ':''}${q.t}${sub(q)}</h3>${q.hint&&q.type!=='matrix'?`<p class="hint">${esc(q.hint)}</p>`:''}<div class="b">${body(q)}</div><p class="msg" hidden></p></div>`).join('')}</section>`).join('');
   progress();
 }
 const filled=q=>{const a=ans[q.id];
@@ -165,6 +171,7 @@ $('#qs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)r
   refresh(q)});
 $('#qs').addEventListener('input',e=>{const el=e.target,q=ALL.find(x=>'q'+x.id===el.closest('.q').id);
   if(q.type==='contact')ans[q.id]={...(ans[q.id]||{}),[el.dataset.f]:el.type==='checkbox'?el.checked:el.value};
+  else if(q.type==='duo'){const v={...(ans[q.id]||{})};if(el.value.trim())v[el.dataset.f]=el.value;else delete v[el.dataset.f];if(Object.keys(v).length)ans[q.id]=v;else delete ans[q.id]}
   else if(el.value.trim())ans[q.id]=el.value;else delete ans[q.id];
   $('#q'+q.id).classList.remove('bad');$('#q'+q.id).querySelector('.msg').hidden=true;save();progress()});
 
@@ -180,6 +187,7 @@ function payload(ts){const t=v=>typeof v==='string'?v.trim():v,d={v:1,createdAt:
     if(q.type==='matrix')d['q'+q.id]=q.rows.map((r,i)=>a[i]??null);
     else if(q.type==='contact')d['q'+q.id]={store:t(a.store),phone:t(a.phone),agree:true};
     else if(q.type==='pair')d['q'+q.id]={way:a.way||'',cycle:a.cycle||''};
+    else if(q.type==='duo')d['q'+q.id]={dessert:t(a.dessert||''),drink:t(a.drink||'')};
     else d['q'+q.id]=t(a)});
   return d}
 $('#send').addEventListener('click',async()=>{if(!check())return;const btn=$('#send');btn.disabled=true;btn.textContent='보내는 중…';

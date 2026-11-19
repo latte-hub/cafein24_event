@@ -48,9 +48,9 @@ import { db, $, esc, fmtTime, requireAdmin, downloadCsv } from "./js/common.js";
 import { collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const ROWS=['원두 · 음료 맛과 품질','신메뉴','디저트 · 다과','홍보물 · POP · 머신 화면','이벤트','담당 SV 소통 · 방문','발주 · 물류','머신 · 기기 관리','본사 공지 · 커뮤니티 소통'];
-const LABEL={q1:'전체 만족도(1~5)',q2:'만족도 이유',q5:'낮은 점수 이유',q6:'가장 좋았던 것',q7:'좋았던 점',q8:'가장 아쉬웠던 점',q9:'나아졌으면 하는 것',q10:'가장 급한 것',q11:'바라는 메뉴',q12:'메뉴 예시',q13:'도움 될 2027 계획',q24:'2027 계획에 더할 의견',q14:'위크인24 참여',q15:'망설이는 이유',q23:'위크인24가 아쉬운 이유',q17:'고마웠던 사람 · 팀',q18:'칭찬 한마디',q20:'자유 의견'};
+const LABEL={q1:'전체 만족도(1~5)',q2:'만족도 이유',q5:'낮은 점수 이유',q6:'가장 좋았던 것',q7:'좋았던 점',q8:'가장 아쉬웠던 점',q9:'나아졌으면 하는 것',q10:'가장 급한 것',q11:'바라는 메뉴',q25:'고원유 밀크파우더 도입 의향',q26:'바라는 디저트',q27:'꼭 나왔으면 하는 메뉴',q29:'피크피크 프리미엄 디저트 도입 의향',q12:'메뉴 예시 (이전 문항)',q13:'도움 될 2027 계획',q24:'2027 계획에 더할 의견',q14:'WEEK IN 24 참여',q15:'망설이는 이유',q23:'WEEK IN 24가 아쉬운 이유',q30:'WEEK IN 24 바라는 이벤트',q17:'고마웠던 사람 · 팀',q18:'칭찬 한마디',q20:'자유 의견'};
 let all=[];
-const show=(k,v)=>Array.isArray(v)?v.join(' · '):String(v);
+const show=(k,v)=>Array.isArray(v)?v.join(' · '):(v&&typeof v==='object')?(k==='q27'?`디저트: ${v.dessert||'-'} / 음료: ${v.drink||'-'}`:JSON.stringify(v)):String(v);
 const avg=a=>a.length?(a.reduce((x,y)=>x+y,0)/a.length):null;
 
 async function load(){

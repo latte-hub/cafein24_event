@@ -1,5 +1,5 @@
 rules_version = '2';
-// 카페인24 크리스마스 럭키룰렛 · Firestore 보안 규칙 (2026-11-13 최신화 · 매장당 200장 · 210개 매장 · 점주 의견 voices 추가)
+// 카페인24 크리스마스 럭키룰렛 · Firestore 보안 규칙 (2026-11-13 최신화 · 매장당 200장 · 210개 매장 · 점주 의견 voices 추가 · 11/19 의견 문항 q25~q30 추가)
 // 11/4 변경: 등수를 tiers 컬렉션으로 분리(스티커를 쓴 뒤에만 읽힘) · 참여 가능 날짜를 서버에서 강제 · 집계/선착순 카운터를 실제 기록과 묶음
 // 등수: 1~4 포인트 · 5 꽝 · 6 다라미 텀블러 · 7 다라미 양산
 // Firebase 콘솔 → Firestore Database → 규칙 탭: 전체를 지우고 이 파일 내용을 통째로 붙여넣고 '게시'.
@@ -227,7 +227,7 @@ service cloud.firestore {
       function txt(k, n) { return !(k in request.resource.data) || (request.resource.data[k] is string && request.resource.data[k].size() <= n); }
       function lst(k, n) { return !(k in request.resource.data) || (request.resource.data[k] is list && request.resource.data[k].size() <= n); }
       allow read, delete: if isAdmin();
-      allow create: if request.resource.data.keys().hasOnly(['v','createdAt','q1','q2','q4','q5','q6','q7','q8','q9','q10','q11','q12','q13','q14','q15','q17','q18','q20','q23','q24'])
+      allow create: if request.resource.data.keys().hasOnly(['v','createdAt','q1','q2','q4','q5','q6','q7','q8','q9','q10','q11','q12','q13','q14','q15','q17','q18','q20','q23','q24','q25','q26','q27','q29','q30'])
         && request.resource.data.keys().hasAll(['v','createdAt','q1','q4','q8','q9','q20'])
         && request.resource.data.v == 1
         && request.resource.data.createdAt == request.time
@@ -237,7 +237,8 @@ service cloud.firestore {
         && request.resource.data.q8 is string && request.resource.data.q8.size() > 0 && request.resource.data.q8.size() <= 2000
         && request.resource.data.q20 is string && request.resource.data.q20.size() > 0 && request.resource.data.q20.size() <= 2000
         && txt('q2', 200) && txt('q5', 2000) && txt('q7', 200) && txt('q10', 2000) && txt('q12', 200)
-        && txt('q13', 60) && txt('q14', 60) && txt('q17', 200) && txt('q18', 2000) && txt('q23', 2000) && txt('q24', 2000)
+        && txt('q13', 60) && txt('q14', 60) && txt('q25', 60) && txt('q26', 2000) && txt('q29', 60) && txt('q30', 2000)
+        && (!('q27' in request.resource.data) || (request.resource.data.q27 is map && request.resource.data.q27.keys().hasOnly(['dessert','drink']) && request.resource.data.q27.get('dessert','') is string && request.resource.data.q27.get('dessert','').size() <= 200 && request.resource.data.q27.get('drink','') is string && request.resource.data.q27.get('drink','').size() <= 200)) && txt('q17', 200) && txt('q18', 2000) && txt('q23', 2000) && txt('q24', 2000)
         && lst('q6', 2) && lst('q11', 3) && lst('q15', 5);
     }
   }

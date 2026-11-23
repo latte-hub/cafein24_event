@@ -540,7 +540,17 @@ const MAIN=[
   {k:'p5',v:5000,label:'5,000',fill:'url(#crG)',ink:'#FF4D00',name:'3등'},
   {k:'lose',fill:'url(#brG)',ink:'#FFF6EA'}
 ];
-const BONUS=[0,1,2,3,4,5,6,7].map(i=>i%2?{k:'lose',fill:'url(#brG)',ink:'#FFF6EA'}:{k:'b1',v:1000,label:'1,000',fill:i%4?'url(#crG)':'url(#orG)',ink:i%4?'#FF4D00':'#FFF6EA',name:'응모권 룰렛'});
+// 응모권(만족도 조사) 룰렛: 기본 룰렛과 같은 색 구성 · 1,000P 4칸 + 꽝 4칸 (11/23)
+const BONUS=[
+  {k:'b1',v:1000,label:'1,000',fill:'url(#goldG)',ink:'#3A2410',name:'응모권 룰렛'},
+  {k:'lose',fill:'url(#brG)',ink:'#FFF6EA'},
+  {k:'b1',v:1000,label:'1,000',fill:'url(#grG)',ink:'#FFF6EA',name:'응모권 룰렛'},
+  {k:'lose',fill:'url(#crG)',ink:'#FF4D00'},
+  {k:'b1',v:1000,label:'1,000',fill:'url(#orG)',ink:'#FFF6EA',name:'응모권 룰렛'},
+  {k:'lose',fill:'url(#brG)',ink:'#FFF6EA'},
+  {k:'b1',v:1000,label:'1,000',fill:'url(#rdG)',ink:'#FFF6EA',name:'응모권 룰렛'},
+  {k:'lose',fill:'url(#crG)',ink:'#FF4D00'}
+];
 let SEGS=MAIN;
 const R=132,rot=$('#rot');
 const pt=(r,a)=>{a=a*Math.PI/180;return[r*Math.sin(a),-r*Math.cos(a)]};
@@ -572,18 +582,26 @@ const bulbs=$('#bulbs');
 for(let i=0;i<24;i++){const[x,y]=pt(143,i*15);bulbs.appendChild(mk('circle',{cx:x,cy:y,r:4.2,class:'bulb'+(i%2?' b':'')}))}
 
 let angle=0,spinning=false,spinFrom=0,spinTo=0,spinT0=0,DUR=4600,onDone=null;
+// 11/23: 버튼을 누르면 서버 확인을 기다리지 않고 바로 빠르게 돌기 시작 → 결과가 오면 그 속도에서 이어서 멈춤
+let free=false,lastT=0;const FREE_V=0.8; // 빠르게 도는 속도 (도/ms)
 const ease=t=>1-Math.pow(1-t,4);
 function frame(now){
+  const dt=lastT?Math.min(now-lastT,50):16;lastT=now;
   if(spinning){const t=Math.min(1,(now-spinT0)/DUR);angle=spinFrom+(spinTo-spinFrom)*ease(t);
     if(t>=1){spinning=false;$('#wheelSvg').classList.remove('spinning');onDone&&onDone()}}
+  else if(free){angle+=FREE_V*dt}
   else if(!reduce){angle+=0.06}
   rot.setAttribute('transform',`rotate(${angle%360})`);requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
+function startFree(){if(reduce||spinning)return;free=true;$('#wheelSvg').classList.add('spinning')}
+function stopFree(){if(!free)return;free=false;if(!spinning)$('#wheelSvg').classList.remove('spinning')}
 function spinToIndex(idx,cb){
   const STEP=360/SEGS.length,c=idx*STEP+STEP/2,jit=(Math.random()-.5)*STEP*.6,cur=((angle%360)+360)%360;
   const need=((-c-jit-cur)%360+720)%360;
-  spinFrom=angle;spinTo=angle+360*(reduce?1:6)+need;spinT0=performance.now();DUR=reduce?600:4600;
+  let turns=reduce?1:6;DUR=reduce?600:4600;
+  if(free){DUR=3600;turns=Math.max(1,Math.round((FREE_V*DUR/4-need)/360));free=false} // 도는 속도 그대로 이어서 감속
+  spinFrom=angle;spinTo=angle+360*turns+need;spinT0=performance.now();
   spinning=true;onDone=cb;$('#wheelSvg').classList.add('spinning');
 }
 const indexOf=k=>{const ids=SEGS.map((s,i)=>s.k===k?i:-1).filter(i=>i>=0);return ids[Math.floor(Math.random()*ids.length)]};
@@ -706,7 +724,7 @@ function askPhone(){
 
 /* ── 2. 룰렛: ① 스티커 잠금 + 번호 저장 → ② 등수 읽기(잠근 뒤에만 가능) → ③ 참여 기록·당첨 롤링·매장 집계 ── */
 async function spinQR(){
-  if(busy)return;busy=true;lastLose=false;cta.textContent='확인 중…';render();
+  if(busy)return;busy=true;lastLose=false;cta.textContent='두구두구…';render();startFree();
   try{
     await runTransaction(db,async tx=>{
       const ref=doc(db,'codes',code),snap=await tx.get(ref);
@@ -715,23 +733,25 @@ async function spinQR(){
       tx.set(doc(db,'phones',code),{phone,store:storeCode,createdAt:serverTimestamp()});
     });
   }catch(e){
-    console.error(e);busy=false;
+    console.error(e);busy=false;stopFree();
     if(String(e.message).includes('used')){used=true;toast('이미 참여한 QR이에요')}
     else if(e.code==='permission-denied'){blocked='지금은 참여 기간이 아니에요';toast('12월 18일부터 27일까지 참여할 수 있어요')}
     else toast('연결이 불안정해요. 다시 눌러 주세요.');
     return render();
   }
   used=true;pending=true;busy=false;
-  return finishEntry();
+  return finishEntry(true);
 }
 // ②③ — 연결이 끊겨도 같은 번호로 다시 누르면 이어서 끝남
-async function finishEntry(){
-  if(busy)return;busy=true;cta.textContent='두구두구…';render();
+async function finishEntry(fresh){
+  if(busy)return;busy=true;cta.textContent='두구두구…';render();startFree();
   let ok=false,err=null;
   for(let i=0;i<3&&!ok;i++){
     try{
-      const es=await getDoc(doc(db,'entries',code));
-      if(es.exists()){entry=es.data();tier=entry.tier;ok=true;break}   // 이미 저장됨 (응답만 늦게 온 경우)
+      if(!(fresh===true&&i===0)){   // 방금 잠근 QR의 첫 시도는 확인 생략 (서버 왕복 1번 줄임)
+        const es=await getDoc(doc(db,'entries',code));
+        if(es.exists()){entry=es.data();tier=entry.tier;ok=true;break}   // 이미 저장됨 (응답만 늦게 온 경우)
+      }
       const ts=await getDoc(doc(db,'tiers',code));
       tier=ts.data().tier;
       const [money,label]=PR[tier],win=tier!==5?1:0;
@@ -744,7 +764,7 @@ async function finishEntry(){
     }catch(e){err=e;console.warn(e);await new Promise(r=>setTimeout(r,800*(i+1)))}
   }
   if(!ok){
-    console.error(err);busy=false;
+    console.error(err);busy=false;stopFree();
     if(err&&err.code==='permission-denied'){toast('처음 넣은 번호와 달라요');phone=''}
     else toast('연결이 불안정해요. 아래 버튼을 다시 눌러 주세요.');
     return render();
@@ -886,7 +906,7 @@ $('#surveyBtn').onclick=()=>{if(surveyDone||!lastLose)return;
 
 /* ── 5. 응모권 룰렛 (1,000P · 선착순) ── */
 async function spinBonus(){
-  if(busy)return;busy=true;render();cta.textContent='확인 중…';
+  if(busy)return;busy=true;render();cta.textContent='두구두구…';startFree();
   let win=0;
   try{
     const s=await getDoc(doc(db,'stats','bonus'));const wins=s.exists()?(s.data().wins||0):0;
@@ -905,7 +925,7 @@ async function spinBonus(){
       const b2=writeBatch(db);b2.update(doc(db,'entries',code),{bonusDone:true,bonus:0});await b2.commit().catch(()=>{});
     }
   }catch(e){
-    console.error(e);busy=false;
+    console.error(e);busy=false;stopFree();
     if(e.code==='permission-denied'){bonus=0;drawWheel(MAIN);toast('이미 응모권을 사용했어요')}else toast('연결이 불안정해요. 다시 눌러 주세요.');
     return render();
   }

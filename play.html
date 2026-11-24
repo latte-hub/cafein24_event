@@ -526,7 +526,8 @@ import { getFirestore, doc, getDoc, getDocs, writeBatch, runTransaction, serverT
 import { firebaseConfig, EVENT } from "./js/firebase-config.js";
 import { STORES } from "./js/stores.js";
 
-const MODE = 'customer';            // 'customer' = play.html · 'guide' = index.html
+const MODE = 'customer';            // 'customer' = play.html · 'guide' = index.html · hakdong.html
+const GUIDE_PILOT = false;         // true = hakdong.html (학동점 사전 운영 기간용 매장 비치 안내: 이벤트 기간을 12.7 - 12.11로 표시)
 const db = getFirestore(initializeApp(firebaseConfig));
 const PR = EVENT.prizes;            // {1:[50000,'1등'], … 6:[0,'다라미 텀블러'], 7:[0,'다라미 양산']}
 const TK = {1:'p50',2:'p10',3:'p5',4:'p1',5:'lose',6:'tumbler',7:'umbrella',8:'p500'};
@@ -665,18 +666,27 @@ const scrollTo=el=>el.scrollIntoView({behavior:reduce?'auto':'smooth',block:'sta
 /* ── 0. 시작: QR 확인 ── */
 async function boot(){
   const testing=EVENT.testUntil&&today()<=EVENT.testUntil;
-  if(testing){document.body.insertAdjacentHTML('afterbegin','<div style="position:fixed;top:0;left:0;right:0;z-index:99;background:#FFC54D;color:#2A1B17;font-size:12px;font-weight:700;text-align:center;padding:4px">테스트 기간 · '+EVENT.testUntil.slice(5).replace('-','/')+'까지 · 기록은 오픈 전에 초기화돼요</div>')}
-  if(MODE==='guide')return;
+  // 학동점 사전 운영: 그 기간에는 정해 둔 예비 묶음(EVENT.pilot.packs)만 실제 참여 (테스트 띠 없음 · 기록 유지)
+  const PILOT=EVENT.pilot,pilotDay=!!PILOT&&today()>=PILOT.start&&today()<=PILOT.end;
+  const testBar=()=>{if(testing&&!document.getElementById('testBar'))document.body.insertAdjacentHTML('afterbegin','<div style="position:fixed;top:0;left:0;right:0;z-index:99;background:#FFC54D;color:#2A1B17;font-size:12px;font-weight:700;text-align:center;padding:4px" id="testBar">테스트 기간 · '+EVENT.testUntil.slice(5).replace('-','/')+'까지 · 기록은 오픈 전에 초기화돼요</div>')};
+  if(MODE==='guide'){if(GUIDE_PILOT&&PILOT)pilotUI();else testBar();return}
   storeCode=code.slice(0,3);
   storeName=(STORES.find(s=>s[0]===storeCode)||[])[1]||'';
   render();
-  if(!testing&&today()<EVENT.start){blocked='12월 18일부터 참여할 수 있어요';return render()}
-  if(today()>EVENT.end){blocked='이벤트가 끝났어요';return render()}
-  if(!/^\d{3}-[A-Z0-9]{6}$/.test(code)){blocked='컵의 QR을 다시 찍어 주세요';toast('QR 주소가 올바르지 않아요');return render()}
+  // 기간이 아니어도 스티커가 속한 매장 이름은 서버에서 확인 (학동점으로 옮긴 예비 스티커가 '예비 ○○'로 보이지 않게)
+  if(!/^\d{3}-[A-Z0-9]{6}$/.test(code)){testBar();blocked='컵의 QR을 다시 찍어 주세요';toast('QR 주소가 올바르지 않아요');return render()}
   try{
     const [cs,ss]=await Promise.all([getDoc(doc(db,'codes',code)),getDoc(doc(db,'stores',storeCode))]);
-    if(!cs.exists()){blocked='등록되지 않은 QR이에요';toast('매장에 문의해 주세요 · '+code);return render()}
-    if(ss.exists()&&ss.data().name)storeName=ss.data().name;
+    if(!cs.exists()){testBar();blocked='등록되지 않은 QR이에요';toast('매장에 문의해 주세요 · '+code);return render()}
+    const real=cs.data().store;   // 스티커가 속한 매장 (예비 스티커는 번호 앞자리와 달리 학동점으로 귀속)
+    if(real&&real!==storeCode){storeCode=real;storeName=(STORES.find(s=>s[0]===real)||[])[1]||'';
+      try{const s2=await getDoc(doc(db,'stores',real));if(s2.exists()&&s2.data().name)storeName=s2.data().name}catch(e){}}
+    else if(ss.exists()&&ss.data().name)storeName=ss.data().name;
+    const pilotStore=!!PILOT&&storeCode===PILOT.store&&(PILOT.packs||[]).includes(code.slice(0,3));   // 사전 운영용 묶음인지
+    if(pilotStore&&today()<=PILOT.end)pilotUI();
+    if(!(pilotDay&&pilotStore))testBar();
+    if(today()>EVENT.end){blocked='이벤트가 끝났어요';return render()}
+    if(!testing&&today()<EVENT.start&&!(pilotDay&&pilotStore)){blocked='12월 18일부터 참여할 수 있어요';return render()}
     used=!!cs.data().used;blocked='';
     if(used){
       const es=await getDoc(doc(db,'entries',code));
@@ -1003,7 +1013,16 @@ cta.onclick=()=>{if(spinning||busy)return;
   if(used||blocked)return;askPhone()};
 
 /* ── 카운트다운: 이벤트 종료까지 (한국 시간) ── */
-const END=Date.parse(EVENT.end+'T00:00:00+09:00')+86400000;   // 종료일 다음 날 0시
+let END=Date.parse(EVENT.end+'T00:00:00+09:00')+86400000;   // 종료일 다음 날 0시
+// 사전 운영용 스티커의 화면: 이벤트 기간을 그 기간(12.7 - 12.11)으로 보여 줌 (날짜 · 남은 시간 · 포인트 안내 · 유의사항)
+function pilotUI(){const P=EVENT.pilot,md=d=>+d.slice(5,7)+'.'+(+d.slice(8));
+  const kd=d=>`${+d.slice(5,7)}월 ${+d.slice(8)}일(${'일월화수목금토'[new Date(Date.UTC(+d.slice(0,4),+d.slice(5,7)-1,+d.slice(8))).getUTCDay()]})`;
+  const de=document.querySelector('p.date');if(de)de.textContent=`${md(P.start)} - ${md(P.end)}`;
+  END=Date.parse(P.end+'T00:00:00+09:00')+86400000;
+  const fb=document.querySelector('.flowx .card.bx b');if(fb)fb.textContent=`${md(P.start)}–${+P.end.slice(8)}`;
+  const li=[...document.querySelectorAll('#s-notice li')].find(l=>l.textContent.includes('이벤트 기간'));
+  if(li)li.innerHTML=`이벤트 기간 : <b>${P.start.slice(0,4)}년 ${kd(P.start)} ~ ${kd(P.end)}</b>`;
+  tick()}
 const pad=n=>String(n).padStart(2,'0');
 function tick(){const diff=END-Date.now();if(diff<=0){$('#timer').innerHTML='<b>이벤트가 끝났어요</b>';return}
   const s=Math.floor(diff/1000),d=Math.floor(s/86400),h=Math.floor(s%86400/3600),m=Math.floor(s%3600/60),x=s%60;
@@ -1012,7 +1031,7 @@ tick();setInterval(tick,1000);
 
 /* ── 당첨 롤링: 실제 당첨 (번호 뒤 4자리만) · 이벤트 시작 후 ── */
 async function ticker(){
-  const started=today()>=EVENT.start||(EVENT.testUntil&&today()<=EVENT.testUntil);
+  const started=today()>=EVENT.start||(EVENT.testUntil&&today()<=EVENT.testUntil)||(EVENT.pilot&&today()>=EVENT.pilot.start&&today()<=EVENT.pilot.end);
   if(!started)return;
   let rows=[];
   try{const snap=await getDocs(query(collection(db,'wins'),orderBy('createdAt','desc'),limit(12)));

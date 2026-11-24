@@ -93,6 +93,18 @@
   </div>
 
   <div class="box">
+    <h2>2-4. 예비 스티커를 다른 매장으로 옮기기 (QR 번호는 그대로 · 11/24)</h2>
+    <p>인쇄한 스티커와 번호는 그대로 두고, 서버에서 <b>어느 매장의 스티커인지</b>만 바꿔요. 옮긴 스티커를 찍으면 받는 매장 이름으로 열리고, 당첨 포인트·집계도 받는 매장으로 잡혀요. 등수는 그대로 따라가요. 이미 사용된 스티커는 옮기지 않아요.</p>
+    <div class="row">
+      <label style="flex:1;min-width:260px">옮길 매장 번호 (쉼표로) <input type="text" id="mv-from" value="207, 208, 209, 210, 211, 212" style="width:100%"></label>
+      <label>받는 매장 번호 <input type="text" id="mv-to" value="150" style="width:70px"></label>
+    </div>
+    <div class="row"><button class="btn ghost" id="btn-mv-check">지금 상태 확인</button><button class="btn" id="btn-mv-run">스티커 옮기기</button><span class="note">스티커 1장에 쓰기 2건이에요 (1,200장이면 2,400건). 예비 08~10(213~215)은 여유분이라 옮기지 않아요.</span></div>
+    <div class="bar"><i id="mv-bar" style="width:0"></i></div>
+    <div class="prog" id="mv-msg"></div>
+  </div>
+
+  <div class="box">
     <h2>3. 내려받기</h2>
     <div class="row">
       <button class="btn" id="btn-csv-print" disabled>인쇄소용 CSV (등수 없음)</button>
@@ -111,7 +123,7 @@
 
 <script type="module">
 import { db, EVENT, $, won, esc, requireAdmin, downloadCsv, randomCode, shuffle, playUrl } from "./js/common.js";
-import { collection, doc, getDocs, getCountFromServer, writeBatch, query, where, limit, setDoc, orderBy, startAfter, documentId, deleteField } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { collection, doc, getDoc, getDocs, getCountFromServer, writeBatch, query, where, limit, setDoc, orderBy, startAfter, documentId, deleteField } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 let stores = [];      // Firestore에 있는 매장 [{code,name,...}]
 let parsed = [];      // 붙여넣기 미리보기
@@ -254,7 +266,10 @@ $('btn-gen').addEventListener('click', async () => {
     }
     const partial = all.filter(c => have[c] > 0 && have[c] < PER);
     if(partial.length){ msg.innerHTML = `<span class="danger">번호가 일부만 들어간 매장이 있어요: ${partial.map(c=>c+'('+have[c]+'장)').join(', ')}</span> 아래 '위험 구역'에서 codes를 지우고 다시 올려 주세요.`; btn.disabled=false; return; }
-    const todo = all.filter(c => !have[c]);
+    let todo = all.filter(c => !have[c]);
+    // 다른 매장으로 옮긴 스티커(예비 → 학동점)는 번호가 이미 있으니 다시 올리지 않음
+    const moved = []; for(const c of todo){ if((await getDoc(doc(db,'codes',byStore[c][0].code))).exists()) moved.push(c); }
+    if(moved.length){ todo = todo.filter(c => !moved.includes(c)); msg.textContent = `다른 매장으로 옮긴 스티커는 건너뛰어요: ${moved.join(', ')}`; }
     if(!todo.length){ msg.innerHTML = '<span class="ok">모든 매장의 번호가 이미 올라가 있어요.</span>'; btn.disabled=false; return; }
     // 3) 1등·굿즈: 이미 배정된 수를 빼고, 남은 '운영' 매장 중에서 무작위
     const cnt = async t => (await getCountFromServer(query(collection(db,'tiers'), where('tier','==',t)))).data().count;
@@ -352,8 +367,8 @@ function tierSummary(by){
 $('btn-re-check').addEventListener('click', async e => {
   const msg = $('re-msg'); e.target.disabled = true;
   try{ const by = await loadTiers(msg), p = P();
-    const off = Object.entries(by).filter(([c,rows]) => rows.filter(r=>r.tier===4).length!==p.t4 || rows.filter(r=>r.tier===8).length!==p.t8).length;
-    msg.innerHTML = '지금 서버 배정 : ' + tierSummary(by) + `<br>4등 ${p.t4}장 · 5등 ${p.t8}장과 다른 매장 : <b>${off}곳</b>` + (off ? '' : ' <span class="ok">모두 맞아요</span>');
+    const off = Object.entries(by).filter(([c,rows]) => { const k = rows.length/PER; return rows.filter(r=>r.tier===4).length!==Math.round(p.t4*k) || rows.filter(r=>r.tier===8).length!==Math.round(p.t8*k); }).length;
+    msg.innerHTML = '지금 서버 배정 : ' + tierSummary(by) + `<br>4등 ${p.t4}장 · 5등 ${p.t8}장(200장 기준, 스티커가 더 많은 매장은 그만큼 더)과 다른 매장 : <b>${off}곳</b>` + (off ? '' : ' <span class="ok">모두 맞아요</span>');
   }catch(err){ console.error(err); msg.innerHTML = `<span class="danger">읽지 못했어요: ${esc(err.message)}</span>`; }
   e.target.disabled = false;
 });
@@ -361,7 +376,7 @@ $('btn-re-run').addEventListener('click', async e => {
   const msg = $('re-msg'), btn = e.target, p = P(); btn.disabled = true;
   try{
     const by = await loadTiers(msg);
-    const plans = Object.entries(by).sort().map(([c,rows]) => [c, planStore(rows, p.t4, p.t8)]);
+    const plans = Object.entries(by).sort().map(([c,rows]) => { const k = rows.length/PER; return [c, planStore(rows, Math.round(p.t4*k), Math.round(p.t8*k))]; });   // 스티커가 200장보다 많은 매장(학동점)은 비례해서
     const todo = plans.filter(([c,pl]) => pl.changes.length), total = todo.reduce((a,[c,pl]) => a+pl.changes.length, 0);
     const short = plans.filter(([c,pl]) => pl.short);
     if(!todo.length){ msg.innerHTML = '<span class="ok">이미 모든 매장이 맞게 배정되어 있어요.</span> ' + tierSummary(by); btn.disabled = false; return; }
@@ -379,6 +394,51 @@ $('btn-re-run').addEventListener('click', async e => {
     }
     msg.innerHTML = '<span class="ok">완료!</span> 지금 서버 배정 : ' + tierSummary(by);
   }catch(err){ console.error(err); msg.innerHTML = `<span class="danger">멈췄어요: ${esc(err.message)}</span> 다시 누르면 남은 매장만 이어서 해요.`; }
+  btn.disabled = false;
+});
+
+// ---- 2-4. 예비 스티커를 다른 매장으로 옮기기: codes.store · tiers.store만 바꿈 (번호 · 등수 그대로) ----
+const MV = () => ({ from:[...new Set($('mv-from').value.split(/[^0-9]+/).filter(Boolean).map(x => x.padStart(3,'0')))], to:($('mv-to').value.match(/\d+/)||[''])[0].padStart(3,'0') });
+const storeName = c => (stores.find(s => s.code===c)||{}).name || c;
+async function mvLoad(from, to){
+  const get = async c => (await getDocs(query(collection(db,'codes'), where('store','==',c)))).docs.map(d => ({ code:d.id, ...d.data() }));
+  const src = {}; for(const c of from) src[c] = await get(c);
+  return { src, dst: await get(to) };
+}
+const mvText = (m, to, st) => `받는 매장 ${to} ${esc(storeName(to))} : 지금 <b>${won(st.dst.length)}장</b> (번호 앞자리가 다른 스티커 ${won(st.dst.filter(r => r.code.slice(0,3)!==to).length)}장 포함)<br>` + m.from.map(c => `${c} ${esc(storeName(c))} : ${won(st.src[c].length)}장${st.src[c].filter(r=>r.used).length ? ' (사용됨 '+st.src[c].filter(r=>r.used).length+'장은 안 옮김)' : ''}`).join(' · ');
+$('btn-mv-check').addEventListener('click', async e => {
+  const msg = $('mv-msg'), m = MV(); e.target.disabled = true;
+  try{ if(!m.from.length || !/^\d{3}$/.test(m.to) || m.from.includes(m.to)) throw new Error('매장 번호를 확인해 주세요.');
+    msg.textContent = '읽는 중…'; msg.innerHTML = mvText(m, m.to, await mvLoad(m.from, m.to));
+  }catch(err){ console.error(err); msg.innerHTML = `<span class="danger">${esc(err.message)}</span>`; }
+  e.target.disabled = false;
+});
+$('btn-mv-run').addEventListener('click', async e => {
+  const msg = $('mv-msg'), btn = e.target, m = MV(); btn.disabled = true;
+  try{
+    if(!m.from.length || !/^\d{3}$/.test(m.to) || m.from.includes(m.to)) throw new Error('매장 번호를 확인해 주세요.');
+    if(!stores.find(s => s.code===m.to)) throw new Error(`받는 매장 ${m.to}이(가) 매장 목록에 없어요.`);
+    msg.textContent = '읽는 중…';
+    const st = await mvLoad(m.from, m.to);
+    const list = m.from.flatMap(c => st.src[c].filter(r => !r.used).sort((a,b) => (a.seq||0)-(b.seq||0)).map(r => ({ ...r, from:c })));
+    if(!list.length){ msg.innerHTML = '<span class="ok">옮길 스티커가 없어요 (이미 옮겼어요).</span><br>' + mvText(m, m.to, st); btn.disabled = false; return; }
+    if(!confirm(`${m.from.join(', ')} 매장의 스티커 ${won(list.length)}장을 ${m.to} ${storeName(m.to)}(으)로 옮길게요.\n인쇄한 QR과 스티커 번호 · 등수는 그대로예요.\n옮긴 뒤 ${storeName(m.to)} 스티커는 ${won(st.dst.length+list.length)}장이 돼요.`)){ btn.disabled = false; return; }
+    let seq = Math.max(0, ...st.dst.map(r => r.seq||0)), n = 0;
+    for(let i=0;i<list.length;i+=200){
+      const part = list.slice(i,i+200);
+      const tiers = await Promise.all(part.map(r => getDoc(doc(db,'tiers',r.code))));
+      const b = writeBatch(db);
+      part.forEach((r, j) => {
+        b.update(doc(db,'codes',r.code), { store:m.to, seq:++seq, from:r.from });   // from = 원래 매장(번호 앞자리)
+        b.set(doc(db,'tiers',r.code), { store:m.to, tier: tiers[j].exists() ? tiers[j].data().tier : 5 });
+      });
+      await withWatch(b.commit(), () => { msg.innerHTML = QUOTA_MSG; });
+      n += part.length; $('mv-bar').style.width = Math.round(100*n/list.length)+'%';
+      msg.textContent = `${won(n)} / ${won(list.length)}장 옮기는 중…`;
+    }
+    msg.innerHTML = '<span class="ok">완료!</span> ' + mvText(m, m.to, await mvLoad(m.from, m.to));
+    await refreshStatus();
+  }catch(err){ console.error(err); msg.innerHTML = `<span class="danger">멈췄어요: ${esc(err.message)}</span> 다시 누르면 남은 스티커만 이어서 옮겨요.`; }
   btn.disabled = false;
 });
 

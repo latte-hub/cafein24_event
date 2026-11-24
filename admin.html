@@ -153,9 +153,10 @@
       <table class="gtbl">
         <tr><th>언제</th><th>할 일</th><th>설명서</th></tr>
         <tr><td>인쇄 전 (11월)</td><td>매장 목록·QR 번호 올리기, 1등 매장 10곳 지정</td><td><a href="#g-make">1번</a></td></tr>
-        <tr><td>~ 12/7 (일)</td><td>테스트 기간. 손님 화면 위에 노란 띠가 보이고, 아무 QR이나 실제처럼 돌려볼 수 있어요</td><td><a href="#g-test">3번</a></td></tr>
-        <tr><td><b>12/7 (일) 밤</b></td><td><b>사용된 QR 전체 초기화</b> (테스트 기록 지우기)</td><td><a href="#g-reset">4번</a></td></tr>
-        <tr><td>12/8 ~ 12/17</td><td>잠김. 스티커 발송 기간이라 QR을 찍어도 돌릴 수 없어요</td><td></td></tr>
+        <tr><td>~ 12/6 (일)</td><td>테스트 기간. 손님 화면 위에 노란 띠가 보이고, 아무 QR이나 실제처럼 돌려볼 수 있어요</td><td><a href="#g-test">3번</a></td></tr>
+        <tr><td><b>12/6 (일) 밤</b></td><td><b>사용된 QR 전체 초기화</b> (테스트 기록 지우기). 학동점이 12/7부터 손님을 받으니 그 전에 지워요</td><td><a href="#g-reset">4번</a></td></tr>
+        <tr><td><b>12/7 ~ 12/11</b></td><td><b>학동점 사전 이벤트.</b> 학동점 스티커(150번)와 학동점으로 옮긴 예비 02 · 03(207 · 208번)만 실제 손님이 참여해요(화면에 이벤트 기간 12.7 - 12.11). 이 기록은 지우지 않아요</td><td></td></tr>
+        <tr><td>12/7 ~ 12/17</td><td>잠김. 그 밖의 스티커(학동점 본 이벤트용 예비 04~07 포함)는 QR을 찍어도 돌릴 수 없어요</td><td></td></tr>
         <tr><td>12/18 ~ 12/27</td><td>이벤트 기간. 현황 확인, 점주 문의 대응</td><td><a href="#g-run">5번</a></td></tr>
         <tr><td>12/28 (월)</td><td>포인트 적립 목록을 매장별로 전달 → 매장 적립 → 마켓봄 포인트 정산</td><td><a href="#g-credit">6번</a></td></tr>
         <tr><td>2027년 2월 25일경</td><td>손님 휴대폰 번호 삭제 (종료 60일 뒤)</td><td><a href="#g-end">7번</a></td></tr>
@@ -225,7 +226,7 @@
         <li>스티커 번호나 QR 주소를 붙여넣고 <span class="kbd">이 QR 초기화</span> → 확인.</li>
         <li>또는 [당첨 QR 참여자] 표나 [매장별 QR] 카드의 빨간 <span class="kbd">초기화</span> 버튼.</li>
       </ol>
-      <h3>테스트 기록 전체 (12/7 밤 1번)</h3>
+      <h3>테스트 기록 전체 (12/6 밤 1번)</h3>
       <ol class="steps">
         <li><span class="kbd">사용된 QR 전체 초기화</span> → 입력창에 <code>초기화</code>라고 적고 확인.</li>
         <li>'완료' 문구가 나올 때까지 기다려요. 현황판의 참여·당첨·응모권이 모두 <b>0</b>인지 확인해요.</li>
@@ -431,11 +432,20 @@ $('btn-r-one').addEventListener('click', async () => {
 $('btn-r-all').addEventListener('click', async () => {
   const msg = $('r-all-msg');
   msg.textContent = '사용된 QR을 찾는 중…';
-  const snap = await getDocs(query(collection(db,'codes'), where('used','==',true)));
+  const all0 = await getDocs(query(collection(db,'codes'), where('used','==',true)));
+  // 학동점 사전 운영(12/7~) 기록은 실제 손님 참여라 지우지 않음
+  const P = EVENT.pilot, pStart = P ? Date.parse(P.start+'T00:00:00+09:00') : null;
+  const keep = d => P && d.data().store===P.store && d.data().usedAt && d.data().usedAt.toMillis() >= pStart;
+  const kept = all0.docs.filter(keep), snap = { docs: all0.docs.filter(d => !keep(d)), get size(){ return this.docs.length; } };
+  if(kept.length && !confirm(`${P.name} 사전 운영(${P.start.slice(5).replace('-','/')}~) 손님 참여 ${kept.length}건은 지우지 않고 남겨 둘게요.\n나머지 테스트 기록만 초기화해요.`)) return msg.textContent = '취소했어요.';
   if(prompt(`사용된 QR ${snap.size}개를 모두 처음 상태로 되돌려요. 참여 기록이 모두 지워지고 되돌릴 수 없어요.\n계속하려면 "초기화" 라고 입력하세요.`) !== '초기화') return msg.textContent = '취소했어요.';
   let n = 0;
   for(const d of snap.docs){ try{ await resetCode(d.id); n++; msg.textContent = `${n} / ${snap.size} 초기화 중…`; }catch(e){ console.error(e); } }
   // 설문 · 응모권 당첨 · 집계도 정리 → 같은 번호로 다시 테스트 가능
+  if(kept.length){   // 학동점 손님 기록이 남아 있으면 통째로 지우지 않음 (스티커별 초기화에서 이미 그 스티커의 설문·응모권·집계를 정리함)
+    msg.innerHTML = `<span class="ok">테스트 스티커 ${n}개 초기화 완료</span> · ${P.name} 손님 참여 ${kept.length}건은 그대로 두었어요.`;
+    return loadDash();
+  }
   msg.textContent = '설문·응모권 기록 정리 중…';
   const [cl, sv, sd, sst, wn] = await Promise.all([getDocs(collection(db,'claims')), getDocs(collection(db,'surveys')), getDocs(collection(db,'surveyed')), getDocs(collection(db,'stats')), getDocs(collection(db,'wins'))]);
   const dels = [...cl.docs, ...sv.docs, ...sd.docs, ...wn.docs, ...sst.docs.filter(d => d.id.startsWith('store_') || d.id==='lose')].map(d => d.ref);

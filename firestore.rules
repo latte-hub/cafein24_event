@@ -1,5 +1,5 @@
 rules_version = '2';
-// 카페인24 크리스마스 럭키룰렛 · Firestore 보안 규칙 (2026-11-13 최신화 · 매장당 200장 · 210개 매장 · 점주 의견 voices 추가 · 11/19 의견 문항 q25~q30 추가 · 11/24 당첨 손님 설문 허용 · 5등 500P 추가)
+// 카페인24 크리스마스 럭키룰렛 · Firestore 보안 규칙 (2026-11-13 최신화 · 매장당 200장 · 210개 매장 · 점주 의견 voices 추가 · 11/19 의견 문항 q25~q30 추가 · 11/24 당첨 손님 설문 허용 · 5등 500P 추가 · 학동점 12/7~11 사전 이벤트(150 · 207 · 208 묶음))
 // 11/4 변경: 등수를 tiers 컬렉션으로 분리(스티커를 쓴 뒤에만 읽힘) · 참여 가능 날짜를 서버에서 강제 · 집계/선착순 카운터를 실제 기록과 묶음
 // 등수 번호: 1~4 포인트 · 5 꽝 · 6 다라미 텀블러 · 7 다라미 양산 · 8 = 5등 500P (11/24 추가)
 // Firebase 콘솔 → Firestore Database → 규칙 탭: 전체를 지우고 이 파일 내용을 통째로 붙여넣고 '게시'.
@@ -26,15 +26,24 @@ service cloud.firestore {
     function changedOnly(keys) { return request.resource.data.diff(resource.data).affectedKeys().hasOnly(keys); }
     function docOf(c, id) { return /databases/$(database)/documents/$(c)/$(id); }
     function maskOf(p) { return p[0:3] + '-****-' + p[7:11]; }
-    // 참여 가능 시간 (한국 시간 = UTC+9). 테스트: 12/7까지 · 본 기간: 12/18 0시 ~ 12/27 24시
+    // 참여 가능 시간 (한국 시간 = UTC+9). 테스트: 12/6까지 · 본 기간: 12/18 0시 ~ 12/27 24시
     function kst(y, m, d) { return timestamp.date(y, m, d) - duration.value(9, 'h'); }
     function canPlay() {
-      return request.time < kst(2026, 12, 8)
+      return request.time < kst(2026, 12, 7)
         || (request.time >= kst(2026, 12, 18) && request.time < kst(2026, 12, 28));
+    }
+    // 학동점(150) 사전 이벤트: 12/7 0시 ~ 12/11 24시에는 학동점 원래 스티커(150-)와 학동점으로 귀속한 예비 묶음 207 · 208만 참여 가능 (11/24)
+    // 예비 209~212는 학동점 본 이벤트(12/18~27)용, 213~215는 여유분. 묶음 번호는 js/firebase-config.js의 pilot.packs와 같아야 함
+    function isPilotCode(codeId) { return codeId.matches('(150|207|208)-[A-Z0-9]{6}'); }
+    function isPilot(store, codeId) {
+      return store == '150' && isPilotCode(codeId) && request.time >= kst(2026, 12, 7) && request.time < kst(2026, 12, 12);
+    }
+    function isPilotBonus(store, codeId) {
+      return store == '150' && isPilotCode(codeId) && request.time >= kst(2026, 12, 7) && request.time < kst(2026, 12, 12) + duration.value(6, 'h');
     }
     // 설문·응모권은 종료 다음 날 아침 6시까지 (마지막 날 밤 꽝 손님용 여유)
     function canBonus() {
-      return request.time < kst(2026, 12, 8)
+      return request.time < kst(2026, 12, 7)
         || (request.time >= kst(2026, 12, 18) && request.time < kst(2026, 12, 28) + duration.value(6, 'h'));
     }
 
@@ -53,7 +62,7 @@ service cloud.firestore {
       allow get: if true;
       allow list, create, delete: if isAdmin();
       allow update: if isAdmin() || (
-        canPlay()
+        (canPlay() || isPilot(resource.data.store, code))
         && resource.data.used == false
         && request.resource.data.used == true
         && changedOnly(['used', 'usedAt'])
@@ -90,7 +99,7 @@ service cloud.firestore {
       );
       // 설문 완료(1번): 모든 스티커 (11/24 당첨 손님도 설문 가능 · 보상 없음) · 응모권 결과(1번): 꽝 스티커만
       // 꽝 스티커의 설문 완료는 그 번호의 첫 설문이거나, 당첨 때 한 설문(free)을 이번에 쓰는 경우만
-      allow update: if isAdmin() || canBonus() && ((
+      allow update: if isAdmin() || (canBonus() || isPilotBonus(resource.data.store, code)) && ((
         changedOnly(['surveyDone'])
         && resource.data.surveyDone == false
         && request.resource.data.surveyDone == true
@@ -130,7 +139,7 @@ service cloud.firestore {
     match /surveys/{phone} {
       allow read, update, delete: if isAdmin();
       allow create: if isAdmin() || (
-        canBonus()
+        (canBonus() || isPilotBonus(request.resource.data.store, request.resource.data.code))
         && isPhone(phone)
         && request.resource.data.phone == phone
         && request.resource.data.keys().hasOnly(['phone','code','store','q1','q2','q3','q4','q5','q6','q7','q8','q9','q10','q11','q12','q13','q14','q15','q16','q17','etc3','etc7','etc10','etc13','etc15','createdAt'])
@@ -154,7 +163,7 @@ service cloud.firestore {
         && request.resource.data.get('free', false) == (get(/databases/$(database)/documents/entries/$(getAfter(/databases/$(database)/documents/surveys/$(phone)).data.code)).data.tier != 5)
       );
       allow update: if isAdmin() || (
-        canBonus()
+        (canBonus() || isPilotBonus(get(/databases/$(database)/documents/entries/$(request.resource.data.by)).data.store, request.resource.data.by))
         && resource.data.get('free', false) == true
         && request.resource.data.free == false
         && changedOnly(['free', 'by'])
@@ -169,7 +178,7 @@ service cloud.firestore {
     match /claims/{phone} {
       allow read, update, delete: if isAdmin();
       allow create: if isAdmin() || (
-        canBonus()
+        (canBonus() || isPilotBonus(request.resource.data.store, request.resource.data.code))
         && isPhone(phone)
         && request.resource.data.phone == phone
         && request.resource.data.keys().hasOnly(['phone','code','store','storeName','amount','src','createdAt'])

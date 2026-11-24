@@ -296,6 +296,57 @@ summary:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
 .nps{display:grid;grid-template-columns:repeat(11,1fr);gap:3px;margin-top:10px}
 .nps .sc{height:38px;font-size:13px;border-radius:8px;padding:0}
 .nps-l{display:flex;justify-content:space-between;font-size:11.5px;color:var(--cream-3);margin-top:6px}
+/* 설문 · 한 화면에 질문 하나 (11/24 디자인 변경) */
+.sheet:has(.svw){height:100vh;height:100dvh;max-height:none;border-radius:0;border-top:0;display:flex;flex-direction:column;overflow:hidden;padding-top:calc(16px + env(safe-area-inset-top,0px))}
+.svw{flex:1;min-height:0;display:flex;flex-direction:column}
+.svh{flex:none}
+.svbar{height:8px;border-radius:999px;background:rgba(255,236,214,.14);overflow:hidden}
+.svbar i{display:block;height:100%;border-radius:999px;background:var(--orange);transition:width .2s}
+.svm{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-top:10px}
+.svm span{font-size:15px;font-weight:900;color:var(--orange-hi)}
+.svm b{font-size:15px;font-weight:700;color:var(--cream-3);font-variant-numeric:tabular-nums;white-space:nowrap}
+.svb{flex:1;min-height:0;overflow-y:auto;padding:18px 2px 8px;margin:0 -2px}
+.svb .lead{font-size:14.5px!important;color:var(--cream-2);margin:0 0 14px!important;line-height:1.5}
+.svtag{display:inline-block;font-size:13.5px;font-weight:900;border-radius:999px;padding:3px 12px;background:rgba(255,236,214,.12);color:var(--cream-2)}
+.svtag.g{background:var(--gold);color:#2A1A0E}
+.svq{font-size:22px;font-weight:900;line-height:1.4;letter-spacing:-.03em;margin-top:10px}
+.svq small{font-size:.7em;font-weight:700;color:var(--cream-3);white-space:nowrap}
+.svb .sv-hint{font-size:15.5px!important;color:var(--cream-2)!important;margin-top:8px!important}
+.sheet .svw .opts{display:grid;gap:10px;margin-top:18px}
+.sheet .svw .opt{display:grid;grid-template-columns:26px 1fr;gap:12px;align-items:center;text-align:left;font-size:18px;font-weight:700;line-height:1.4;min-height:60px;padding:12px 16px;border-radius:16px;background:var(--bg);border:2px solid var(--line)}
+.sheet .svw .opt::before{content:"";width:26px;height:26px;border-radius:50%;border:2px solid rgba(255,236,214,.4)}
+.sheet .svw .opt.sq::before{border-radius:8px}
+.sheet .svw .opts.many{gap:8px;margin-top:14px}
+.sheet .svw .opts.many .opt{min-height:52px;padding:8px 14px;font-size:17px;line-height:1.3}
+.sheet .svw .opts.two{grid-template-columns:1fr 1fr}
+.sheet .svw .opts.two .opt{grid-template-columns:1fr;text-align:center;padding:10px 8px;font-size:17px;min-height:62px}
+.sheet .svw .opts.two .opt::before{display:none}
+.sheet .svw .opts.two .opt:last-child:nth-child(odd){grid-column:1/-1}
+.sheet .svw .opts.two .opt[aria-pressed="true"]{background:var(--orange);border-color:var(--orange)}
+.sheet .svw .opt[aria-pressed="true"]{background:rgba(255,77,0,.18);border-color:var(--orange)}
+.sheet .svw .opt[aria-pressed="true"]::before{border-color:var(--orange);background:var(--orange) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5' fill='none' stroke='%23fff' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/18px no-repeat}
+.sheet .svw input[type=text]{margin-top:14px;font-size:18px;padding:16px;border-width:2px;border-radius:16px}
+.svmx{display:grid;gap:12px;margin-top:14px}
+.svmx>div{background:var(--bg);border:1px solid var(--line);border-radius:16px;padding:12px 14px}
+.svmx>div>span{display:block;font-size:17.5px;font-weight:900;line-height:1.35}
+.svmx>div>div{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:8px}
+.svn{height:60px;border-radius:14px;background:var(--bg2);border:2px solid var(--line);font-size:21px;font-weight:900;font-variant-numeric:tabular-nums;padding:0}
+.svn[aria-pressed="true"]{background:var(--orange);border-color:var(--orange);color:var(--cream)}
+.svnps{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:18px}
+.svnps .svn{background:var(--bg)}
+.svends{display:flex;justify-content:space-between;gap:12px;font-size:15px;font-weight:700;color:var(--cream-2);margin-top:10px}
+.svf{flex:none;padding-top:10px;border-top:1px solid var(--line)}
+.svf .err{font-size:15.5px;font-weight:700;min-height:0;margin:0 0 8px}
+.svf .err:empty{display:none}
+.svnav{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center}
+.svprev{min-height:60px;padding:0 22px;border-radius:999px;border:2px solid var(--line);background:var(--bg);font-size:18px;font-weight:900;color:var(--cream)}
+.svnav .cta{padding:0 16px;min-height:60px;font-size:19px;box-shadow:0 4px 0 #8F2C00,inset 0 2px 0 rgba(255,255,255,.35)}
+.svnav .cta.bonus{box-shadow:0 4px 0 #8A5206,inset 0 2px 0 rgba(255,255,255,.5)}
+.svnav .cta.skip{background:var(--bg3);color:var(--cream);box-shadow:0 4px 0 rgba(0,0,0,.35)}
+.svnav .cta:disabled,.svprev:disabled{opacity:.5}
+body:has(.dim:not([hidden]) .svw) .toast{bottom:calc(112px + env(safe-area-inset-bottom,0px))}
+@media (max-width:360px){.svq{font-size:20px}.sheet .svw .opt{font-size:17px}.svprev{padding:0 16px}}
+@media (prefers-reduced-motion:reduce){.svbar i{transition:none}}
 @media (prefers-reduced-motion:reduce){.obj,.cw,.bulb,.sheet,.bokeh,.timer i{animation:none}.way.hot .go{animation:none}}
 </style>
 
@@ -880,59 +931,76 @@ const SURVEY=[
  {id:17,t:'카페인24에서 딱 한 가지만 바꿀 수 있다면?',type:'text',opt:1}
 ];
 function survey(){
+  // 11/24: 한 화면에 질문 하나씩 넘기는 방식 (저장되는 형식은 예전과 같음)
   const isWin=winSurvey&&!lastLose;   // 당첨 손님: 의견만 받고 응모권 룰렛은 없음
-  const ans={};
-  const qHtml=q=>{
-    if(q.sec)return `<div class="sv-sec">${q.sec}</div>`;
-    const tag=q.opt?' <span class="sv-opt">선택</span>':q.max?` <span class="sv-opt">최대 ${q.max}개</span>`:'';
+  const ans={},txt={},etc={};
+  const QS=SURVEY.filter(q=>q.id),PER=2,sendLabel=isWin?'의견 보내기':'제출하고 응모권 받기';
+  const secOf=q=>{let s='';for(const x of SURVEY){if(x.sec)s=x.sec;if(x===q)break}return s};
+  const filled=q=>q.type==='matrix'?Object.keys(ans[q.id]||{}).length>=q.rows.length:q.type==='nps'?ans[q.id]!==undefined:q.type==='text'?!!(txt[q.id]||'').trim():(ans[q.id]||[]).length>0;
+  const why=q=>q.type==='matrix'?'모든 항목의 점수를 골라 주세요.':q.type==='nps'?'점수를 골라 주세요.':'하나를 골라 주세요.';
+  // 화면 목록: 질문마다 한 화면, 평가표는 2줄씩 나눔
+  const ST=QS.flatMap(q=>{if(q.type!=='matrix')return [{q}];const o=[];for(let r=0;r<q.rows.length;r+=PER)o.push({q,from:r,to:Math.min(r+PER,q.rows.length)});return o}),N=ST.length;
+  const stepFilled=s=>{if(s.q.type!=='matrix')return filled(s.q);const a=ans[s.q.id]||{};for(let r=s.from;r<s.to;r++)if(a[r]===undefined)return false;return true};
+  let i=0,timer=0,first=true,sending=false;
+  const el=s=>sheet.querySelector(s);
+  const label=()=>{const q=ST[i].q,b=el('#svNext');if(!b||sending)return;const last=i===N-1,skip=!last&&q.opt&&!filled(q);
+    b.textContent=last?sendLabel:skip?'건너뛰기':'다음';b.className='cta'+(last&&!isWin?' bonus':'')+(skip?' skip':'')};
+  function draw(){
+    clearTimeout(timer);
+    const s=ST[i],q=s.q,a=ans[q.id];
+    const tag=q.opt?'<span class="svtag">선택</span>':q.max?`<span class="svtag g">최대 ${q.max}개</span>`:'';
     let body='';
-    if(q.type==='one'||q.type==='multi')body=`<div class="opts">${q.o.map((o,i)=>`<button type="button" class="opt" data-q="${q.id}" data-i="${i}" aria-pressed="false">${o}</button>`).join('')}</div>${q.etc?`<input type="text" class="etc" id="etc${q.id}" placeholder="기타 내용을 적어주세요" maxlength="100" hidden>`:''}`;
-    if(q.type==='matrix')body=`<p class="sv-hint">${q.hint}</p><div class="mx">${q.rows.map((r,ri)=>`<div class="mxr"><span>${r}</span><div>${[1,2,3,4,5].map(n=>`<button type="button" class="sc" data-q="${q.id}" data-r="${ri}" data-n="${n}" aria-pressed="false">${n}</button>`).join('')}</div></div>`).join('')}</div>`;
-    if(q.type==='nps')body=`<div class="nps">${[...Array(11).keys()].map(n=>`<button type="button" class="sc" data-q="${q.id}" data-n="${n}" aria-pressed="false">${n}</button>`).join('')}</div><div class="nps-l"><span>0 전혀 추천 안 함</span><span>10 꼭 추천</span></div>`;
-    if(q.type==='text')body=`<input type="text" id="tx${q.id}" placeholder="자유롭게 적어주세요" maxlength="200">`;
-    return `<div class="q" id="q${q.id}"><div class="t">${q.id}. ${q.t}${tag}</div>${body}</div>`;
-  };
-  open(`
-    <h3 style="margin-top:16px">카페인24 만족도 조사</h3>
-    <p style="font-size:12.5px;opacity:.75;margin-top:4px">답변은 메뉴와 매장 운영을 더 좋게 만드는 데만 써요.${isWin?' 당첨되신 분은 추가 룰렛 없이 의견만 받아요.':''}</p>
-    ${SURVEY.map(qHtml).join('')}
-    <div class="err" id="serr"></div>
-    <div class="btns"><button class="cta${isWin?'':' bonus'}" id="send" type="button">${isWin?'의견 보내기':'제출하고 응모권 받기'}</button><button class="ghost" id="cancel" type="button">닫기</button></div>`);
-  const byId=id=>SURVEY.find(q=>q.id===id);
-  sheet.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{
-    const q=byId(+b.dataset.q),i=+b.dataset.i,box=b.parentElement;
-    if(q.type==='one'){ans[q.id]=[i];box.querySelectorAll('.opt').forEach(x=>x.setAttribute('aria-pressed',x===b))}
-    else{const cur=ans[q.id]||[];const on=cur.includes(i);
-      if(!on&&cur.length>=q.max){toast(`최대 ${q.max}개까지 고를 수 있어요`);return}
-      ans[q.id]=on?cur.filter(x=>x!==i):[...cur,i];b.setAttribute('aria-pressed',!on)}
-    if(q.etc){const e=document.getElementById('etc'+q.id);e.hidden=!(ans[q.id]||[]).includes(q.o.length-1)}
-    document.getElementById('q'+q.id).classList.remove('miss');
-  });
-  sheet.querySelectorAll('.sc').forEach(b=>b.onclick=()=>{
-    const id=+b.dataset.q,n=+b.dataset.n;
-    if(b.dataset.r!==undefined){ans[id]=ans[id]||{};ans[id][b.dataset.r]=n;b.parentElement.querySelectorAll('.sc').forEach(x=>x.setAttribute('aria-pressed',x===b))}
-    else{ans[id]=n;b.parentElement.querySelectorAll('.sc').forEach(x=>x.setAttribute('aria-pressed',x===b))}
-    document.getElementById('q'+id).classList.remove('miss');
-  });
-  $('#cancel').onclick=close;
-  $('#send').onclick=async()=>{
-    const missing=SURVEY.filter(q=>q.id&&!q.opt&&(q.type==='matrix'?Object.keys(ans[q.id]||{}).length<q.rows.length:q.type==='nps'?ans[q.id]===undefined:!(ans[q.id]||[]).length));
-    sheet.querySelectorAll('.q.miss').forEach(e=>e.classList.remove('miss'));
-    if(missing.length){missing.forEach(q=>document.getElementById('q'+q.id).classList.add('miss'));
-      $('#serr').textContent=`${missing.map(q=>q.id).join(', ')}번 문항에 답해 주세요.`;
-      document.getElementById('q'+missing[0].id).scrollIntoView({behavior:reduce?'auto':'smooth',block:'center'});return}
+    if(q.type==='one'||q.type==='multi')body=`<div class="opts${q.o.length>=6&&Math.max(...q.o.map(o=>o.length))<=13?' two':q.o.length>=6?' many':''}">${q.o.map((o,k)=>`<button type="button" class="opt${q.type==='multi'?' sq':''}" data-i="${k}" aria-pressed="${(a||[]).includes(k)}">${o}</button>`).join('')}</div>${q.etc?`<input type="text" id="svEtc" placeholder="기타 내용을 적어주세요" maxlength="100" value="${esc(etc[q.id]||'')}" ${(a||[]).includes(q.o.length-1)?'':'hidden'}>`:''}`;
+    if(q.type==='matrix')body=`<p class="sv-hint">${q.hint}</p><div class="svmx">${q.rows.slice(s.from,s.to).map((r,j)=>{const ri=s.from+j;return `<div><span>${r}</span><div>${[1,2,3,4,5].map(n=>`<button type="button" class="svn" data-r="${ri}" data-n="${n}" aria-pressed="${a?.[ri]===n}" aria-label="${r} ${n}점">${n}</button>`).join('')}</div></div>`}).join('')}</div>`;
+    if(q.type==='nps')body=`<div class="svnps">${[...Array(11).keys()].map(n=>`<button type="button" class="svn" data-n="${n}" aria-pressed="${a===n}">${n}</button>`).join('')}</div><div class="svends"><span>0 전혀 추천 안 함</span><span>10 꼭 추천</span></div>`;
+    if(q.type==='text')body=`<input type="text" id="svTx" placeholder="자유롭게 적어주세요" maxlength="200" value="${esc(txt[q.id]||'')}" enterkeyhint="${i===N-1?'done':'next'}">`;
+    const html=`<div class="svw">
+      <div class="svh"><div class="svbar" role="progressbar" aria-valuemin="0" aria-valuemax="${N}" aria-valuenow="${i+1}"><i style="width:${Math.round((i+1)/N*100)}%"></i></div><div class="svm"><span>${secOf(q)}</span><b>${i+1} / ${N}</b></div></div>
+      <div class="svb">${i===0?`<p class="lead">카페인24 만족도 조사 · 답변은 메뉴와 매장 운영을 더 좋게 만드는 데만 써요.${isWin?' 당첨되신 분은 추가 룰렛 없이 의견만 받아요.':''}</p>`:''}${tag}<div class="svq">${q.t}${q.type==='matrix'?` <small>(${s.from/PER+1}/${Math.ceil(q.rows.length/PER)})</small>`:''}</div>${body}</div>
+      <div class="svf"><div class="err" id="serr"></div><div class="svnav"><button class="svprev" id="svPrev" type="button">${i===0?'닫기':'이전'}</button><button class="cta" id="svNext" type="button">다음</button></div></div></div>`;
+    if(first){open(html);first=false;document.activeElement&&document.activeElement.blur()}else{sheet.innerHTML=html;sheet.scrollTop=0}
+    label();
+    sheet.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{
+      const k=+b.dataset.i;
+      if(q.type==='one'){ans[q.id]=[k];sheet.querySelectorAll('.opt').forEach(x=>x.setAttribute('aria-pressed',x===b))}
+      else{const cur=ans[q.id]||[],on=cur.includes(k);
+        if(!on&&cur.length>=q.max){toast(`최대 ${q.max}개까지 고를 수 있어요`);return}
+        ans[q.id]=on?cur.filter(x=>x!==k):[...cur,k];b.setAttribute('aria-pressed',!on)}
+      const isEtc=q.etc&&(ans[q.id]||[]).includes(q.o.length-1);
+      if(q.etc){const e=el('#svEtc');e.hidden=!isEtc;if(isEtc&&k===q.o.length-1)e.scrollIntoView({block:'nearest'})}
+      el('#serr').textContent='';label();
+      if(q.type==='one'&&!isEtc&&i<N-1){clearTimeout(timer);timer=setTimeout(()=>{i++;draw()},reduce?0:260)}   // 하나만 고르는 질문은 고르면 바로 다음으로
+    });
+    sheet.querySelectorAll('.svn').forEach(b=>b.onclick=()=>{
+      const n=+b.dataset.n;
+      if(b.dataset.r!==undefined){ans[q.id]=ans[q.id]||{};ans[q.id][b.dataset.r]=n}else ans[q.id]=n;
+      b.parentElement.querySelectorAll('.svn').forEach(x=>x.setAttribute('aria-pressed',x===b));
+      el('#serr').textContent='';label();
+      if(q.type==='nps'&&i<N-1){clearTimeout(timer);timer=setTimeout(()=>{i++;draw()},reduce?0:260)}
+    });
+    const tx=el('#svTx');if(tx){tx.oninput=()=>{txt[q.id]=tx.value;label()};tx.onkeydown=e=>{if(e.key==='Enter'&&!e.isComposing){e.preventDefault();tx.blur();el('#svNext').click()}}}
+    const ei=el('#svEtc');if(ei)ei.oninput=()=>{etc[q.id]=ei.value};
+    el('#svPrev').onclick=()=>{if(sending)return;if(i===0)return close();i--;draw()};
+    el('#svNext').onclick=()=>{if(sending)return;
+      if(!q.opt&&!stepFilled(s)){el('#serr').textContent=why(q);return}
+      if(i<N-1){i++;return draw()}
+      send()};
+  }
+  async function send(){
+    const miss=ST.findIndex(s=>!s.q.opt&&!stepFilled(s));
+    if(miss>=0){i=miss;draw();el('#serr').textContent=why(ST[miss].q);return}
     // 저장 형식: 고른 보기 글자 그대로 (복수 선택은 배열, 평가표는 [맛,가격,청결,편함] 점수, 추천은 0~10)
     const data={};
-    SURVEY.filter(q=>q.id).forEach(q=>{
+    QS.forEach(q=>{
       const a=ans[q.id];
       if(q.type==='one')data['q'+q.id]=a?q.o[a[0]]:'';
-      if(q.type==='multi')data['q'+q.id]=(a||[]).map(i=>q.o[i]);
+      if(q.type==='multi')data['q'+q.id]=(a||[]).map(k=>q.o[k]);
       if(q.type==='matrix')data['q'+q.id]=q.rows.map((r,ri)=>a?.[ri]??0);
       if(q.type==='nps')data['q'+q.id]=a??-1;
-      if(q.type==='text')data['q'+q.id]=(document.getElementById('tx'+q.id)?.value||'').trim().slice(0,200);
-      if(q.etc)data['etc'+q.id]=(document.getElementById('etc'+q.id)?.value||'').trim().slice(0,100);
+      if(q.type==='text')data['q'+q.id]=(txt[q.id]||'').trim().slice(0,200);
+      if(q.etc)data['etc'+q.id]=((a||[]).includes(q.o.length-1)?(etc[q.id]||''):'').trim().slice(0,100);
     });
-    const btn=$('#send');btn.disabled=true;btn.textContent='저장 중…';
+    const btn=el('#svNext');sending=true;btn.disabled=true;el('#svPrev').disabled=true;btn.textContent='저장 중…';
     try{
       const b=writeBatch(db);
       b.set(doc(db,'surveys',phone),{phone,code,store:storeCode,...data,createdAt:serverTimestamp()});   // 문서 이름 = 번호 → 번호당 1번
@@ -940,8 +1008,8 @@ function survey(){
       b.update(doc(db,'entries',code),{surveyDone:true});
       await b.commit();
     }catch(e){
-      console.error(e);btn.disabled=false;btn.textContent=isWin?'의견 보내기':'제출하고 응모권 받기';
-      $('#serr').textContent=e.code==='permission-denied'?'이미 만족도 조사에 참여한 번호예요. 번호당 1번이에요.':'저장이 안 됐어요. 다시 눌러 주세요.';
+      console.error(e);sending=false;btn.disabled=false;el('#svPrev').disabled=false;label();
+      el('#serr').textContent=e.code==='permission-denied'?'이미 만족도 조사에 참여한 번호예요. 번호당 1번이에요.':'저장이 안 됐어요. 다시 눌러 주세요.';
       if(e.code==='permission-denied'){surveyDone=true;lastLose=false;winSurvey=false;render()}
       return;
     }
@@ -949,7 +1017,8 @@ function survey(){
     surveyDone=true;lastLose=false;bonus=1;close();drawWheel(BONUS);render();
     toast('응모권 룰렛 1회를 받았어요');
     setTimeout(()=>scrollTo($('#stage')),reduce?0:300);
-  };
+  }
+  draw();
 }
 // 설문 없이 응모권 룰렛 받기: 당첨 때 설문에 이미 답한 번호가 꽝이 나온 경우 (번호당 1번)
 async function claimFree(){

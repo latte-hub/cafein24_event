@@ -1,5 +1,5 @@
 rules_version = '2';
-// 카페인24 크리스마스 럭키룰렛 · Firestore 보안 규칙 (2026-11-13 최신화 · 매장당 200장 · 210개 매장 · 점주 의견 voices 추가 · 11/19 의견 문항 q25~q30 추가)
+// 카페인24 크리스마스 럭키룰렛 · Firestore 보안 규칙 (2026-11-13 최신화 · 매장당 200장 · 210개 매장 · 점주 의견 voices 추가 · 11/19 의견 문항 q25~q30 추가 · 11/24 당첨 손님 설문 허용)
 // 11/4 변경: 등수를 tiers 컬렉션으로 분리(스티커를 쓴 뒤에만 읽힘) · 참여 가능 날짜를 서버에서 강제 · 집계/선착순 카운터를 실제 기록과 묶음
 // 등수: 1~4 포인트 · 5 꽝 · 6 다라미 텀블러 · 7 다라미 양산
 // Firebase 콘솔 → Firestore Database → 규칙 탭: 전체를 지우고 이 파일 내용을 통째로 붙여넣고 '게시'.
@@ -88,13 +88,18 @@ service cloud.firestore {
         && request.resource.data.createdAt == request.time
         && getAfter(docOf('stats', 'store_' + request.resource.data.store)).data.last == code
       );
-      // 꽝 스티커만: 설문 완료(1번) · 응모권 결과(1번)
+      // 설문 완료(1번): 모든 스티커 (11/24 당첨 손님도 설문 가능 · 보상 없음) · 응모권 결과(1번): 꽝 스티커만
+      // 꽝 스티커의 설문 완료는 그 번호의 첫 설문이거나, 당첨 때 한 설문(free)을 이번에 쓰는 경우만
       allow update: if isAdmin() || canBonus() && ((
-        resource.data.tier == 5
-        && changedOnly(['surveyDone'])
+        changedOnly(['surveyDone'])
         && resource.data.surveyDone == false
         && request.resource.data.surveyDone == true
         && existsAfter(/databases/$(database)/documents/surveys/$(get(/databases/$(database)/documents/phones/$(code)).data.phone))
+        && (resource.data.tier != 5
+            || !exists(/databases/$(database)/documents/surveyed/$(get(/databases/$(database)/documents/phones/$(code)).data.phone))
+            || (get(/databases/$(database)/documents/surveyed/$(get(/databases/$(database)/documents/phones/$(code)).data.phone)).data.get('free', false) == true
+                && getAfter(/databases/$(database)/documents/surveyed/$(get(/databases/$(database)/documents/phones/$(code)).data.phone)).data.free == false
+                && getAfter(/databases/$(database)/documents/surveyed/$(get(/databases/$(database)/documents/phones/$(code)).data.phone)).data.by == code))
       ) || (
         resource.data.tier == 5
         && changedOnly(['bonusDone', 'bonus'])
@@ -129,7 +134,7 @@ service cloud.firestore {
         && isPhone(phone)
         && request.resource.data.phone == phone
         && request.resource.data.keys().hasOnly(['phone','code','store','q1','q2','q3','q4','q5','q6','q7','q8','q9','q10','q11','q12','q13','q14','q15','q16','q17','etc3','etc7','etc10','etc13','etc15','createdAt'])
-        && get(/databases/$(database)/documents/entries/$(request.resource.data.code)).data.tier == 5
+        && get(/databases/$(database)/documents/entries/$(request.resource.data.code)).data.tier in [1, 2, 3, 4, 5, 6, 7]   // 11/24: 당첨 손님도 설문 가능
         && get(/databases/$(database)/documents/phones/$(request.resource.data.code)).data.phone == phone
         && request.resource.data.store == get(/databases/$(database)/documents/entries/$(request.resource.data.code)).data.store
         && existsAfter(/databases/$(database)/documents/surveyed/$(phone))
@@ -137,14 +142,27 @@ service cloud.firestore {
       );
     }
     // '이 번호는 설문 완료' 표시 (내용 없음): 다른 꽝 스티커에서 설문 버튼을 숨길 때 확인
+    // free = 당첨 스티커에서 한 설문(응모권을 아직 안 받음). 나중에 꽝이 나오면 설문 없이 응모권 룰렛 1번 → free:false, by:꽝 스티커 번호
     match /surveyed/{phone} {
       allow get: if true;
-      allow list, update, delete: if isAdmin();
+      allow list, delete: if isAdmin();
       allow create: if isAdmin() || (
         isPhone(phone)
-        && request.resource.data.keys().hasOnly(['at'])
+        && request.resource.data.keys().hasOnly(['at', 'free'])
         && request.resource.data.at == request.time
         && existsAfter(/databases/$(database)/documents/surveys/$(phone))
+        && request.resource.data.get('free', false) == (get(/databases/$(database)/documents/entries/$(getAfter(/databases/$(database)/documents/surveys/$(phone)).data.code)).data.tier != 5)
+      );
+      allow update: if isAdmin() || (
+        canBonus()
+        && resource.data.get('free', false) == true
+        && request.resource.data.free == false
+        && changedOnly(['free', 'by'])
+        && request.resource.data.by is string
+        && get(/databases/$(database)/documents/phones/$(request.resource.data.by)).data.phone == phone
+        && get(/databases/$(database)/documents/entries/$(request.resource.data.by)).data.tier == 5
+        && get(/databases/$(database)/documents/entries/$(request.resource.data.by)).data.surveyDone == false
+        && getAfter(/databases/$(database)/documents/entries/$(request.resource.data.by)).data.surveyDone == true
       );
     }
     // 응모권 당첨 1,000P (문서 이름 = 휴대폰 번호 → 번호당 1번): 설문을 마친 꽝 스티커, 같은 순간에 선착순 카운터 +1

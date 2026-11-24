@@ -52,7 +52,8 @@
       <label>1등(5만P) 매장 수 <input type="number" id="p-t1" value="10" style="width:70px"></label>
       <label>2등(1만P) 매장당 <input type="number" id="p-t2" value="1" style="width:60px"></label>
       <label>3등(5천P) 매장당 <input type="number" id="p-t3" value="3" style="width:60px"></label>
-      <label>4등(1천P) 매장당 <input type="number" id="p-t4" value="24" style="width:60px"></label>
+      <label>4등(1천P) 매장당 <input type="number" id="p-t4" value="10" style="width:60px"></label>
+      <label>5등(500P) 매장당 <input type="number" id="p-t8" value="50" style="width:60px"></label>
     </div>
     <div class="row">
       <label style="flex:1;min-width:260px">1등 매장 (운영팀 지정, 매장번호 쉼표로) <input type="text" id="p-t1list" value="" placeholder="예: 003, 017, 045 …" style="width:100%"></label>
@@ -84,6 +85,14 @@
   </div>
 
   <div class="box">
+    <h2>2-3. 등수 다시 배정 (QR 번호는 그대로 · 11/24)</h2>
+    <p>이미 올린 스티커 번호와 인쇄한 QR은 <b>그대로 두고</b>, 4등(1천P)과 5등(500P) 장수만 위 <b>2번 칸에 적힌 숫자</b>로 다시 맞춰요. 1등·2등·3등·굿즈와 <b>이미 사용된 스티커</b>는 건드리지 않아요. 남는 4등은 5등으로 바꾸고, 모자라는 만큼은 꽝 중에서 무작위로 골라요. <b>새 보안 규칙(5등 500P 포함)을 게시한 뒤</b> 눌러 주세요.</p>
+    <div class="row"><button class="btn ghost" id="btn-re-check">지금 배정 확인</button><button class="btn" id="btn-re-run">등수 다시 배정</button><span class="note">약 8.4만 건 읽기 · 매장당 50건 안팎 쓰기(전체 약 1만 건). 중간에 멈춰도 다시 누르면 남은 매장만 해요.</span></div>
+    <div class="bar"><i id="re-bar" style="width:0"></i></div>
+    <div class="prog" id="re-msg"></div>
+  </div>
+
+  <div class="box">
     <h2>3. 내려받기</h2>
     <div class="row">
       <button class="btn" id="btn-csv-print" disabled>인쇄소용 CSV (등수 없음)</button>
@@ -106,11 +115,11 @@ import { collection, doc, getDocs, getCountFromServer, writeBatch, query, where,
 
 let stores = [];      // Firestore에 있는 매장 [{code,name,...}]
 let parsed = [];      // 붙여넣기 미리보기
-const TIER_MONEY = {1:50000,2:10000,3:5000,4:1000,5:0,6:0,7:0};
+const TIER_MONEY = {1:50000,2:10000,3:5000,4:1000,5:0,6:0,7:0,8:500};   // 8 = 5등 500P (11/24)
 const TIER_LABEL = t => EVENT.prizes[t]?.[1] || t+'등';
 
 async function refreshStatus(){
-  const [s, c, t, lk] = await Promise.all([getDocs(collection(db,'stores')), getCountFromServer(collection(db,'codes')), getCountFromServer(collection(db,'tiers')), getCountFromServer(query(collection(db,'codes'), where('tier','in',[1,2,3,4,5,6,7])))]);
+  const [s, c, t, lk] = await Promise.all([getDocs(collection(db,'stores')), getCountFromServer(collection(db,'codes')), getCountFromServer(collection(db,'tiers')), getCountFromServer(query(collection(db,'codes'), where('tier','in',[1,2,3,4,5,6,7,8])))]);
   stores = s.docs.map(d => ({ code:d.id, ...d.data() })).sort((a,b) => a.code.localeCompare(b.code));
   $('st-stores').textContent = stores.length; $('st-codes').textContent = won(c.data().count); $('st-tiers').textContent = won(t.data().count);
   $('st-leak').innerHTML = lk.data().count ? `<span class="danger">${won(lk.data().count)}</span>` : '<span class="ok">0</span>';
@@ -207,14 +216,14 @@ function checkT1(){
   return !bad.length;
 }
 $('p-t1list').addEventListener('input', () => { checkT1(); calcSum(); });
-const P = () => ({ t1:+$('p-t1').value, t2:+$('p-t2').value, t3:+$('p-t3').value, t4:+$('p-t4').value, t6:+$('p-t6').value||0, t7:+$('p-t7').value||0 });
+const P = () => ({ t1:+$('p-t1').value, t2:+$('p-t2').value, t3:+$('p-t3').value, t4:+$('p-t4').value, t8:+$('p-t8').value||0, t6:+$('p-t6').value||0, t7:+$('p-t7').value||0 });
 function calcSum(){
   const p = P(), st = [...new Set(qrRows.map(r=>r.store))], n = st.length || 210;
-  const total = n*PER, w1 = p.t1, w2 = n*p.t2, w3 = n*p.t3, w4 = n*p.t4, wins = w1+w2+w3+w4+p.t6+p.t7;
-  const money = w1*50000+w2*10000+w3*5000+w4*1000;
-  $('p-sum').innerHTML = `매장 ${n}곳 × ${PER}장 = <b>${won(total)}장</b> · 1등 ${w1} · 2등 ${won(w2)} · 3등 ${won(w3)} · 4등 ${won(w4)} · 텀블러 ${p.t6} · 양산 ${p.t7} · 꽝 ${won(total-wins)} → 당첨 ${won(wins)}장(${(100*wins/total).toFixed(1)}%) · 포인트 액면 <b>${won(money)}원</b>`;
+  const total = n*PER, w1 = p.t1, w2 = n*p.t2, w3 = n*p.t3, w4 = n*p.t4, w8 = n*p.t8, wins = w1+w2+w3+w4+w8+p.t6+p.t7;
+  const money = w1*50000+w2*10000+w3*5000+w4*1000+w8*500;
+  $('p-sum').innerHTML = `매장 ${n}곳 × ${PER}장 = <b>${won(total)}장</b> · 1등 ${w1} · 2등 ${won(w2)} · 3등 ${won(w3)} · 4등 ${won(w4)} · 5등(500P) ${won(w8)} · 텀블러 ${p.t6} · 양산 ${p.t7} · 꽝 ${won(total-wins)} → 당첨 ${won(wins)}장(${(100*wins/total).toFixed(1)}%) · 포인트 액면 <b>${won(money)}원</b>`;
 }
-document.querySelectorAll('#p-t1,#p-t2,#p-t3,#p-t4,#p-t6,#p-t7').forEach(i => i.addEventListener('input', calcSum));
+document.querySelectorAll('#p-t1,#p-t2,#p-t3,#p-t4,#p-t8,#p-t6,#p-t7').forEach(i => i.addEventListener('input', calcSum));
 
 // 하루 무료 한도에 걸리면 Firebase가 오류 없이 계속 기다리므로, 오래 걸리면 안내
 const withWatch = (promise, onSlow, ms=45000) => { const t = setTimeout(onSlow, ms); return promise.finally(() => clearTimeout(t)); };
@@ -266,6 +275,7 @@ $('btn-gen').addEventListener('click', async () => {
       for(let i=0;i<p.t2;i++) tiers.push(2);
       for(let i=0;i<p.t3;i++) tiers.push(3);
       for(let i=0;i<p.t4;i++) tiers.push(4);
+      for(let i=0;i<p.t8;i++) tiers.push(8);   // 5등 500P
       while(tiers.length < PER) tiers.push(5);
       shuffle(tiers);
       const batch = writeBatch(db);
@@ -302,9 +312,74 @@ $('btn-csv-internal').addEventListener('click', async e => { const all = await l
   ['매장코드','매장명','순번','스티커번호','등수','금액','사용','QR주소'], all.map(m => [m.store, m.storeName, m.seq||'', m.code, TIER_LABEL(m.tier), TIER_MONEY[m.tier], m.used?'Y':'', playUrl(m.code)])); });
 $('btn-csv-stores').addEventListener('click', async e => {
   const all = await loadAllCodes(e.target), by = {};
-  all.forEach(m => { const o = by[m.store] ??= { name:m.storeName, n:0, t1:0,t2:0,t3:0,t4:0,t5:0,t6:0,t7:0, money:0 }; o.n++; o['t'+m.tier]++; o.money += TIER_MONEY[m.tier]; });
-  downloadCsv('cafein24_매장별_배분요약.csv', ['매장코드','매장명','스티커','1등','2등','3등','4등','다라미 텀블러','다라미 양산','꽝','포인트 액면합계'],
-    Object.entries(by).sort().map(([k,o]) => [k,o.name,o.n,o.t1,o.t2,o.t3,o.t4,o.t6,o.t7,o.t5,o.money]));
+  all.forEach(m => { const o = by[m.store] ??= { name:m.storeName, n:0, t1:0,t2:0,t3:0,t4:0,t5:0,t6:0,t7:0,t8:0, money:0 }; o.n++; o['t'+m.tier]++; o.money += TIER_MONEY[m.tier]; });
+  downloadCsv('cafein24_매장별_배분요약.csv', ['매장코드','매장명','스티커','1등','2등','3등','4등','5등(500P)','다라미 텀블러','다라미 양산','꽝','포인트 액면합계'],
+    Object.entries(by).sort().map(([k,o]) => [k,o.name,o.n,o.t1,o.t2,o.t3,o.t4,o.t8,o.t6,o.t7,o.t5,o.money]));
+});
+
+// ---- 2-3. 등수 다시 배정: 스티커 번호(codes)는 그대로, tiers의 4등·5등(500P)·꽝만 다시 맞춤 ----
+// 매장마다 아직 안 쓴 스티커 중에서: 4등은 목표 장수만 남기고, 남는 4등 → 5등(8), 모자라는 5등은 꽝에서 무작위. 바뀌는 것만 저장.
+function planStore(rows, t4, t8){   // rows:[{code,used,tier}] → [{code,tier}] 바꿀 것만
+  const used = t => rows.filter(r => r.used && r.tier===t).length;
+  const free = t => shuffle(rows.filter(r => !r.used && r.tier===t));
+  const A4 = free(4), A8 = free(8), A5 = free(5);
+  const n4 = Math.max(0, t4-used(4)), n8 = Math.max(0, t8-used(8));
+  const next = new Map();
+  const keep4 = A4.slice(0,n4), spare4 = A4.slice(n4);
+  let need4 = n4-keep4.length;
+  while(need4>0 && A5.length){ next.set(A5.pop().code,4); need4--; }
+  const keep8 = A8.slice(0,n8); A8.slice(n8).forEach(r => next.set(r.code,5));
+  let need8 = n8-keep8.length;
+  while(need8>0 && spare4.length){ next.set(spare4.pop().code,8); need8--; }
+  while(need8>0 && A5.length){ next.set(A5.pop().code,8); need8--; }
+  spare4.forEach(r => next.set(r.code,5));
+  return { changes:[...next].map(([code,tier]) => ({code,tier})), short: need4+need8 };
+}
+async function loadTiers(msg){
+  msg.textContent = '스티커 번호와 등수를 읽는 중… (약 8.4만 건)';
+  const [cs, ts] = await Promise.all([getDocs(collection(db,'codes')), getDocs(collection(db,'tiers'))]);
+  const tierOf = Object.fromEntries(ts.docs.map(d => [d.id, d.data().tier]));
+  const by = {};
+  cs.docs.forEach(d => (by[d.data().store] ??= []).push({ code:d.id, used:!!d.data().used, tier: tierOf[d.id] }));
+  return by;
+}
+function tierSummary(by){
+  const c = {1:0,2:0,3:0,4:0,5:0,6:0,7:0,8:0}; let n = 0, used = 0;
+  Object.values(by).forEach(rows => rows.forEach(r => { c[r.tier] = (c[r.tier]||0)+1; n++; if(r.used) used++; }));
+  const money = Object.entries(c).reduce((a,[t,k]) => a + (TIER_MONEY[t]||0)*k, 0), wins = n-c[5];
+  return `매장 ${Object.keys(by).length}곳 · ${won(n)}장 (사용됨 ${won(used)}) · 1등 ${c[1]} · 2등 ${won(c[2])} · 3등 ${won(c[3])} · 4등 ${won(c[4])} · 5등(500P) ${won(c[8])} · 텀블러 ${c[6]} · 양산 ${c[7]} · 꽝 ${won(c[5])} → 당첨 ${won(wins)}장(${n?(100*wins/n).toFixed(1):0}%) · 포인트 액면 <b>${won(money)}원</b>`;
+}
+$('btn-re-check').addEventListener('click', async e => {
+  const msg = $('re-msg'); e.target.disabled = true;
+  try{ const by = await loadTiers(msg), p = P();
+    const off = Object.entries(by).filter(([c,rows]) => rows.filter(r=>r.tier===4).length!==p.t4 || rows.filter(r=>r.tier===8).length!==p.t8).length;
+    msg.innerHTML = '지금 서버 배정 : ' + tierSummary(by) + `<br>4등 ${p.t4}장 · 5등 ${p.t8}장과 다른 매장 : <b>${off}곳</b>` + (off ? '' : ' <span class="ok">모두 맞아요</span>');
+  }catch(err){ console.error(err); msg.innerHTML = `<span class="danger">읽지 못했어요: ${esc(err.message)}</span>`; }
+  e.target.disabled = false;
+});
+$('btn-re-run').addEventListener('click', async e => {
+  const msg = $('re-msg'), btn = e.target, p = P(); btn.disabled = true;
+  try{
+    const by = await loadTiers(msg);
+    const plans = Object.entries(by).sort().map(([c,rows]) => [c, planStore(rows, p.t4, p.t8)]);
+    const todo = plans.filter(([c,pl]) => pl.changes.length), total = todo.reduce((a,[c,pl]) => a+pl.changes.length, 0);
+    const short = plans.filter(([c,pl]) => pl.short);
+    if(!todo.length){ msg.innerHTML = '<span class="ok">이미 모든 매장이 맞게 배정되어 있어요.</span> ' + tierSummary(by); btn.disabled = false; return; }
+    if(!confirm(`스티커 번호와 QR은 그대로 두고, 매장당 4등 ${p.t4}장 · 5등(500P) ${p.t8}장으로 다시 배정할게요.\n바뀌는 매장 ${todo.length}곳 · 바뀌는 스티커 ${won(total)}장 (1~3등 · 굿즈 · 이미 사용된 스티커는 그대로)` + (short.length ? `\n\n남은 스티커가 모자라 다 못 채우는 매장: ${short.map(x=>x[0]).join(', ')}` : '') + `\n\n무료 요금제는 하루 쓰기 2만 건 한도예요.`)){ btn.disabled = false; return; }
+    let n = 0;
+    for(const [c, pl] of todo){
+      for(let i=0;i<pl.changes.length;i+=400){
+        const b = writeBatch(db);
+        pl.changes.slice(i,i+400).forEach(x => b.set(doc(db,'tiers',x.code), { store:c, tier:x.tier }));
+        await withWatch(b.commit(), () => { msg.innerHTML = QUOTA_MSG; });
+      }
+      pl.changes.forEach(x => { by[c].find(r => r.code===x.code).tier = x.tier; });
+      n++; $('re-bar').style.width = Math.round(100*n/todo.length)+'%';
+      msg.textContent = `매장 ${n} / ${todo.length} 완료 (${c})`;
+    }
+    msg.innerHTML = '<span class="ok">완료!</span> 지금 서버 배정 : ' + tierSummary(by);
+  }catch(err){ console.error(err); msg.innerHTML = `<span class="danger">멈췄어요: ${esc(err.message)}</span> 다시 누르면 남은 매장만 이어서 해요.`; }
+  btn.disabled = false;
 });
 
 // ---- 위험: 전체 삭제 ----

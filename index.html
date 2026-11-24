@@ -132,6 +132,13 @@ h1,h2,h3,p{margin:0}
 .sheet{width:100%;max-width:480px;max-height:88vh;overflow-y:auto;background:var(--bg2);border-top:1px solid var(--line);border-radius:24px 24px 0 0;padding:24px max(20px,env(safe-area-inset-right,0px)) calc(22px + env(safe-area-inset-bottom,0px)) max(20px,env(safe-area-inset-left,0px));animation:up .28s cubic-bezier(.2,.8,.2,1)}
 @keyframes up{from{transform:translateY(40px);opacity:0}}
 .sheet h3{font-size:20px;font-weight:900;line-height:1.35;letter-spacing:-.03em}
+.sns-pop{text-align:center}.sns-pop img{height:132px;width:auto;display:block;margin:12px auto 10px}
+.sns-pop h3{font-size:22px}.sns-pop h3 em{font-style:normal;color:var(--gold)}
+.sns-steps{list-style:none;margin:14px 0 0;padding:0;display:grid;gap:8px;text-align:left}
+.sns-steps li{display:flex;gap:10px;align-items:center;background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:11px 14px;font-size:14px;font-weight:700;color:var(--cream)}
+.sns-steps li i{flex:none;width:24px;height:24px;border-radius:50%;background:#FF4D00;color:#FFF6EA;font-style:normal;font-size:13px;font-weight:900;display:grid;place-items:center}
+.sns-pop .fine{font-size:12px;color:var(--cream-3);margin-top:10px}
+.sns-pop a.cta{display:block;text-decoration:none;text-align:center}
 .sheet p{font-size:14px;color:var(--cream-2);margin-top:6px;line-height:1.55}
 .sheet p b{color:var(--cream)}
 .sheet label.lb{display:block;font-size:12.5px;font-weight:700;color:var(--cream-2);margin-top:18px}
@@ -403,9 +410,9 @@ summary:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
             <span class="tag or">응모권 룰렛 1번</span>
             <h3>카페인24 만족도 조사 참여하기</h3>
             <p>꽝이 나와도 끝이 아니에요. <b>만족도 조사</b>에 답하면 응모권 룰렛을 한 번 더 돌릴 수 있어요.</p>
-            <p class="fine">만족도 조사·응모권 룰렛은 번호당 1번</p>
+            <p class="fine">만족도 조사·응모권 룰렛은 번호당 1번 · 당첨되신 분도 의견을 남길 수 있어요 (응모권 룰렛은 꽝일 때만)</p>
           </div>
-          <button class="go" id="surveyBtn" type="button" disabled>꽝이 나오면 참여할 수 있어요</button>
+          <button class="go" id="surveyBtn" type="button" disabled>룰렛을 돌린 뒤 참여할 수 있어요</button>
         </div>
       </div>
     </section>
@@ -443,13 +450,14 @@ summary:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
 
   <section class="sec glow" id="s-prize"><div>
     <div class="eyebrow-s">경품</div>
-    <h2><em>6,000분</em>께<br>총 1,000만원을 드려요</h2>
-    <p class="desc">포인트와 다라미 굿즈를 더해 6,000분께 크리스마스 선물을 드려요. 당첨 포인트는 룰렛을 돌린 매장에서 쓸 수 있어요.</p>
+    <h2><em>12,000분</em>께<br>총 1,000만원 넘게 드려요</h2>
+    <p class="desc">포인트와 다라미 굿즈를 더해 12,000분께 크리스마스 선물을 드려요. 세 분 중 한 분은 당첨! 당첨 포인트는 룰렛을 돌린 매장에서 쓸 수 있어요.</p>
     <div class="prizes">
       <div class="prize top"><div><div class="n">1등</div><div class="a">50,000<small>P</small></div></div></div>
       <div class="prize o"><div><div class="n">2등</div><div class="a">10,000<small>P</small></div></div></div>
       <div class="prize o"><div><div class="n">3등</div><div class="a">5,000<small>P</small></div></div></div>
       <div class="prize"><div><div class="n">4등</div><div class="a">1,000<small>P</small></div></div></div>
+      <div class="prize"><div><div class="n">5등</div><div class="a">500<small>P</small></div></div></div>
       <div class="goods2">
         <div class="prize gd"><div><div class="n">굿즈</div><div class="a sm">다라미<br>텀블러</div></div><svg class="gi" viewBox="0 0 40 56" aria-hidden="true"><use href="#icTumbler"/></svg></div>
         <div class="prize rd"><div><div class="n">굿즈</div><div class="a sm">다라미<br>양산</div></div><svg class="gi" viewBox="0 0 56 49" aria-hidden="true"><use href="#icUmbrella"/></svg></div>
@@ -473,7 +481,7 @@ summary:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
     <div class="flowx">
       <div class="card bx"><b>12.18–27</b><span>룰렛 참여</span></div><div class="ar">›</div><div class="card bx hl"><b>12.28~</b><span>매장에서 적립</span></div>
     </div>
-    <div class="card pointbox"><span class="ico"><svg viewBox="0 0 100 108"><use href="#coinGold"/></svg></span><p>적립된 포인트는 <b>룰렛을 돌린 매장에서만</b> 쓸 수 있어요.</p></div>
+    <div class="card pointbox"><span class="ico"><svg viewBox="0 0 100 108"><use href="#coinGold"/></svg></span><p>적립된 포인트는 <b>룰렛을 돌린 매장에서만</b> 쓸 수 있어요.<br>적립된 포인트는 <b>적립일부터 한 달 안에</b> 쓰지 않으면 소멸될 수 있어요.</p></div>
   </div></section>
 
   <section class="sec" id="s-notice"><div>
@@ -488,6 +496,7 @@ summary:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
     </ul></details>
     <details><summary>포인트 안내</summary><ul>
       <li>당첨 포인트는 이벤트 종료 후 <b>12월 28일(월)부터</b> 룰렛에 참여한 매장에서 입력한 휴대폰 번호로 적립됩니다.</li>
+      <li>적립된 포인트는 <b>적립일부터 한 달 안에 사용하지 않으면 소멸될 수 있습니다.</b></li>
       <li>다라미 텀블러·양산 당첨자에게는 수령 방법을 별도로 안내합니다.</li>
       <li>휴대폰 번호를 잘못 입력하면 적립이 어려울 수 있으니 입력 전에 다시 확인해 주세요.</li>
       <li>적립된 포인트는 <b>룰렛에 참여한 매장에서만</b> 사용할 수 있습니다.</li>
@@ -520,7 +529,7 @@ import { STORES } from "./js/stores.js";
 const MODE = 'guide';            // 'customer' = play.html · 'guide' = index.html
 const db = getFirestore(initializeApp(firebaseConfig));
 const PR = EVENT.prizes;            // {1:[50000,'1등'], … 6:[0,'다라미 텀블러'], 7:[0,'다라미 양산']}
-const TK = {1:'p50',2:'p10',3:'p5',4:'p1',5:'lose',6:'tumbler',7:'umbrella'};
+const TK = {1:'p50',2:'p10',3:'p5',4:'p1',5:'lose',6:'tumbler',7:'umbrella',8:'p500'};
 
 const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const $=s=>document.querySelector(s);
@@ -538,9 +547,19 @@ const MAIN=[
   {k:'p1',v:1000,label:'1,000',fill:'url(#orG)',ink:'#FFF6EA',name:'4등'},
   {k:'umbrella',goods:'다라미 양산',icon:'#icUmbrella',fill:'url(#rdG)',ink:'#FFF6EA',name:'다라미 양산'},
   {k:'p5',v:5000,label:'5,000',fill:'url(#crG)',ink:'#FF4D00',name:'3등'},
-  {k:'lose',fill:'url(#brG)',ink:'#FFF6EA'}
+  {k:'p500',v:500,label:'500',fill:'url(#orG)',ink:'#FFF6EA',name:'5등'}   // 11/24: 5등 500P 추가 (등수 번호 8)
 ];
-const BONUS=[0,1,2,3,4,5,6,7].map(i=>i%2?{k:'lose',fill:'url(#brG)',ink:'#FFF6EA'}:{k:'b1',v:1000,label:'1,000',fill:i%4?'url(#crG)':'url(#orG)',ink:i%4?'#FF4D00':'#FFF6EA',name:'응모권 룰렛'});
+// 응모권(만족도 조사) 룰렛: 기본 룰렛과 같은 색 구성 · 1,000P 4칸 + 꽝 4칸 (11/23)
+const BONUS=[
+  {k:'b1',v:1000,label:'1,000',fill:'url(#goldG)',ink:'#3A2410',name:'응모권 룰렛'},
+  {k:'lose',fill:'url(#brG)',ink:'#FFF6EA'},
+  {k:'b1',v:1000,label:'1,000',fill:'url(#grG)',ink:'#FFF6EA',name:'응모권 룰렛'},
+  {k:'lose',fill:'url(#crG)',ink:'#FF4D00'},
+  {k:'b1',v:1000,label:'1,000',fill:'url(#orG)',ink:'#FFF6EA',name:'응모권 룰렛'},
+  {k:'lose',fill:'url(#brG)',ink:'#FFF6EA'},
+  {k:'b1',v:1000,label:'1,000',fill:'url(#rdG)',ink:'#FFF6EA',name:'응모권 룰렛'},
+  {k:'lose',fill:'url(#crG)',ink:'#FF4D00'}
+];
 let SEGS=MAIN;
 const R=132,rot=$('#rot');
 const pt=(r,a)=>{a=a*Math.PI/180;return[r*Math.sin(a),-r*Math.cos(a)]};
@@ -572,18 +591,26 @@ const bulbs=$('#bulbs');
 for(let i=0;i<24;i++){const[x,y]=pt(143,i*15);bulbs.appendChild(mk('circle',{cx:x,cy:y,r:4.2,class:'bulb'+(i%2?' b':'')}))}
 
 let angle=0,spinning=false,spinFrom=0,spinTo=0,spinT0=0,DUR=4600,onDone=null;
+// 11/23: 버튼을 누르면 서버 확인을 기다리지 않고 바로 빠르게 돌기 시작 → 결과가 오면 그 속도에서 이어서 멈춤
+let free=false,lastT=0;const FREE_V=0.8; // 빠르게 도는 속도 (도/ms)
 const ease=t=>1-Math.pow(1-t,4);
 function frame(now){
+  const dt=lastT?Math.min(now-lastT,50):16;lastT=now;
   if(spinning){const t=Math.min(1,(now-spinT0)/DUR);angle=spinFrom+(spinTo-spinFrom)*ease(t);
     if(t>=1){spinning=false;$('#wheelSvg').classList.remove('spinning');onDone&&onDone()}}
+  else if(free){angle+=FREE_V*dt}
   else if(!reduce){angle+=0.06}
   rot.setAttribute('transform',`rotate(${angle%360})`);requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
+function startFree(){if(reduce||spinning)return;free=true;$('#wheelSvg').classList.add('spinning')}
+function stopFree(){if(!free)return;free=false;if(!spinning)$('#wheelSvg').classList.remove('spinning')}
 function spinToIndex(idx,cb){
   const STEP=360/SEGS.length,c=idx*STEP+STEP/2,jit=(Math.random()-.5)*STEP*.6,cur=((angle%360)+360)%360;
   const need=((-c-jit-cur)%360+720)%360;
-  spinFrom=angle;spinTo=angle+360*(reduce?1:6)+need;spinT0=performance.now();DUR=reduce?600:4600;
+  let turns=reduce?1:6;DUR=reduce?600:4600;
+  if(free){DUR=3600;turns=Math.max(1,Math.round((FREE_V*DUR/4-need)/360));free=false} // 도는 속도 그대로 이어서 감속
+  spinFrom=angle;spinTo=angle+360*turns+need;spinT0=performance.now();
   spinning=true;onDone=cb;$('#wheelSvg').classList.add('spinning');
 }
 const indexOf=k=>{const ids=SEGS.map((s,i)=>s.k===k?i:-1).filter(i=>i>=0);return ids[Math.floor(Math.random()*ids.length)]};
@@ -604,6 +631,7 @@ const fromHash=location.hash.match(/^#q(\d{3})([A-Z0-9]{6})$/i);
 if(!code&&fromHash)code=(fromHash[1]+'-'+fromHash[2]).toUpperCase();
 let storeCode='',storeName='',tier=5,used=false,blocked='확인 중…',pending=false,entry=null;
 let phone='',agreeMkt=false,surveyDone=false,lastLose=false,bonus=0,bonusClosed=false,busy=false;
+let winSurvey=false,freeBonus=false;   // 11/24: winSurvey=당첨 손님도 설문 가능(보상 없음) · freeBonus=당첨 때 설문을 이미 한 번호가 꽝이 나오면 설문 없이 응모권 룰렛
 const cta=$('#cta');
 function render(){
   if(MODE==='guide')return;
@@ -618,8 +646,10 @@ function render(){
   else{cta.disabled=false;cta.textContent='룰렛 돌리기'}
   const sb=$('#surveyBtn');
   if(surveyDone){sb.disabled=true;sb.textContent='만족도 조사 참여 완료 (번호당 1번)'}
+  else if(lastLose&&freeBonus){sb.disabled=false;sb.textContent='응모권 룰렛 바로 받기'}
   else if(lastLose){sb.disabled=false;sb.textContent='만족도 설문 참여하고 룰렛 기회 한 번 더 얻기'}
-  else{sb.disabled=true;sb.textContent='꽝이 나오면 참여할 수 있어요'}
+  else if(winSurvey){sb.disabled=false;sb.textContent='만족도 조사 참여하기 (의견만 · 추가 룰렛 없음)'}
+  else{sb.disabled=true;sb.textContent='룰렛을 돌린 뒤 참여할 수 있어요'}
   $('#surveyCard').classList.toggle('hot',lastLose&&!surveyDone);
 }
 
@@ -656,12 +686,13 @@ async function boot(){
         const saved=loadPhone();if(saved&&mask(saved)===entry.phoneMask)phone=saved;
         if(tier===5&&!entry.surveyDone){   // 꽝 → 설문 아직: 이어서 참여
           lastLose=true;
-          if(phone){try{if((await getDoc(doc(db,'surveyed',phone))).exists()){surveyDone=true;lastLose=false}}catch(e){}}
+          if(phone){try{const sv=await getDoc(doc(db,'surveyed',phone));if(sv.exists()){if(sv.data().free===true)freeBonus=true;else{surveyDone=true;lastLose=false}}}catch(e){}}
           toast(lastLose?'꽝이 나온 QR이에요 · 만족도 조사로 기회를 한 번 더 받아보세요':'이미 참여한 QR이에요');
           if(lastLose){$('#more').hidden=false;render();setTimeout(()=>scrollTo($('#surveyCard')),reduce?0:900)}
         }else if(tier===5&&entry.surveyDone&&!entry.bonusDone){   // 설문 끝, 응모권 룰렛 아직
           surveyDone=true;bonus=1;drawWheel(BONUS);toast('응모권 룰렛 1회가 남아 있어요');
-        }else toast(`이미 참여한 QR이에요 · ${tier===5?'꽝':PR[tier][1]} · ${entry.phoneMask}`);
+        }else{toast(`이미 참여한 QR이에요 · ${tier===5?'꽝':PR[tier][1]} · ${entry.phoneMask}`);
+          if(tier!==5&&!entry.surveyDone){winSurvey=true;$('#more').hidden=false}}   // 당첨 손님: 설문은 보상 없이 참여 가능
       }
     }
   }catch(e){console.error(e);blocked='잠시 후 QR을 다시 찍어 주세요';toast('연결이 불안정해요')}
@@ -706,7 +737,7 @@ function askPhone(){
 
 /* ── 2. 룰렛: ① 스티커 잠금 + 번호 저장 → ② 등수 읽기(잠근 뒤에만 가능) → ③ 참여 기록·당첨 롤링·매장 집계 ── */
 async function spinQR(){
-  if(busy)return;busy=true;lastLose=false;cta.textContent='확인 중…';render();
+  if(busy)return;busy=true;lastLose=false;cta.textContent='두구두구…';render();startFree();
   try{
     await runTransaction(db,async tx=>{
       const ref=doc(db,'codes',code),snap=await tx.get(ref);
@@ -715,23 +746,25 @@ async function spinQR(){
       tx.set(doc(db,'phones',code),{phone,store:storeCode,createdAt:serverTimestamp()});
     });
   }catch(e){
-    console.error(e);busy=false;
+    console.error(e);busy=false;stopFree();
     if(String(e.message).includes('used')){used=true;toast('이미 참여한 QR이에요')}
     else if(e.code==='permission-denied'){blocked='지금은 참여 기간이 아니에요';toast('12월 18일부터 27일까지 참여할 수 있어요')}
     else toast('연결이 불안정해요. 다시 눌러 주세요.');
     return render();
   }
   used=true;pending=true;busy=false;
-  return finishEntry();
+  return finishEntry(true);
 }
 // ②③ — 연결이 끊겨도 같은 번호로 다시 누르면 이어서 끝남
-async function finishEntry(){
-  if(busy)return;busy=true;cta.textContent='두구두구…';render();
+async function finishEntry(fresh){
+  if(busy)return;busy=true;cta.textContent='두구두구…';render();startFree();
   let ok=false,err=null;
   for(let i=0;i<3&&!ok;i++){
     try{
-      const es=await getDoc(doc(db,'entries',code));
-      if(es.exists()){entry=es.data();tier=entry.tier;ok=true;break}   // 이미 저장됨 (응답만 늦게 온 경우)
+      if(!(fresh===true&&i===0)){   // 방금 잠근 QR의 첫 시도는 확인 생략 (서버 왕복 1번 줄임)
+        const es=await getDoc(doc(db,'entries',code));
+        if(es.exists()){entry=es.data();tier=entry.tier;ok=true;break}   // 이미 저장됨 (응답만 늦게 온 경우)
+      }
       const ts=await getDoc(doc(db,'tiers',code));
       tier=ts.data().tier;
       const [money,label]=PR[tier],win=tier!==5?1:0;
@@ -744,7 +777,7 @@ async function finishEntry(){
     }catch(e){err=e;console.warn(e);await new Promise(r=>setTimeout(r,800*(i+1)))}
   }
   if(!ok){
-    console.error(err);busy=false;
+    console.error(err);busy=false;stopFree();
     if(err&&err.code==='permission-denied'){toast('처음 넣은 번호와 달라요');phone=''}
     else toast('연결이 불안정해요. 아래 버튼을 다시 눌러 주세요.');
     return render();
@@ -753,19 +786,47 @@ async function finishEntry(){
   spinToIndex(indexOf(TK[tier]),()=>{busy=false;render();setTimeout(()=>result(TK[tier],false),reduce?0:300)});
 }
 
+/* ── SNS 인증 이벤트 안내 팝업 (11/24): 룰렛 결과를 확인한 뒤 한 번만 ── */
+let snsShown=false;
+function snsPop(){
+  if(snsShown||MODE==='guide')return;snsShown=true;
+  const img=document.querySelector('.card.story img');
+  setTimeout(()=>{
+    open(`<div class="sns-pop"><span class="rank-tag g">하나 더 · SNS 인증 이벤트</span>
+      ${img?`<img src="${img.src}" alt="다라미 텀블러와 다라미 양산">`:''}
+      <h3>인증샷 올리고<br><em>다라미 굿즈</em> 받아가세요</h3>
+      <p>추첨을 통해 <b>다라미 텀블러</b>와 <b>다라미 양산</b>을 드려요.</p>
+      <ol class="sns-steps"><li><i>1</i>룰렛 결과나 매장 방문 사진 찍기</li><li><i>2</i>인스타그램 스토리 · 게시물에 올리기</li><li><i>3</i>@cafein24.official 태그하기</li></ol>
+      <p class="fine">공개 계정으로 올려 주세요. 당첨자는 12월 29일 인스타그램 DM으로 안내드려요.</p>
+      <div class="btns"><a class="cta" id="snsGo" href="${EVENT.instagram}" target="_blank" rel="noopener">인스타그램 열기</a><button class="ghost" id="snsLater" type="button">다음에 할게요</button></div></div>`);
+    const after=()=>{close();if(winSurvey&&!surveyDone)setTimeout(()=>toast('만족도 조사에도 의견을 남길 수 있어요 · 아래 버튼'),400)};
+    $('#snsGo').onclick=()=>setTimeout(after,300);$('#snsLater').onclick=after;
+  },reduce?0:350);
+}
+
 /* ── 3. 결과 ── */
 const ICON={tumbler:'#icTumbler',umbrella:'#icUmbrella'};
 async function result(k,isBonus){
   $('#more').hidden=false;
   if(k==='lose'){
-    if(isBonus){clearPhone();open(`<h3>아쉽지만 이번엔 꽝이에요</h3><p>매장에 준비된 사탕 하나 가져가세요. 음료를 주문하고 새 스티커의 QR을 찍으면 또 도전할 수 있어요.</p><div class="btns"><button class="cta" id="ok" type="button">확인</button></div>`);$('#ok').onclick=close;return}
-    try{const s=await getDoc(doc(db,'surveyed',phone));if(s.exists())surveyDone=true}catch(e){}
+    if(isBonus){clearPhone();open(`<h3>아쉽지만 이번엔 꽝이에요</h3><p>매장에 준비된 사탕 하나 가져가세요. 음료를 주문하고 새 스티커의 QR을 찍으면 또 도전할 수 있어요.</p><div class="btns"><button class="cta" id="ok" type="button">확인</button></div>`);$('#ok').onclick=()=>{close();snsPop()};return}
+    try{const s=await getDoc(doc(db,'surveyed',phone));if(s.exists()){if(s.data().free===true)freeBonus=true;else surveyDone=true}}catch(e){}
     lastLose=!surveyDone;render();if(surveyDone)clearPhone();
-    toast(surveyDone?'아쉽지만 꽝이에요 · 매장의 사탕 하나 가져가세요':'아쉽지만 꽝이에요 · 기회를 한 번 더 받아보세요');
-    if(!surveyDone)setTimeout(()=>scrollTo($('#surveyCard')),reduce?0:700);
+    if(surveyDone){   // 더 받을 기회가 없음 → 확인 뒤 SNS 이벤트 안내
+      open(`<h3>아쉽지만 이번엔 꽝이에요</h3><p>매장에 준비된 사탕 하나 가져가세요. 음료를 주문하고 새 스티커의 QR을 찍으면 또 도전할 수 있어요.</p><div class="btns"><button class="cta" id="ok" type="button">확인</button></div>`);
+      $('#ok').onclick=()=>{close();snsPop()};
+    }else if(freeBonus){   // 당첨 때 설문에 이미 답한 번호 → 설문 없이 응모권 룰렛
+      open(`<span class="rank-tag">꽝 · 하지만 한 번 더!</span><h3 style="margin-top:10px">아쉽지만 꽝이에요</h3><p>지난번에 <b>만족도 조사</b>에 답해 주셨어요. 응모권 룰렛을 <b>바로 한 번 더</b> 돌릴 수 있어요.</p>
+        <div class="btns"><button class="cta bonus" id="goFree" type="button">응모권 룰렛 받기</button><button class="ghost" id="later" type="button">다음에 할게요</button></div>`);
+      $('#goFree').onclick=()=>{close();claimFree()};$('#later').onclick=()=>{close();scrollTo($('#surveyCard'))};
+    }else{   // 꽝 → 설문에 답하면 한 번 더
+      open(`<span class="rank-tag">꽝 · 하지만 한 번 더!</span><h3 style="margin-top:10px">아쉽지만 꽝이에요</h3><p><b>만족도 조사</b>에 답하면 <b>룰렛을 한 번 더</b> 돌릴 수 있어요.</p>
+        <div class="btns"><button class="cta bonus" id="goSurvey" type="button">설문하고 한 번 더 돌리기</button><button class="ghost" id="later" type="button">다음에 할게요</button></div>`);
+      $('#goSurvey').onclick=()=>{close();survey()};$('#later').onclick=()=>{close();scrollTo($('#surveyCard'))};
+    }
     return;
   }
-  if(!isBonus)clearPhone();   // 당첨이면 이어서 할 것이 없음
+  if(!isBonus){clearPhone();winSurvey=true;render()}   // 당첨: 응모권은 없지만 설문은 보상 없이 참여 가능
   const s=isBonus?BONUS[0]:MAIN.find(x=>x.k===k);
   if(s.goods){
     burst(true);
@@ -777,10 +838,10 @@ async function result(k,isBonus){
     burst(s.v>=10000);
     open(`<span class="rank-tag">${s.name} 당첨</span><div class="big ${s.v===50000?'gold':''}">${s.v.toLocaleString()}P</div>
       <h3 style="margin-top:12px">축하해요! 포인트에 당첨됐어요</h3>
-      <div class="note">이벤트가 끝난 뒤 <b>${EVENT.creditDate}</b> <b>${esc(storeName)}</b>에서 <b class="nw">${mask(phone)}</b> 번호로 적립해 드려요.<br>포인트는 이 매장에서만 쓸 수 있어요.</div>
+      <div class="note">이벤트가 끝난 뒤 <b>${EVENT.creditDate}</b> <b>${esc(storeName)}</b>에서 <b class="nw">${mask(phone)}</b> 번호로 적립해 드려요.<br>포인트는 이 매장에서만 쓸 수 있고, <b>적립일부터 한 달 안에</b> 쓰지 않으면 소멸될 수 있어요.</div>
       <div class="btns"><button class="cta" id="ok" type="button">확인</button></div>`);
   }
-  $('#ok').onclick=close;
+  $('#ok').onclick=()=>{close();snsPop()};
 }
 
 /* ── 4. 만족도 조사 (꽝 손님 · 번호당 1번) ── */
@@ -809,6 +870,7 @@ const SURVEY=[
  {id:17,t:'카페인24에서 딱 한 가지만 바꿀 수 있다면?',type:'text',opt:1}
 ];
 function survey(){
+  const isWin=winSurvey&&!lastLose;   // 당첨 손님: 의견만 받고 응모권 룰렛은 없음
   const ans={};
   const qHtml=q=>{
     if(q.sec)return `<div class="sv-sec">${q.sec}</div>`;
@@ -822,10 +884,10 @@ function survey(){
   };
   open(`
     <h3 style="margin-top:16px">카페인24 만족도 조사</h3>
-    <p style="font-size:12.5px;opacity:.75;margin-top:4px">답변은 메뉴와 매장 운영을 더 좋게 만드는 데만 써요.</p>
+    <p style="font-size:12.5px;opacity:.75;margin-top:4px">답변은 메뉴와 매장 운영을 더 좋게 만드는 데만 써요.${isWin?' 당첨되신 분은 추가 룰렛 없이 의견만 받아요.':''}</p>
     ${SURVEY.map(qHtml).join('')}
     <div class="err" id="serr"></div>
-    <div class="btns"><button class="cta bonus" id="send" type="button">제출하고 응모권 받기</button><button class="ghost" id="cancel" type="button">닫기</button></div>`);
+    <div class="btns"><button class="cta${isWin?'':' bonus'}" id="send" type="button">${isWin?'의견 보내기':'제출하고 응모권 받기'}</button><button class="ghost" id="cancel" type="button">닫기</button></div>`);
   const byId=id=>SURVEY.find(q=>q.id===id);
   sheet.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{
     const q=byId(+b.dataset.q),i=+b.dataset.i,box=b.parentElement;
@@ -864,29 +926,52 @@ function survey(){
     try{
       const b=writeBatch(db);
       b.set(doc(db,'surveys',phone),{phone,code,store:storeCode,...data,createdAt:serverTimestamp()});   // 문서 이름 = 번호 → 번호당 1번
-      b.set(doc(db,'surveyed',phone),{at:serverTimestamp()});
+      b.set(doc(db,'surveyed',phone),isWin?{at:serverTimestamp(),free:true}:{at:serverTimestamp()});   // free=응모권을 아직 안 쓴 설문(당첨 손님)
       b.update(doc(db,'entries',code),{surveyDone:true});
       await b.commit();
     }catch(e){
-      console.error(e);btn.disabled=false;btn.textContent='제출하고 응모권 받기';
+      console.error(e);btn.disabled=false;btn.textContent=isWin?'의견 보내기':'제출하고 응모권 받기';
       $('#serr').textContent=e.code==='permission-denied'?'이미 만족도 조사에 참여한 번호예요. 번호당 1번이에요.':'저장이 안 됐어요. 다시 눌러 주세요.';
-      if(e.code==='permission-denied'){surveyDone=true;lastLose=false;render()}
+      if(e.code==='permission-denied'){surveyDone=true;lastLose=false;winSurvey=false;render()}
       return;
     }
+    if(isWin){surveyDone=true;winSurvey=false;close();render();toast('소중한 의견 감사합니다');return}
     surveyDone=true;lastLose=false;bonus=1;close();drawWheel(BONUS);render();
     toast('응모권 룰렛 1회를 받았어요');
     setTimeout(()=>scrollTo($('#stage')),reduce?0:300);
   };
 }
-$('#surveyBtn').onclick=()=>{if(surveyDone||!lastLose)return;
-  if(phone)return survey();
-  confirmPhone(entry?.phoneMask,async()=>{   // 이어서 하는 경우: 이 번호로 이미 설문했는지 확인
-    try{if((await getDoc(doc(db,'surveyed',phone))).exists()){surveyDone=true;lastLose=false;render();return toast('이미 만족도 조사에 참여한 번호예요 (번호당 1번)')}}catch(e){}
-    survey()})};
+// 설문 없이 응모권 룰렛 받기: 당첨 때 설문에 이미 답한 번호가 꽝이 나온 경우 (번호당 1번)
+async function claimFree(){
+  if(busy)return;busy=true;render();
+  try{
+    const b=writeBatch(db);
+    b.update(doc(db,'entries',code),{surveyDone:true});
+    b.update(doc(db,'surveyed',phone),{free:false,by:code});
+    await b.commit();
+  }catch(e){
+    console.error(e);busy=false;
+    if(e.code==='permission-denied'){surveyDone=true;lastLose=false;freeBonus=false;toast('이미 응모권을 받은 번호예요 (번호당 1번)')}else toast('연결이 불안정해요. 다시 눌러 주세요.');
+    return render();
+  }
+  busy=false;surveyDone=true;lastLose=false;freeBonus=false;bonus=1;drawWheel(BONUS);render();
+  toast('응모권 룰렛 1회를 받았어요');
+  setTimeout(()=>scrollTo($('#stage')),reduce?0:300);
+}
+$('#surveyBtn').onclick=()=>{if(surveyDone||!(lastLose||winSurvey))return;
+  const go=async()=>{   // 이 번호로 이미 설문했는지 확인
+    try{const sv=await getDoc(doc(db,'surveyed',phone));
+      if(sv.exists()){
+        if(lastLose&&sv.data().free===true){freeBonus=true;render();return claimFree()}
+        surveyDone=true;lastLose=false;winSurvey=false;render();return toast('이미 만족도 조사에 참여한 번호예요 (번호당 1번)')}}catch(e){}
+    survey()};
+  if(lastLose&&freeBonus&&phone)return claimFree();
+  if(phone)return lastLose?survey():go();
+  confirmPhone(entry?.phoneMask,go)};
 
 /* ── 5. 응모권 룰렛 (1,000P · 선착순) ── */
 async function spinBonus(){
-  if(busy)return;busy=true;render();cta.textContent='확인 중…';
+  if(busy)return;busy=true;render();cta.textContent='두구두구…';startFree();
   let win=0;
   try{
     const s=await getDoc(doc(db,'stats','bonus'));const wins=s.exists()?(s.data().wins||0):0;
@@ -905,7 +990,7 @@ async function spinBonus(){
       const b2=writeBatch(db);b2.update(doc(db,'entries',code),{bonusDone:true,bonus:0});await b2.commit().catch(()=>{});
     }
   }catch(e){
-    console.error(e);busy=false;
+    console.error(e);busy=false;stopFree();
     if(e.code==='permission-denied'){bonus=0;drawWheel(MAIN);toast('이미 응모권을 사용했어요')}else toast('연결이 불안정해요. 다시 눌러 주세요.');
     return render();
   }
@@ -934,7 +1019,7 @@ async function ticker(){
     rows=snap.docs.map(d=>d.data()).filter(r=>r.createdAt)}catch(e){console.warn(e);return}
   if(!rows.length)return;
   const ago=ts=>{const m=Math.max(1,Math.round((Date.now()-ts.toMillis())/60000));return m<60?m+'분 전':m<1440?Math.floor(m/60)+'시간 전':Math.floor(m/1440)+'일 전'};
-  const label=t=>t>=6?PR[t][1]:PR[t][0].toLocaleString()+'P';
+  const label=t=>(t===6||t===7)?PR[t][1]:PR[t][0].toLocaleString()+'P';
   const ul=$('#tick'),html=rows.map(r=>`<li><b>${esc(r.tail)}님</b><span class="p">${label(r.tier)}</span> 당첨 · ${ago(r.createdAt)}</li>`);
   ul.innerHTML=html.join('')+html[0];$('#ticker').hidden=false;let ti=0;
   if(!reduce&&rows.length>1)setInterval(()=>{ti++;ul.style.transition='';ul.style.transform=`translateY(-${ti*44}px)`;if(ti===rows.length)setTimeout(()=>{ul.style.transition='none';ul.style.transform='translateY(0)';ti=0},520)},2400);

@@ -450,13 +450,14 @@ summary:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
 
   <section class="sec glow" id="s-prize"><div>
     <div class="eyebrow-s">경품</div>
-    <h2><em>6,000분</em>께<br>총 1,000만원을 드려요</h2>
-    <p class="desc">포인트와 다라미 굿즈를 더해 6,000분께 크리스마스 선물을 드려요. 당첨 포인트는 룰렛을 돌린 매장에서 쓸 수 있어요.</p>
+    <h2><em>12,000분</em>께<br>총 1,000만원 넘게 드려요</h2>
+    <p class="desc">포인트와 다라미 굿즈를 더해 12,000분께 크리스마스 선물을 드려요. 세 분 중 한 분은 당첨! 당첨 포인트는 룰렛을 돌린 매장에서 쓸 수 있어요.</p>
     <div class="prizes">
       <div class="prize top"><div><div class="n">1등</div><div class="a">50,000<small>P</small></div></div></div>
       <div class="prize o"><div><div class="n">2등</div><div class="a">10,000<small>P</small></div></div></div>
       <div class="prize o"><div><div class="n">3등</div><div class="a">5,000<small>P</small></div></div></div>
       <div class="prize"><div><div class="n">4등</div><div class="a">1,000<small>P</small></div></div></div>
+      <div class="prize"><div><div class="n">5등</div><div class="a">500<small>P</small></div></div></div>
       <div class="goods2">
         <div class="prize gd"><div><div class="n">굿즈</div><div class="a sm">다라미<br>텀블러</div></div><svg class="gi" viewBox="0 0 40 56" aria-hidden="true"><use href="#icTumbler"/></svg></div>
         <div class="prize rd"><div><div class="n">굿즈</div><div class="a sm">다라미<br>양산</div></div><svg class="gi" viewBox="0 0 56 49" aria-hidden="true"><use href="#icUmbrella"/></svg></div>
@@ -480,7 +481,7 @@ summary:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
     <div class="flowx">
       <div class="card bx"><b>12.18–27</b><span>룰렛 참여</span></div><div class="ar">›</div><div class="card bx hl"><b>12.28~</b><span>매장에서 적립</span></div>
     </div>
-    <div class="card pointbox"><span class="ico"><svg viewBox="0 0 100 108"><use href="#coinGold"/></svg></span><p>적립된 포인트는 <b>룰렛을 돌린 매장에서만</b> 쓸 수 있어요.</p></div>
+    <div class="card pointbox"><span class="ico"><svg viewBox="0 0 100 108"><use href="#coinGold"/></svg></span><p>적립된 포인트는 <b>룰렛을 돌린 매장에서만</b> 쓸 수 있어요.<br>적립된 포인트는 <b>적립일부터 한 달 안에</b> 쓰지 않으면 소멸될 수 있어요.</p></div>
   </div></section>
 
   <section class="sec" id="s-notice"><div>
@@ -495,6 +496,7 @@ summary:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
     </ul></details>
     <details><summary>포인트 안내</summary><ul>
       <li>당첨 포인트는 이벤트 종료 후 <b>12월 28일(월)부터</b> 룰렛에 참여한 매장에서 입력한 휴대폰 번호로 적립됩니다.</li>
+      <li>적립된 포인트는 <b>적립일부터 한 달 안에 사용하지 않으면 소멸될 수 있습니다.</b></li>
       <li>다라미 텀블러·양산 당첨자에게는 수령 방법을 별도로 안내합니다.</li>
       <li>휴대폰 번호를 잘못 입력하면 적립이 어려울 수 있으니 입력 전에 다시 확인해 주세요.</li>
       <li>적립된 포인트는 <b>룰렛에 참여한 매장에서만</b> 사용할 수 있습니다.</li>
@@ -527,7 +529,7 @@ import { STORES } from "./js/stores.js";
 const MODE = 'customer';            // 'customer' = play.html · 'guide' = index.html
 const db = getFirestore(initializeApp(firebaseConfig));
 const PR = EVENT.prizes;            // {1:[50000,'1등'], … 6:[0,'다라미 텀블러'], 7:[0,'다라미 양산']}
-const TK = {1:'p50',2:'p10',3:'p5',4:'p1',5:'lose',6:'tumbler',7:'umbrella'};
+const TK = {1:'p50',2:'p10',3:'p5',4:'p1',5:'lose',6:'tumbler',7:'umbrella',8:'p500'};
 
 const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const $=s=>document.querySelector(s);
@@ -545,7 +547,7 @@ const MAIN=[
   {k:'p1',v:1000,label:'1,000',fill:'url(#orG)',ink:'#FFF6EA',name:'4등'},
   {k:'umbrella',goods:'다라미 양산',icon:'#icUmbrella',fill:'url(#rdG)',ink:'#FFF6EA',name:'다라미 양산'},
   {k:'p5',v:5000,label:'5,000',fill:'url(#crG)',ink:'#FF4D00',name:'3등'},
-  {k:'lose',fill:'url(#brG)',ink:'#FFF6EA'}
+  {k:'p500',v:500,label:'500',fill:'url(#orG)',ink:'#FFF6EA',name:'5등'}   // 11/24: 5등 500P 추가 (등수 번호 8)
 ];
 // 응모권(만족도 조사) 룰렛: 기본 룰렛과 같은 색 구성 · 1,000P 4칸 + 꽝 4칸 (11/23)
 const BONUS=[
@@ -836,7 +838,7 @@ async function result(k,isBonus){
     burst(s.v>=10000);
     open(`<span class="rank-tag">${s.name} 당첨</span><div class="big ${s.v===50000?'gold':''}">${s.v.toLocaleString()}P</div>
       <h3 style="margin-top:12px">축하해요! 포인트에 당첨됐어요</h3>
-      <div class="note">이벤트가 끝난 뒤 <b>${EVENT.creditDate}</b> <b>${esc(storeName)}</b>에서 <b class="nw">${mask(phone)}</b> 번호로 적립해 드려요.<br>포인트는 이 매장에서만 쓸 수 있어요.</div>
+      <div class="note">이벤트가 끝난 뒤 <b>${EVENT.creditDate}</b> <b>${esc(storeName)}</b>에서 <b class="nw">${mask(phone)}</b> 번호로 적립해 드려요.<br>포인트는 이 매장에서만 쓸 수 있고, <b>적립일부터 한 달 안에</b> 쓰지 않으면 소멸될 수 있어요.</div>
       <div class="btns"><button class="cta" id="ok" type="button">확인</button></div>`);
   }
   $('#ok').onclick=()=>{close();snsPop()};
@@ -1017,7 +1019,7 @@ async function ticker(){
     rows=snap.docs.map(d=>d.data()).filter(r=>r.createdAt)}catch(e){console.warn(e);return}
   if(!rows.length)return;
   const ago=ts=>{const m=Math.max(1,Math.round((Date.now()-ts.toMillis())/60000));return m<60?m+'분 전':m<1440?Math.floor(m/60)+'시간 전':Math.floor(m/1440)+'일 전'};
-  const label=t=>t>=6?PR[t][1]:PR[t][0].toLocaleString()+'P';
+  const label=t=>(t===6||t===7)?PR[t][1]:PR[t][0].toLocaleString()+'P';
   const ul=$('#tick'),html=rows.map(r=>`<li><b>${esc(r.tail)}님</b><span class="p">${label(r.tier)}</span> 당첨 · ${ago(r.createdAt)}</li>`);
   ul.innerHTML=html.join('')+html[0];$('#ticker').hidden=false;let ti=0;
   if(!reduce&&rows.length>1)setInterval(()=>{ti++;ul.style.transition='';ul.style.transform=`translateY(-${ti*44}px)`;if(ti===rows.length)setTimeout(()=>{ul.style.transition='none';ul.style.transform='translateY(0)';ti=0},520)},2400);
